@@ -67,26 +67,22 @@ function openBy(text,y){
  if(found)ficha(found.id);
  else{year=y?String(y):'todos';term=text;const f=$('#glosario-periodo');if(f)f.value=year;const b=$('#glosario-buscar');if(b)b.value=term;render();pageTo('glosario');}
 }
-function addContext(){
- const roots=document.querySelectorAll('.transition-home-row,.transition-row,.v7-transition');
- for(const el of roots){
-  if(el.dataset.glossReady)return; // handled below with scoped guard
- }
-}
 function contextScan(){
  document.querySelectorAll('.transition-home-row,.transition-row').forEach(el=>{
   if(el.dataset.glossReady)return;
   const raw=el.textContent||'';
   if(!raw.includes('→'))return;
   el.dataset.glossReady='1';
-  const btn=document.createElement('button');btn.type='button';btn.className='glosario-inline';btn.textContent='¿Qué significan estas categorías?';btn.title='Consultar definiciones del POT 2014 y de la propuesta 2026';
-  btn.addEventListener('click',()=>{
-   const terms=raw.split('→').map(s=>s.replace(/\d[\d.,]*\s*(ha|%)[\s\S]*/i,'').trim());
-   const first=terms[0]; const second=terms[1]||'';
-   if(first)openBy(first,2014);
-   // La ficha incluye enlace a la comparación; evitar afirmar equivalencia automática.
-  });
-  el.appendChild(btn);
+  const terms=raw.split('→').map(s=>s.replace(/\d[\d.,]*\s*(ha|%)[\s\S]*/i,'').replace(/POT 2014|Propuesta 2026/gi,'').trim());
+  for(const [idx,periodo] of [[0,2014],[1,2026]]){
+   const nombre=terms[idx]||'';
+   if(!nombre)continue;
+   const btn=document.createElement('button');btn.type='button';btn.className='glosario-inline';
+   btn.textContent=periodo===2014?'Definición 2014':'Definición propuesta 2026';
+   btn.title='Consultar explicación de '+nombre+' ('+periodo+')';
+   btn.addEventListener('click',()=>openBy(nombre,periodo));
+   el.appendChild(btn);
+  }
  });
 }
 function mapGo(layer){
