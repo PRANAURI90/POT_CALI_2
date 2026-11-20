@@ -126,3 +126,61 @@
 #v7-tratamientos,#v7-edificabilidad{margin-top:22px}.v7-treatment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.v7-treatment-grid>.surface-card{min-width:0;padding:17px}.v7-treatment-grid h4{font:700 17px Georgia,serif;margin:10px 0 8px}.v7-treatment-grid p{font-size:11px;line-height:1.6;color:#567161}.v7-index-example{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;margin:18px 0}.v7-index-example>div{flex:1;min-width:150px;padding:16px;border:1px solid #e1e7dc;background:#f3f7f2;border-radius:8px}.v7-index-example small{color:#678775;font-size:10px;display:block}.v7-index-example strong{display:block;font:700 25px Georgia,serif;margin-top:7px;color:#245b46}.v7-index-example>span{align-self:center;font-size:20px;color:#8ca191}@media(max-width:1000px){.v7-treatment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:630px){.v7-treatment-grid{grid-template-columns:1fr}}
 
 .v7-micro-map{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;background:#f7faf6;border-radius:9px}
+
+/* V9.2 · panorama territorial medido en hectáreas */
+.risk-panorama{display:flex;flex-direction:column;gap:15px}
+.risk-map-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.risk-map-tabs .small-btn.selected{background:#1d6354;color:white;border-color:#1d6354}
+.risk-mini-map{height:415px;min-height:340px;width:100%;position:relative;isolation:isolate;z-index:0;border:1px solid #d7e2da;border-radius:12px;overflow:hidden;background:#e9f1eb}
+.risk-dash{margin-top:16px;border:1px solid #dce7de;border-radius:14px;background:#f9fbf8;padding:20px}
+.risk-dash-header h3{font:700 24px Georgia,serif;margin:6px 0}
+.risk-dash-header p{max-width:750px;color:#536d5d;line-height:1.6}
+.risk-dash .topic-tabs{margin:14px 0;display:flex;flex-wrap:wrap;gap:6px}
+.risk-kpis{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.risk-kpis>div{background:#fff;border:1px solid #e3ece5;border-radius:10px;min-width:190px;flex:1;padding:14px}
+.risk-kpis small{display:block;color:#697e70;font-size:11px}
+.risk-kpis strong{display:block;color:#205c49;font:700 28px Georgia,serif;margin-top:5px}
+.risk-district-bars{display:grid;gap:13px;margin:18px 0}
+.risk-bar-row{min-width:0}
+.risk-bar-label{display:flex;gap:10px;align-items:baseline;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.risk-bar-label span{overflow-wrap:anywhere;max-width:72%}
+.risk-bar-label b{white-space:nowrap;font-variant-numeric:tabular-nums;color:#225742}
+.risk-bar-track{height:12px;border-radius:7px;background:#e7efe9;overflow:hidden}
+.risk-bar-track i{display:block;height:100%;border-radius:7px;min-width:1px}
+@media(max-width:680px){.risk-mini-map{height:350px;min-height:300px}.risk-dash{padding:13px}.risk-bar-label{font-size:11px}.risk-kpis strong{font-size:23px}}
+
+/* V9.3: panoramas separados para 2014 y 2026, sin zoom */
+.risk-period-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:18px;margin:19px 0}
+.risk-period-panel{background:#fff;border:1px solid #dce7df;border-radius:12px;padding:15px;min-width:0}
+.risk-period-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid #e9eee9;padding-bottom:10px;margin-bottom:13px}
+.risk-period-heading h3{font:700 30px Georgia,serif;color:#1e604b;margin:0}
+.risk-control-label{display:block;color:#536e5c;font-size:11px;font-weight:700;margin:9px 0}
+.risk-period-select,.risk-category-select{display:block;width:100%;max-width:100%;padding:9px 10px;margin-top:5px;border:1px solid #cbded0;border-radius:7px;background:#fff;color:#1c4e3b;font-size:12px}
+.risk-legend-selection{display:flex;align-items:center;gap:8px;min-height:30px;font-size:11px;color:#4b6656;line-height:1.4}
+.risk-legend-selection i{flex:none;width:15px;height:15px;display:inline-block;border:1px solid #ffffffaa;border-radius:3px}
+.risk-period-map{width:100%;height:330px;position:relative;isolation:isolate;overflow:hidden;border:1px solid #d6e1d8;border-radius:9px;background:#e4ece4}
+.risk-period-panel .risk-bar-panel{margin:14px 0 0}
+.risk-period-panel .risk-kpis{margin:10px 0}
+.risk-period-panel .risk-kpis>div{padding:10px}
+.risk-period-panel .risk-kpis strong{font-size:24px}
+.risk-period-panel .risk-bar-row.risk-bar-button{display:block;text-align:left;border:0;background:transparent;padding:6px;width:100%;font-family:inherit;cursor:pointer;border-radius:5px}
+.risk-period-panel .risk-bar-row.risk-bar-button:hover,.risk-period-panel .risk-bar-row.risk-bar-button.selected{background:#eaf3ed}
+.risk-period-panel .risk-bar-row.risk-bar-button:disabled{cursor:default;opacity:.75}
+.risk-period-panel .risk-bar-label{font-size:11px}
+.risk-period-panel .risk-district-bars{gap:5px}
+.risk-period-panel .risk-bar-track{height:10px}
+.risk-period-panel .caption{font-size:10px;line-height:1.55}
+@media(max-width:850px){.risk-period-grid{grid-template-columns:1fr}.risk-period-map{height:370px}}
+@media(max-width:500px){.risk-period-panel{padding:10px}.risk-period-map{height:290px}}
+
+/* V9.4: diferenciación visual explícita entre los dos periodos */
+.risk-dash-header{padding:4px 0 10px}
+.risk-period-panel{border-top:5px solid #5a8ba3}
+.risk-period-panel.risk-period-2014{border-top-color:#667f98}
+.risk-period-panel.risk-period-2026{border-top-color:#317b5d}
+.risk-period-panel .risk-period-heading{align-items:center}
+.risk-period-panel.risk-period-2014 .risk-period-heading h3{color:#466985}
+.risk-period-panel.risk-period-2026 .risk-period-heading h3{color:#24664d}
+.risk-period-panel .risk-bar-panel{border-top:1px solid #e3ebe5;padding-top:10px}
+.risk-period-panel .risk-control-label{font-size:12px}
+.risk-period-panel .risk-bar-panel>h4{margin-bottom:8px}
