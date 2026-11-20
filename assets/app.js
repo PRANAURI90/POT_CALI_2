@@ -66,7 +66,8 @@ function calcColor(key,cat,index){
  if(key==='cambio_perimetro2026')return cat.includes('adiciona')?'#4f9f7f':cat.includes('excluye')?'#d67c65':'#aec8ad';
  if(key==='planes2014'||key==='planes_parciales'){const s=String(cat).toLowerCase();if(s==='adoptado')return '#6aa388';if(s.includes('predelim'))return '#c89a5b';if(s.includes('formul')||s.includes('en_form'))return '#5d93bb';if(s.includes('ambient'))return '#8d79b9';}
  if(key==='condicion_riesgo'||key==='condicion_amenaza')return {'1':'#bc8660','2':'#bd6779','3':'#6e96bb'}[cat]||PALETTE[index%PALETTE.length];
- if(key==='amenaza'){const [f,c]=String(cat).split('|');return c==='0'?({'1':'#bc8660','2':'#bd6779','3':'#6e96bb'}[f]):PALETTE[(Number(f)*4+Number(c))%PALETTE.length]}
+ if(key==='amenaza'){const c=String(cat).split('|')[1];return {'1':'#CF4446','2':'#E8BC39','3':'#39976A','0':'#8D97A1'}[c]||'#8D97A1'}
+ if(key==='inundacion_fluvial2014'){const t=String(cat).toLowerCase();return t.includes('amenaza alta')?'#CF4446':t.includes('amenaza media')?'#E8BC39':t.includes('amenaza baja')?'#39976A':t.includes('no mitigable')?'#9D3348':'#8D97A1'}
  return PALETTE[index%PALETTE.length];
 }
 function groupCat(key,p){
@@ -93,7 +94,7 @@ function catLabel(key,cat){
  if(key==='microzonas_aproximadas')return 'Zona sísmica '+cat+' · digitalización aproximada';
  if(key==='areas_actividad')return CODES26.actividad[cat]||'Código '+cat;
  if(key==='planes2014')return {'adoptado':'Adoptado','determ':'En determinantes','en_form':'En formulación','predelim':'Predelimitado','conc_amb':'Concertación ambiental','vigen_ven':'Vigencia vencida (código GDB)'}[cat]||cat;
- if(key==='amenaza'){const [f,c]=String(cat).split('|');return ({'1':'Movimientos en masa','2':'Avenidas torrenciales','3':'Inundación'})[f]+' · categoría '+c+' (código cartográfico)'}
+ if(key==='amenaza'){const [f,c]=String(cat).split('|');return (({'1':'Movimientos en masa','2':'Avenidas torrenciales','3':'Inundación'})[f]||'Fenómeno '+f)+' · '+({'1':'Alta','2':'Media','3':'Baja','0':'Otra condición (código 0)'}[c]||'Código '+c)+(c==='0'?'':' (código '+c+')')}
  if(key==='condicion_riesgo'||key==='condicion_amenaza')return {'1':'Movimientos en masa','2':'Avenidas torrenciales','3':'Inundación'}[cat]||'Fenómeno código '+cat;
  if(key==='edificabilidad_zonas2014')return (state.edificabilidadIndice||'ICB')+' '+cat;
  if(key==='norma_rural')return 'Tipo de subdivisión rural '+cat+' (código de la GDB)';
@@ -106,6 +107,16 @@ function buildLegend(key,geo){
  state.catEntries[key]=[...cats].sort((a,b)=>b[1]-a[1]).map(([cat,n],i)=>({cat,n,label:catLabel(key,cat),color:calcColor(key,cat,i)}));
  if(!state.catAllowed[key])state.catAllowed[key]=new Set(cats.keys());updateLayerLegend(key);
 }
+function renderLayerCategoryRows(key,cats,selected,filterEnabled){
+ const item=x=>`<div class="layer-filter-row"><label class="layer-filter"><input type="checkbox" data-filter-layer="${key}" data-filter-cat="${htmlEscape(x.cat)}" ${filterEnabled&&selected.has(x.cat)?'checked':''} ${filterEnabled?'':'disabled'}><i class="swatch" style="background:${x.color}"></i><span title="${htmlEscape(x.label||catLabel(key,x.cat))}">${key==='amenaza'?htmlEscape(({'1':'Alta','2':'Media','3':'Baja','0':'Otra condición (código 0)'})[String(x.cat).split('|')[1]]||x.label):htmlEscape(x.label||catLabel(key,x.cat))}</span><small class="category-count">${x.n}</small></label></div>`;
+ if(key!=='amenaza')return cats.map(item).join('');
+ const groups=[['1','Movimientos en masa'],['3','Inundación'],['2','Avenidas torrenciales']];
+ return groups.map(([f,name])=>{
+  const rows=cats.filter(x=>String(x.cat).split('|')[0]===f).sort((a,b)=>({'1':0,'2':1,'3':2,'0':3}[String(a.cat).split('|')[1]]??4)-({'1':0,'2':1,'3':2,'0':3}[String(b.cat).split('|')[1]]??4));
+  if(!rows.length)return '';
+  return '<div class="hazard-legend-group"><div class="hazard-legend-heading">'+htmlEscape(name)+' <small>'+rows.reduce((n,x)=>n+x.n,0)+' polígonos</small></div>'+rows.map(item).join('')+'</div>';
+ }).join('')+'<p class="hazard-legend-note">Códigos 1, 2 y 3 representados como alta, media y baja. El código 0 se conserva como otra condición, sin asignarle nivel.</p>';
+}
 function updateLayerLegend(key){
  const holder=document.querySelector(`[data-legend="${key}"]`);if(!holder)return;
  const cats=state.catEntries[key]||[];if(!cats.length){holder.innerHTML='<p class="layer-hint">Cargando categorías cartográficas…</p>';return}
@@ -113,7 +124,7 @@ function updateLayerLegend(key){
  const filterEnabled=state.mapMode==='compare'?Boolean(SWIPE_THEMES[state.compareTheme]?.includes(key)):state.active.has(key);
  const idxControl=key==='edificabilidad_zonas2014'?`<label class="index-switch">Mostrar índice <select data-indice-capa="${key}"><option value="ICB" ${(state.edificabilidadIndice||'ICB')==='ICB'?'selected':''}>Básico (ICB)</option><option value="ICA" ${state.edificabilidadIndice==='ICA'?'selected':''}>Adicional (ICA)</option></select></label>`:'';
  const wasOpen=holder.querySelector('details.layer-categories')?.open??false;
- holder.innerHTML=`<details class="layer-categories" ${wasOpen?'open':''}><summary>${cats.length} categorías disponibles</summary>${idxControl}<div class="layer-filter-tools"><button type="button" data-filter-all="${key}">Todas</button><button type="button" data-filter-none="${key}">Ninguna</button></div><div class="filter-scroll">${cats.map(x=>`<div class="layer-filter-row"><label class="layer-filter"><input type="checkbox" data-filter-layer="${key}" data-filter-cat="${htmlEscape(x.cat)}" ${filterEnabled&&selected.has(x.cat)?'checked':''} ${filterEnabled?'':'disabled'}><i class="swatch" style="background:${x.color}"></i><span title="${htmlEscape(x.label||catLabel(key,x.cat))}">${htmlEscape(x.label||catLabel(key,x.cat))}</span><small class="category-count">${x.n}</small></label></div>`).join('')}</div></details>`;
+ holder.innerHTML=`<details class="layer-categories" ${wasOpen?'open':''}><summary>${cats.length} categorías disponibles</summary>${idxControl}<div class="layer-filter-tools"><button type="button" data-filter-all="${key}">Todas</button><button type="button" data-filter-none="${key}">Ninguna</button></div><div class="filter-scroll">${renderLayerCategoryRows(key,cats,selected,filterEnabled)}</div></details>`;
  holder.querySelectorAll('[data-filter-layer]').forEach(inp=>inp.addEventListener('change',()=>{if(inp.checked)selected.add(inp.dataset.filterCat);else selected.delete(inp.dataset.filterCat);state.catAllowed[key]=selected;restyleLayer(key)}));
  holder.querySelector('[data-filter-all]').addEventListener('click',()=>{state.catAllowed[key]=new Set(cats.map(x=>x.cat));updateLayerLegend(key);restyleLayer(key)});
  holder.querySelector('[data-filter-none]').addEventListener('click',()=>{state.catAllowed[key]=new Set();updateLayerLegend(key);restyleLayer(key)});
@@ -355,7 +366,7 @@ function renderRiskBarPanel(year){
  const cats=riskCategories(key),active=riskCatSelection(year,key);
  const clean=x=>String(x||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(' (')[0].trim();
  const rows=d.rows.map((r,i)=>{
-  const matched=cats.find(x=>clean(x.label)===clean(r[0])||clean(x.label).startsWith(clean(r[0])));
+  const matched=key==='amenaza'?cats.find(x=>{const m=String(r[0]).match(/^(Movimientos en masa|Avenidas torrenciales|Inundación) · categoría (\\d)/);if(!m)return false;return String(x.cat)===({'Movimientos en masa':'1','Avenidas torrenciales':'2','Inundación':'3'}[m[1]]+'|'+m[2])}):cats.find(x=>clean(x.label)===clean(r[0])||clean(x.label).startsWith(clean(r[0])));
   const selected=matched?.cat===active;
   const color=matched?.color||['#397b73','#629da0','#c58f67','#6e91b2','#9a8bb9'][i%5];
   return '<button type="button" class="risk-bar-row risk-bar-button '+(selected?'selected':'')+'" '+(matched?'data-risk-pick="'+year+'" data-risk-cat-value="'+htmlEscape(matched.cat)+'"':'disabled')+'><div class="risk-bar-label"><span>'+htmlEscape(r[0])+'</span><b>'+fmt(r[1],1)+' ha</b></div><div class="risk-bar-track"><i style="width:'+Math.max(.2,100*r[1]/max)+'%;background:'+color+'"></i></div></button>';
