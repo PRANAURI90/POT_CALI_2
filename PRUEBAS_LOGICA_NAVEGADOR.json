@@ -1,0 +1,32 @@
+{
+  "initial": {
+    "n": 20,
+    "nLegend": 20
+  },
+  "solo": {
+    "chosen": [
+      "C2"
+    ],
+    "checked": 1,
+    "open": true
+  },
+  "all": 12,
+  "none": 0,
+  "icachange": {
+    "indice": "ICA",
+    "count": 27
+  },
+  "warning": {
+    "overlap": true,
+    "sismico": true
+  },
+  "compareList": {
+    "visible": [
+      "tratamientos2014",
+      "tratamientos"
+    ],
+    "sideGroups": 2
+  },
+  "slider25": "inset(0px 0px 0px 25%)",
+  "slider75": "inset(0px 0px 0px 75%)"
+}

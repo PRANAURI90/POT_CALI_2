@@ -1,0 +1,27 @@
+{
+  "tratamientos2026": {
+    "10": "Renovación - Redensificación alta (R1)",
+    "11": "Renovación - Redensificación media (R2)",
+    "12": "No aplica",
+    "1": "Conservación de sectores urbanos",
+    "2": "Conservación contextual",
+    "3": "Consolidación urbanística (C1)",
+    "4": "Consolidación básica (C2)",
+    "5": "Consolidación moderada (C3)",
+    "6": "Consolidación cambio de patrón (C4)",
+    "7": "Desarrollo suelo de expansión (D1)",
+    "8": "Desarrollo suelo urbano (D2)",
+    "9": "Mejoramiento Integral"
+  },
+  "actividad2026": {
+    "1": "Área de Proximidad",
+    "2": "Área de Integración",
+    "3": "Área Multifuncional",
+    "4": "Área de Dinamización Económica",
+    "5": "Área de Manejo Especial",
+    "6": "PEMP Centro Histórico",
+    "7": "PEMP Plaza de Toros",
+    "8": "PEMP Cañas Gordas",
+    "9": "PEMP Piedragrandre"
+  }
+}

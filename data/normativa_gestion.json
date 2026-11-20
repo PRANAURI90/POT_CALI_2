@@ -1,0 +1,382 @@
+{
+  "version": "2026-11-18",
+  "etapa": "2 - homologación preliminar y lectura de instrumentos",
+  "estado": "Reglas generales verificadas en articulados. No hay certificación normativa predial ni atribución automática de beneficiarios.",
+  "documentos": {
+    "2014": "Acuerdo 0373 de 2014",
+    "2026": "Proyecto de Acuerdo, revisión del POT radicada en 2026"
+  },
+  "homologacion": [
+    {
+      "familia": "Conservación",
+      "2014": "Conservación integral, arquitectónica y contextual",
+      "2026": "Conservación de sectores urbanos de interés cultural (CSU) y conservación contextual (CTL)",
+      "lectura": "Reconfiguración de modalidades. No homologar por coincidencia del término «contextual» sin revisar niveles patrimoniales y polígonos.",
+      "arts2014": "301–307",
+      "arts2026": "370, 377–378"
+    },
+    {
+      "familia": "Consolidación",
+      "2014": "C1 urbanística; C2 básica; C3 moderada",
+      "2026": "C1 urbanística; C2 básica; C3 moderada; C4 cambio de patrón",
+      "lectura": "Los códigos C1–C3 persisten, pero su significado y régimen pueden variar. Se incorpora C4.",
+      "arts2014": "308–313",
+      "arts2026": "370, 379"
+    },
+    {
+      "familia": "Renovación",
+      "2014": "R1 redesarrollo; R2 reactivación; R3 cambio de patrón",
+      "2026": "R1 redensificación alta; R2 redensificación media",
+      "lectura": "R1 y R2 se redefinen; R3 no permanece como modalidad con ese nombre. Es un cambio de clasificación, no correspondencia uno-a-uno.",
+      "arts2014": "314–321",
+      "arts2026": "370, 387–388, 615–616"
+    },
+    {
+      "familia": "Desarrollo",
+      "2014": "Tratamiento de desarrollo, sin modalidades D1/D2 en el artículo 301",
+      "2026": "D1 expansión / ámbitos delimitados; D2 suelo urbano",
+      "lectura": "Nuevo desdoblamiento D1/D2. La necesidad de plan parcial depende de delimitación y supuestos expresos.",
+      "arts2014": "323–325",
+      "arts2026": "370, 381–383, 615"
+    },
+    {
+      "familia": "Mejoramiento integral",
+      "2014": "Programa de mejoramiento en ciertos sectores C2; no listado como tratamiento autónomo en art. 301",
+      "2026": "Tratamiento de mejoramiento integral",
+      "lectura": "Se propone como tratamiento propio; la comparación depende de las delimitaciones y de su régimen concreto.",
+      "arts2014": "301, 311",
+      "arts2026": "370, 380"
+    }
+  ],
+  "comparaciones": [
+    {
+      "tema": "Renovación R1",
+      "antes": "R1 = redesarrollo. Plan parcial obligatorio para esa modalidad (mín. 20.000 m²).",
+      "propuesta": "R1 = densificación alta. Modalidades diferenciadas: predio/agrupación <3.000 m², plan manzana (desde 3.000 m²), plan parcial (mín. dos manzanas).",
+      "interpretacion": "Cambio general de denominación y vías de actuación; no asignar automáticamente a un predio la supresión de plan parcial.",
+      "ref2014": "Arts. 316, 319–320 · pp. 262–264",
+      "ref2026": "Arts. 370, 387 y 615 · pp. 368, 402–403 y 656–657"
+    },
+    {
+      "tema": "Renovación R2",
+      "antes": "R2 = reactivación; el cuadro del art. 319 no permitía plan parcial de renovación y admitía proyectos de renovación.",
+      "propuesta": "R2 = densificación media; permite plan parcial, plan manzana y actuación individual según supuestos.",
+      "interpretacion": "Cambian modalidades y posibilidades procedimentales, pero no se infieren beneficios concretos sin delimitar el ámbito.",
+      "ref2014": "Arts. 317, 319 y 321 · pp. 262–265",
+      "ref2026": "Arts. 370, 387 y 615 · pp. 368–369, 402–403 y 656–657"
+    },
+    {
+      "tema": "Consolidación",
+      "antes": "C1–C3. El art. 313 no permitía planes parciales de renovación en consolidación.",
+      "propuesta": "La propuesta admite planes parciales únicamente cuando sean delimitados a través de PUI; define nueva C4.",
+      "interpretacion": "Excepción condicionada, no habilitación automática de planes parciales en todo el tratamiento.",
+      "ref2014": "Arts. 308–313 · pp. 260–261",
+      "ref2026": "Arts. 370 y 379 · pp. 367–382"
+    },
+    {
+      "tema": "Desarrollo D1/D2",
+      "antes": "Desarrollo como tratamiento único; su régimen incluye suelos urbanos y de expansión y delimitaciones específicas de planes parciales.",
+      "propuesta": "D1/D2. Se distingue plan parcial obligatorio en expansión y en áreas delimitadas, de vías de urbanización sin plan parcial en determinados suelos urbanos.",
+      "interpretacion": "Cambio estructural en clasificación y reglas generales. Hay que comprobar situación predial y límites de los planes parciales.",
+      "ref2014": "Arts. 323–325 · pp. 265–267",
+      "ref2026": "Arts. 370, 381–383 y 615 · pp. 369, 383–384 y 656–657"
+    },
+    {
+      "tema": "Cargas e incentivos",
+      "antes": "El art. 320 define cargas y régimen de aprovechamiento para planes parciales de renovación; art. 321 regula proyectos sin plan parcial.",
+      "propuesta": "Arts. 371, 388 y 616–620 definen cargas, cesiones y acceso a ICA/ICP según tratamiento e instrumento.",
+      "interpretacion": "No son una exención tributaria del ICA (impuesto) ni una eliminación general de cesiones; cada régimen requiere análisis específico.",
+      "ref2014": "Arts. 320–322 · pp. 263–265",
+      "ref2026": "Arts. 371, 388, 616–620 · pp. 370, 403–405 y 657–664"
+    }
+  ],
+  "reglas": [
+    {
+      "id": "2014-conservacion",
+      "anio": "2014",
+      "codigos": [
+        "CON"
+      ],
+      "titulo": "Conservación",
+      "condicion": "En conservación no se permiten planes parciales de renovación urbana; las intervenciones se someten a las reglas de protección patrimonial.",
+      "articulos": "303, 304",
+      "pagina_documento": "258-259",
+      "tipo": "condición general",
+      "fuente": "Acuerdo 0373 de 2014",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2014-c1",
+      "anio": "2014",
+      "codigos": [
+        "C1"
+      ],
+      "titulo": "Consolidación urbanística (C1)",
+      "condicion": "No se admiten planes parciales de renovación urbana ni proyectos de renovación urbana según el cuadro de condiciones del tratamiento.",
+      "articulos": "313",
+      "pagina_documento": "261",
+      "tipo": "condición general",
+      "fuente": "Acuerdo 0373 de 2014",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2014-c2",
+      "anio": "2014",
+      "codigos": [
+        "C2"
+      ],
+      "titulo": "Consolidación básica (C2)",
+      "condicion": "No se admiten planes parciales de renovación; se permiten proyectos de renovación urbana con área mínima de dos manzanas y obligaciones específicas.",
+      "articulos": "313, 321",
+      "pagina_documento": "261, 264-265",
+      "tipo": "condición general",
+      "fuente": "Acuerdo 0373 de 2014",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2014-c3",
+      "anio": "2014",
+      "codigos": [
+        "C3"
+      ],
+      "titulo": "Consolidación moderada (C3)",
+      "condicion": "No se admiten planes parciales de renovación; se permiten determinados proyectos de renovación urbana, con restricciones y obligaciones.",
+      "articulos": "313, 321",
+      "pagina_documento": "261, 264-265",
+      "tipo": "condición general",
+      "fuente": "Acuerdo 0373 de 2014",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2014-r1",
+      "anio": "2014",
+      "codigos": [
+        "R1"
+      ],
+      "titulo": "Renovación por redesarrollo (R1)",
+      "condicion": "La modalidad R1 se desarrollaba mediante plan parcial obligatorio; área mínima establecida de 20.000 m².",
+      "articulos": "316, 319, 320",
+      "pagina_documento": "262-264",
+      "tipo": "requisito obligatorio",
+      "fuente": "Acuerdo 0373 de 2014",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2014-r2",
+      "anio": "2014",
+      "codigos": [
+        "R2"
+      ],
+      "titulo": "Renovación por reactivación (R2)",
+      "condicion": "El cuadro de tratamientos no permitía planes parciales de renovación en R2; sí proyectos de renovación urbana con área mínima de dos manzanas.",
+      "articulos": "317, 319, 321",
+      "pagina_documento": "262, 264-265",
+      "tipo": "modalidad permitida",
+      "fuente": "Acuerdo 0373 de 2014",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2014-r3",
+      "anio": "2014",
+      "codigos": [
+        "R3"
+      ],
+      "titulo": "Renovación por cambio de patrón (R3)",
+      "condicion": "Se permitían planes parciales de renovación (área mínima de 20.000 m²) y proyectos de renovación (mínimo dos manzanas), sujetos a las condiciones del tratamiento.",
+      "articulos": "318, 319, 320, 321",
+      "pagina_documento": "262-265",
+      "tipo": "condición general",
+      "fuente": "Acuerdo 0373 de 2014",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2014-de",
+      "anio": "2014",
+      "codigos": [
+        "DE"
+      ],
+      "titulo": "Desarrollo urbano o de expansión",
+      "condicion": "Tratamiento para predios urbanizables no urbanizados. Se establece predelimitación de planes parciales en el corredor Cali-Jamundí; la formulación de planes parciales puede ser voluntaria cuando no sea obligatoria.",
+      "articulos": "323, 324, 325",
+      "pagina_documento": "265-267",
+      "tipo": "condición general",
+      "fuente": "Acuerdo 0373 de 2014",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-c",
+      "anio": "2026",
+      "codigos": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "titulo": "Consolidación y planes parciales",
+      "condicion": "Solo se permiten planes parciales en consolidación cuando sean delimitados mediante Proyectos Urbanísticos Integrales (PUI); existen reglas específicas para Corredor Verde y planes manzana.",
+      "articulos": "379",
+      "pagina_documento": "381-382",
+      "tipo": "excepción condicionada",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-mi",
+      "anio": "2026",
+      "codigos": [
+        "MI"
+      ],
+      "titulo": "Mejoramiento integral",
+      "condicion": "Se podrán delimitar Planes de Gestión del Hábitat (PGHAB) para articular intervenciones públicas; no supone por sí solo obligación de plan parcial.",
+      "articulos": "380",
+      "pagina_documento": "382",
+      "tipo": "condición general",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-d1",
+      "anio": "2026",
+      "codigos": [
+        "D1"
+      ],
+      "titulo": "Desarrollo D1",
+      "condicion": "Plan parcial obligatorio para suelo de expansión y para áreas delimitadas como plan parcial en suelo urbano. En suelo urbano sin delimitación de plan parcial, el artículo 382.E contempla proyecto urbanístico general o licencia, con cargas aplicables.",
+      "articulos": "381, 382, 615",
+      "pagina_documento": "383-384, 656",
+      "tipo": "requisito condicionado al ámbito",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-d2",
+      "anio": "2026",
+      "codigos": [
+        "D2"
+      ],
+      "titulo": "Desarrollo D2",
+      "condicion": "Por regla general puede urbanizarse mediante proyecto urbanístico general o licencia. Exige plan parcial si se requiere gestión asociada por unidades de actuación urbanística, o si la urbanización supera diez hectáreas netas urbanizables y comprende dos o más predios.",
+      "articulos": "383, 615",
+      "pagina_documento": "384, 656-657",
+      "tipo": "requisito condicionado",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-r1",
+      "anio": "2026",
+      "codigos": [
+        "R1"
+      ],
+      "titulo": "Renovación con densificación alta (R1)",
+      "condicion": "Se admiten: actuación en predios/agrupaciones inferiores a 3.000 m²; plan manzana desde 3.000 m² hasta una manzana; plan parcial para un ámbito mínimo de dos manzanas. Además aplican excepciones y delimitaciones especiales.",
+      "articulos": "370, 387, 615, 619",
+      "pagina_documento": "368-369, 402-403, 656-657, 662",
+      "tipo": "tres vías de actuación",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-r2",
+      "anio": "2026",
+      "codigos": [
+        "R2"
+      ],
+      "titulo": "Renovación con densificación media (R2)",
+      "condicion": "Se admiten actuaciones individuales, plan manzana o plan parcial con distintos tamaños y condiciones; el plan parcial puede desarrollarse en R2, pero no se presume obligatorio para cualquier predio.",
+      "articulos": "370, 387, 615, 619",
+      "pagina_documento": "368-369, 402-403, 656-657, 662",
+      "tipo": "tres vías de actuación",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-pp",
+      "anio": "2026",
+      "codigos": [
+        "D1",
+        "D2",
+        "R1",
+        "R2"
+      ],
+      "titulo": "Facultades del plan parcial e índices",
+      "condicion": "Los planes parciales de renovación pueden acceder a Índice de Construcción Adicional (ICA) sin aportes urbanísticos adicionales por mayor edificabilidad según el artículo 616; el Índice Progresivo (ICP) tiene contraprestaciones de espacio público. No se elimina por ello la totalidad de las cargas.",
+      "articulos": "616",
+      "pagina_documento": "657-659",
+      "tipo": "incentivo y cargas",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-carga",
+      "anio": "2026",
+      "codigos": [
+        "D1",
+        "D2",
+        "R1",
+        "R2"
+      ],
+      "titulo": "Cargas urbanísticas generales y locales",
+      "condicion": "La propuesta diferencia cargas generales y locales para reparto de cargas y beneficios: infraestructura, vías, redes, suelo ambiental, espacio público y otras cesiones, según ámbito e instrumento.",
+      "articulos": "371, 372",
+      "pagina_documento": "370-375",
+      "tipo": "obligaciones",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-ren-cargas",
+      "anio": "2026",
+      "codigos": [
+        "R1",
+        "R2"
+      ],
+      "titulo": "Cesiones en renovación urbana",
+      "condicion": "La propuesta establece mínimos diferenciados de cesión de espacio público (R1: 10%; R2: 12% del área neta urbanizable) y áreas privadas de vocación pública (R1: 6%; R2: 4%), más otras cargas aplicables. Son reglas generales y no deben compararse sin identificar instrumento, área base y excepciones.",
+      "articulos": "388",
+      "pagina_documento": "403-405",
+      "tipo": "obligaciones",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-planmanzana",
+      "anio": "2026",
+      "codigos": [
+        "R1",
+        "R2"
+      ],
+      "titulo": "Plan manzana e índices",
+      "condicion": "El plan manzana aplica en renovación R1/R2 y otros ámbitos delimitados; para agrupaciones desde 3.000 m² hasta una manzana, puede acceder a ICA y/o ICP según condiciones y cesiones del artículo 620.",
+      "articulos": "619, 620",
+      "pagina_documento": "662-664",
+      "tipo": "instrumento e incentivo",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-sustitucion",
+      "anio": "2026",
+      "codigos": [
+        "D1",
+        "D2",
+        "R1",
+        "R2"
+      ],
+      "titulo": "Sustitución de cargas en planes parciales",
+      "condicion": "Se propone mecanismo opcional para sustituir parcialmente ciertas cesiones por infraestructura de equipamientos multifuncionales, sujeto a requisitos. No significa exención general de las cargas.",
+      "articulos": "617",
+      "pagina_documento": "659-661",
+      "tipo": "sustitución condicionada",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    }
+  ],
+  "glosario": {
+    "ICA_indice": "Índice de Construcción Adicional (instrumento de edificabilidad citado en el POT 2026, arts. 616 y 620).",
+    "ICA_impuesto": "Impuesto de Industria y Comercio (tributo distrital): una exención de este impuesto no se infiere de las referencias al ICA de edificabilidad.",
+    "ICP": "Índice de Construcción Progresivo; puede estar sujeto a cesiones adicionales de espacio público (arts. 616 y 620).",
+    "PUI": "Proyecto Urbanístico Integral. No presupone automáticamente la delimitación de un plan parcial.",
+    "PUG": "Proyecto Urbanístico General, mecanismo mencionado en las reglas de desarrollo D1/D2 según los supuestos normativos."
+  }
+}

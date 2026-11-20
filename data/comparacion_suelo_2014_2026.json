@@ -1,0 +1,54 @@
+{
+  "metodologia": "Áreas calculadas en un CRS proyectado común MAGNA-SIRGAS 2018 Origen Nacional. GDB 2014 disponible incluye ajustes posteriores a 2014. GDB 2026 es propuesta.",
+  "periodo_2014": "POT 2014 vigente, geodatabase con actualizaciones",
+  "periodo_2026": "Propuesta POT 2026, no aprobada",
+  "periodo": {
+    "2014": {
+      "urbano_ha": 11942.9,
+      "expansion_ha": 1636.6,
+      "rural_derivado_ha": 42691.3,
+      "municipal_ha": 56270.8
+    },
+    "2026": {
+      "urbano_ha": 12717.8,
+      "expansion_ha": 2259.6,
+      "rural_ha": 41416.9,
+      "clasificado_total_ha": 56394.3
+    }
+  },
+  "cambios": {
+    "urbano_delta_ha": 774.9,
+    "expansion_delta_ha": 622.9,
+    "perimetro_por_categoria": [
+      {
+        "nombre": "Perímetro urbano que se conserva",
+        "poligonos": 1,
+        "hectareas": 11862.7
+      },
+      {
+        "nombre": "Zona que se adiciona al perímetro urbano",
+        "poligonos": 49,
+        "hectareas": 855.0
+      },
+      {
+        "nombre": "Zona que se excluye del perímetro urbano",
+        "poligonos": 46,
+        "hectareas": 80.1
+      }
+    ]
+  },
+  "advertencias": [
+    "No interpretar automáticamente un cambio cartográfico como cambio normativo aprobado.",
+    "Diferencias entre delimitaciones municipales 2014 y 2026: las variaciones de rural no son directamente homologables.",
+    "Las áreas provienen de las GDB originales; la web presenta geometrías simplificadas para visualizar.",
+    "Un incremento neto no representa todas las incorporaciones o exclusiones: deben consultarse las dos direcciones del cambio."
+  ],
+  "renovacion_cartografica": {
+    "2014_ha": 1993.1,
+    "2026_ha": 3951.5,
+    "nuevamente_clasificada_2026_ha": 2032.0,
+    "fuera_de_renovacion_2026_ha": 73.5,
+    "variacion_neta_ha": 1958.5,
+    "precaucion": "Se comparan las categorías nominales de renovación 2014 R1/R2/R3 contra 2026 R1/R2; no son necesariamente equivalentes en obligaciones, aprovechamientos o derechos de construcción."
+  }
+}

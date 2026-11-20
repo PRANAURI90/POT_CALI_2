@@ -1,0 +1,68 @@
+{
+  "fuente": "GDB propuesta POT 2026; superficies provenientes del atributo csarea para clasificación; geometrías simplificadas para tratamientos",
+  "estado": "Indicadores descriptivos 2026; NO representan variación comprobada 2014–2026",
+  "clasificacion2026": [
+    {
+      "nombre": "Perímetro urbano",
+      "hectareas": 12717.8
+    },
+    {
+      "nombre": "Expansión 1",
+      "hectareas": 1195.3
+    },
+    {
+      "nombre": "Expansión 2",
+      "hectareas": 417.7
+    },
+    {
+      "nombre": "Expansión 4",
+      "hectareas": 52.5
+    },
+    {
+      "nombre": "Expansión 5",
+      "hectareas": 183.4
+    },
+    {
+      "nombre": "Expansión 3",
+      "hectareas": 410.7
+    },
+    {
+      "nombre": "Suelo rural",
+      "hectareas": 41416.9
+    }
+  ],
+  "urbano2026_ha": 12717.8,
+  "expansion2026_ha": 2259.6,
+  "rural2026_ha": 41416.9,
+  "renovacion2026_ha_aprox": 3944.3,
+  "renovacion2026_advertencia": "Aproximación sobre geometría simplificada de la capa de tratamientos; no constituye cálculo de incremento respecto al POT 2014.",
+  "amenaza2026_num_poligonos": 229,
+  "amenaza2026_estudios": [
+    {
+      "nombre": "Estudios previos detallados MM - Susceptibilidad",
+      "poligonos": 97
+    },
+    {
+      "nombre": "Estudios previos detallados MM",
+      "poligonos": 52
+    },
+    {
+      "nombre": "Estudios previos detallados Inundación",
+      "poligonos": 19
+    },
+    {
+      "nombre": "Estudios detallados AVT",
+      "poligonos": 18
+    },
+    {
+      "nombre": "Estudios básicos Inundación",
+      "poligonos": 18
+    },
+    {
+      "nombre": "Estudios previos básicos Inundación",
+      "poligonos": 7
+    }
+  ],
+  "planes_parciales2026_num_poligonos": 42,
+  "barrios_num": 342
+}

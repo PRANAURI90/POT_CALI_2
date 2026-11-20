@@ -1,0 +1,253 @@
+{
+  "metodologia": "Estimaciones exploratorias sobre GeoJSON simplificados; NO son cifras oficiales ni sustituyen las GDB originales. Comprobar solapamientos antes de publicar como resultados.",
+  "tratamientos2014": [
+    {
+      "categoria": "Consolidación",
+      "ha": 8873.2
+    },
+    {
+      "categoria": "Renovación",
+      "ha": 1993.0
+    },
+    {
+      "categoria": "Desarrollo",
+      "ha": 1658.8
+    },
+    {
+      "categoria": "ND",
+      "ha": 732.0
+    },
+    {
+      "categoria": "INS",
+      "ha": 210.5
+    },
+    {
+      "categoria": "Conservación",
+      "ha": 108.0
+    },
+    {
+      "categoria": "INS - SS",
+      "ha": 50.1
+    },
+    {
+      "categoria": "PE",
+      "ha": 10.3
+    }
+  ],
+  "tratamientos2026": [
+    {
+      "categoria": "Consolidación",
+      "ha": 6896.9
+    },
+    {
+      "categoria": "Renovación",
+      "ha": 3951.8
+    },
+    {
+      "categoria": "Desarrollo",
+      "ha": 2903.5
+    },
+    {
+      "categoria": "Mejoramiento integral",
+      "ha": 682.8
+    },
+    {
+      "categoria": "Conservación",
+      "ha": 287.4
+    },
+    {
+      "categoria": "No aplica",
+      "ha": 254.9
+    }
+  ],
+  "actividades2026": [
+    {
+      "categoria": "Área de Proximidad",
+      "ha": 5683.9
+    },
+    {
+      "categoria": "Área Multifuncional",
+      "ha": 3483.0
+    },
+    {
+      "categoria": "Área de Integración",
+      "ha": 3102.2
+    },
+    {
+      "categoria": "Área de Dinamización Económica",
+      "ha": 1606.9
+    },
+    {
+      "categoria": "Área de Manejo Especial",
+      "ha": 1022.2
+    },
+    {
+      "categoria": "PEMP Centro Histórico",
+      "ha": 52.9
+    },
+    {
+      "categoria": "PEMP Cañas Gordas",
+      "ha": 10.4
+    },
+    {
+      "categoria": "PEMP Plaza de Toros",
+      "ha": 8.2
+    },
+    {
+      "categoria": "PEMP Piedragrande",
+      "ha": 7.1
+    }
+  ],
+  "transiciones_tratamientos": [
+    {
+      "desde": "Consolidación",
+      "hacia": "Consolidación",
+      "ha": 6033.4
+    },
+    {
+      "desde": "Renovación",
+      "hacia": "Renovación",
+      "ha": 1919.7
+    },
+    {
+      "desde": "Consolidación",
+      "hacia": "Renovación",
+      "ha": 1899.5
+    },
+    {
+      "desde": "Desarrollo",
+      "hacia": "Desarrollo",
+      "ha": 1572.4
+    },
+    {
+      "desde": "Consolidación",
+      "hacia": "Mejoramiento integral",
+      "ha": 518.0
+    },
+    {
+      "desde": "ND",
+      "hacia": "Consolidación",
+      "ha": 498.4
+    },
+    {
+      "desde": "Consolidación",
+      "hacia": "Conservación",
+      "ha": 151.3
+    },
+    {
+      "desde": "INS",
+      "hacia": "Consolidación",
+      "ha": 148.3
+    },
+    {
+      "desde": "Consolidación",
+      "hacia": "Desarrollo",
+      "ha": 138.9
+    },
+    {
+      "desde": "ND",
+      "hacia": "Desarrollo",
+      "ha": 124.8
+    },
+    {
+      "desde": "Conservación",
+      "hacia": "Conservación",
+      "ha": 107.5
+    },
+    {
+      "desde": "ND",
+      "hacia": "Renovación",
+      "ha": 68.2
+    },
+    {
+      "desde": "INS",
+      "hacia": "Renovación",
+      "ha": 62.2
+    },
+    {
+      "desde": "Renovación",
+      "hacia": "Mejoramiento integral",
+      "ha": 57.9
+    },
+    {
+      "desde": "Consolidación",
+      "hacia": "No aplica",
+      "ha": 54.5
+    },
+    {
+      "desde": "INS - SS",
+      "hacia": "Consolidación",
+      "ha": 47.0
+    },
+    {
+      "desde": "Desarrollo",
+      "hacia": "Consolidación",
+      "ha": 42.4
+    },
+    {
+      "desde": "Renovación",
+      "hacia": "Consolidación",
+      "ha": 15.4
+    },
+    {
+      "desde": "ND",
+      "hacia": "Conservación",
+      "ha": 13.1
+    },
+    {
+      "desde": "PE",
+      "hacia": "Conservación",
+      "ha": 8.2
+    },
+    {
+      "desde": "Desarrollo",
+      "hacia": "Mejoramiento integral",
+      "ha": 7.2
+    },
+    {
+      "desde": "Desarrollo",
+      "hacia": "Conservación",
+      "ha": 7.1
+    },
+    {
+      "desde": "INS - SS",
+      "hacia": "Renovación",
+      "ha": 3.1
+    },
+    {
+      "desde": "ND",
+      "hacia": "Mejoramiento integral",
+      "ha": 2.6
+    },
+    {
+      "desde": "PE",
+      "hacia": "Consolidación",
+      "ha": 2.1
+    },
+    {
+      "desde": "Conservación",
+      "hacia": "Renovación",
+      "ha": 0.3
+    },
+    {
+      "desde": "Conservación",
+      "hacia": "Consolidación",
+      "ha": 0.2
+    },
+    {
+      "desde": "Renovación",
+      "hacia": "Conservación",
+      "ha": 0.1
+    },
+    {
+      "desde": "INS",
+      "hacia": "Conservación",
+      "ha": 0.1
+    },
+    {
+      "desde": "INS - SS",
+      "hacia": "No aplica",
+      "ha": 0.0
+    }
+  ]
+}
