@@ -330,33 +330,82 @@ const RISK_AREA_STATS={
  asentamientos:{title:'Asentamientos y condiciones de intervención · propuesta 2026',total:1155.782,rows:[['Condicionado a estudio de detalle',313.831],['No aplica',273.214],['Reubicación',171.872],['Regularización condicionada',126.298],['Condicionado a régimen normativo de PNN',123.112],['Condicionado a diseño y ejecución de obras de mitigación',69.177],['Regularización integral',63.497],['Hábitat y Vivienda Diferencial',10.859],['Riesgo no mitigable',4.319]],note:'Las categorías describen polígonos de asentamientos, no cifras de hogares o decisiones individuales.'},
  inundacion_fluvial2014:{title:'Inundación fluvial · POT 2014',total:7078.003,rows:[['Área prioritaria para estudio',3011.716],['Amenaza alta mitigable',2241.587],['Amenaza baja mitigable',919.370],['Amenaza media mitigable',539.107],['Amenaza no mitigable por inundación',319.262],['Avenidas torrenciales (Tr50)',48.114]],note:'Las categorías del POT 2014 no son directamente comparables con las categorías de 2026.'}
 };
-function renderRiskDistrictDashboard(){
- const key=state.riskDistrictTopic||'condicion_riesgo',d=RISK_AREA_STATS[key]||RISK_AREA_STATS.condicion_riesgo;
- const max=Math.max(1,...d.rows.map(x=>x[1]));
- const options=Object.keys(RISK_AREA_STATS).map(x=>'<button type="button" class="'+(key===x?'selected':'')+'" data-risk-district="'+x+'">'+htmlEscape({amenaza:'Amenazas 2026',condicion_amenaza:'Condición de amenaza',condicion_riesgo:'Condición de riesgo',asentamientos:'Hábitat y asentamientos',inundacion_fluvial2014:'Inundación 2014'}[x])+'</button>').join('');
- const bars=d.rows.map((r,i)=>'<div class="risk-bar-row"><div class="risk-bar-label"><span>'+htmlEscape(r[0])+'</span><b>'+fmt(r[1],1)+' ha</b></div><div class="risk-bar-track"><i style="width:'+Math.max(.2,100*r[1]/max)+'%;background:'+(['#397b73','#629da0','#c58f67','#6e91b2','#9a8bb9'][i%5])+'"></i></div></div>').join('');
- return '<div class="risk-dash"><div class="risk-dash-header"><span class="eyebrow">EXTENSIÓN TERRITORIAL</span><h3>¿Cuántas hectáreas están cartografiadas?</h3><p>Selecciona un conjunto de información para comparar superficies. Las barras indican <b>hectáreas</b>, no número de polígonos.</p></div><div class="topic-tabs">'+options+'</div><div class="risk-kpis"><div><small>Superficie única en esta capa</small><strong>'+fmt(d.total,1)+' ha</strong></div><div><small>Categorías cartografiadas</small><strong>'+d.rows.length+'</strong></div></div><h4>'+htmlEscape(d.title)+'</h4><div class="risk-district-bars">'+bars+'</div><p class="caption">'+htmlEscape(d.note)+'</p><p class="caption">Áreas calculadas sobre GeoJSON mediante proyección EPSG:9377 y unión de geometrías por categoría. Los polígonos pueden superponerse: <b>no sumar las barras para obtener la superficie única</b>. Las áreas 2014 y 2026 no son una comparación normativa homologada.</p></div>';
-}
-let riskMiniMap=null,riskMiniSeq=0;
-async function renderRiskMiniMap(){
- const host=DOM('risk-mini-map');if(!host||!window.L)return;
- if(riskMiniMap){riskMiniMap.remove();riskMiniMap=null;}
- const map=L.map(host,{preferCanvas:true,zoomControl:true,scrollWheelZoom:false}).setView([3.43,-76.54],11);
- riskMiniMap=map;
- L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
- const selected=state.riskMapTopic||'condicion_riesgo',key=['amenaza','condicion_riesgo','condicion_amenaza','asentamientos','inundacion_fluvial2014'].includes(selected)?selected:'condicion_riesgo';
- const status=DOM('risk-map-status');if(status)status.textContent='Cargando cartografía…';
- const seq=++riskMiniSeq;
- try{
-  const geo=await getGeo(key);if(seq!==riskMiniSeq||riskMiniMap!==map)return;
-  const fill={'amenaza':'#a76d63','condicion_riesgo':'#af6e54','condicion_amenaza':'#cb9f52','asentamientos':'#659c87','inundacion_fluvial2014':'#659cbe'}[key];
-  const layer=L.geoJSON(geo,{renderer:L.canvas({padding:.15}),style:{color:fill,weight:.6,opacity:.7,fillColor:fill,fillOpacity:.45},onEachFeature:(feature,l)=>l.bindTooltip(htmlEscape(getLabelForFeature(key,feature.properties||{})),{sticky:true})}).addTo(map);
-  const b=layer.getBounds();if(b.isValid())map.fitBounds(b.pad(.05),{maxZoom:12});
-  if(status)status.textContent=fmt(geo.features.length)+' polígonos cartográficos · Proyección visual orientativa';
-  setTimeout(()=>map.invalidateSize(),70);
- }catch(e){if(status)status.textContent='No se pudo cargar la capa cartográfica seleccionada.';console.error(e)}
-}
 
+const RISK_MAP_PERIODS={
+ '2014':[{key:'inundacion_fluvial2014',title:'Inundación fluvial 2014'},{key:'efectos_sismicos2014',title:'Efectos sísmicos 2014'}],
+ '2026':[{key:'amenaza',title:'Zonificación de amenazas 2026'},{key:'condicion_amenaza',title:'Condición de amenaza 2026'},{key:'condicion_riesgo',title:'Condición de riesgo 2026'},{key:'asentamientos',title:'Asentamientos e intervenciones 2026'}]
+};
+const RISK_PERIOD_DEFAULT={'2014':'inundacion_fluvial2014','2026':'amenaza'};
+function riskMapKey(year){return state['riskPeriod'+year]||RISK_PERIOD_DEFAULT[year]}
+function riskCategories(key){
+ return (state.leyendas?.[key]?.categorias||[]).map((x,i)=>({cat:String(x.cat),label:x.label||catLabel(key,x.cat),color:x.color||PALETTE[i%PALETTE.length]}));
+}
+function riskCatSelection(year,key){
+ const cats=riskCategories(key);
+ const saved=state['riskCat'+year];
+ if(saved&&cats.some(x=>x.cat===saved))return saved;
+ // De entrada se representa una sola categoria para que sea reconocible.
+ const initial=key==='amenaza'?(cats.find(x=>x.cat==='1|2')||cats[0]):cats[0];
+ return initial?.cat||'';
+}
+function renderRiskBarPanel(year){
+ const key=riskMapKey(year),d=RISK_AREA_STATS[key];
+ if(!d)return '<div class="risk-bar-panel"><h4>Distribución por superficie</h4><p class="caption">Consulta las delimitaciones de esta capa en el mapa. El proyecto no incluye una tabla distrital de hectáreas desagregadas para esta selección.</p></div>';
+ const max=Math.max(1,...d.rows.map(x=>x[1]));
+ const cats=riskCategories(key),active=riskCatSelection(year,key);
+ const clean=x=>String(x||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\\s*\\(codigo cartografico\\)/g,'').replace(/\\s*\\([^)]*\\)/g,'').trim();
+ const rows=d.rows.map((r,i)=>{
+  const matched=cats.find(x=>clean(x.label)===clean(r[0])||clean(x.label).startsWith(clean(r[0])));
+  const selected=matched?.cat===active;
+  const color=matched?.color||['#397b73','#629da0','#c58f67','#6e91b2','#9a8bb9'][i%5];
+  return '<button type="button" class="risk-bar-row risk-bar-button '+(selected?'selected':'')+'" '+(matched?'data-risk-pick="'+year+'" data-risk-cat-value="'+htmlEscape(matched.cat)+'"':'disabled')+'><div class="risk-bar-label"><span>'+htmlEscape(r[0])+'</span><b>'+fmt(r[1],1)+' ha</b></div><div class="risk-bar-track"><i style="width:'+Math.max(.2,100*r[1]/max)+'%;background:'+color+'"></i></div></button>';
+ }).join('');
+ return '<div class="risk-bar-panel"><div class="risk-kpis"><div><small>Superficie única de la capa</small><strong>'+fmt(d.total,1)+' ha</strong></div></div><h4>Extensión por categoría</h4><div class="risk-district-bars">'+rows+'</div><p class="caption">'+htmlEscape(d.note)+'</p><p class="caption">Superficies en hectáreas calculadas sobre la cartografía. Los solapamientos pueden hacer que la suma de barras supere la superficie única.</p></div>';
+}
+function renderRiskPeriodPanel(year){
+ const key=riskMapKey(year),cats=riskCategories(key),current=riskCatSelection(year,key);
+ const selectLayers=RISK_MAP_PERIODS[year].map(x=>'<option value="'+x.key+'" '+(key===x.key?'selected':'')+'>'+htmlEscape(x.title)+'</option>').join('');
+ const selectCategories=cats.map(x=>'<option value="'+htmlEscape(x.cat)+'" '+(current===x.cat?'selected':'')+'>'+htmlEscape(x.label)+'</option>').join('');
+ return '<article class="risk-period-panel"><div class="risk-period-heading"><span class="eyebrow">'+(year==='2014'?'POT VIGENTE':'PROPUESTA POT')+'</span><h3>'+year+'</h3></div><label class="risk-control-label">Tema cartográfico<select class="risk-period-select" data-risk-period="'+year+'">'+selectLayers+'</select></label><label class="risk-control-label">Categoría a mostrar<select class="risk-category-select" data-risk-category="'+year+'">'+selectCategories+'</select></label><div class="risk-legend-selection"><i style="background:'+(cats.find(x=>x.cat===current)?.color||'#9f8271')+'"></i><span>'+htmlEscape(cats.find(x=>x.cat===current)?.label||'Cargando categorías…')+'</span></div><div class="risk-period-map" id="risk-map-'+year+'" role="img" aria-label="Vista cartográfica fija del POT '+year+'"></div><p class="caption" id="risk-map-status-'+year+'">Cargando superficie cartográfica…</p>'+renderRiskBarPanel(year)+'</article>';
+}
+function renderRiskDistrictDashboard(){
+ return '<div class="risk-dash"><div class="risk-dash-header"><span class="eyebrow">DOS PERIODOS · CARTOGRAFÍAS DIFERENCIADAS</span><h3>¿Dónde se localizan las categorías y cuántas hectáreas ocupan?</h3><p>Consulta los años por separado. Elige un fenómeno y una categoría: cada mapa muestra únicamente su delimitación, y las barras indican la superficie de sus categorías.</p></div><div class="risk-period-grid">'+renderRiskPeriodPanel('2014')+renderRiskPeriodPanel('2026')+'</div><p class="caption">Las delimitaciones 2014 y 2026 responden a metodologías y clasificaciones diferentes. No se deben interpretar como una comparación directa de hectáreas que aumentaron o disminuyeron. Las categorías 0–3 de la propuesta son códigos cartográficos, no una clasificación universal alta/media/baja.</p></div>';
+}
+const riskPanelMaps={'2014':null,'2026':null},riskPanelSeq={'2014':0,'2026':0};
+function destroyRiskPanelMaps(){
+ for(const year of ['2014','2026']){riskPanelSeq[year]++;if(riskPanelMaps[year]){riskPanelMaps[year].remove();riskPanelMaps[year]=null;}}
+}
+async function renderRiskPanelMap(year){
+ const host=DOM('risk-map-'+year);if(!host||!window.L)return;
+ if(riskPanelMaps[year]){riskPanelMaps[year].remove();riskPanelMaps[year]=null;}
+ const key=riskMapKey(year),category=riskCatSelection(year,key),status=DOM('risk-map-status-'+year),seq=++riskPanelSeq[year];
+ const map=L.map(host,{preferCanvas:true,zoomControl:false,scrollWheelZoom:false,doubleClickZoom:false,dragging:false,keyboard:false,touchZoom:false,boxZoom:false,attributionControl:true}).setView([3.43,-76.54],10);
+ riskPanelMaps[year]=map;
+ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+ if(status)status.textContent='Cargando categoría seleccionada…';
+ try{
+  const data=await getGeo(key);if(seq!==riskPanelSeq[year]||riskPanelMaps[year]!==map)return;
+  const features=data.features.filter(f=>String(groupCat(key,f.properties||{}))===category);
+  const color=riskCategories(key).find(x=>x.cat===category)?.color||'#bb7162';
+  const layer=L.geoJSON({type:'FeatureCollection',features},{renderer:L.canvas({padding:.12}),style:{color,weight:1,opacity:.9,fillColor:color,fillOpacity:.69},interactive:false}).addTo(map);
+  // Escala territorial común aproximada para comparar localizaciones sin acercamientos automáticos.
+  map.setView([3.43,-76.54],10,{animate:false});
+  if(status)status.textContent=fmt(features.length)+' polígonos de la categoría seleccionada · Vista cartográfica fija';
+  setTimeout(()=>{if(riskPanelMaps[year]===map)map.invalidateSize()},50);
+ }catch(e){if(status)status.textContent='No fue posible cargar esta categoría.';console.error(e)}
+}
+function bindRiskPeriodControls(root){
+ root.querySelectorAll('[data-risk-period]').forEach(sel=>sel.addEventListener('change',()=>{
+  const year=sel.dataset.riskPeriod;state['riskPeriod'+year]=sel.value;state['riskCat'+year]=null;renderRiesgo();
+ }));
+ root.querySelectorAll('[data-risk-category]').forEach(sel=>sel.addEventListener('change',()=>{
+  state['riskCat'+sel.dataset.riskCategory]=sel.value;renderRiesgo();
+ }));
+ root.querySelectorAll('[data-risk-pick]').forEach(btn=>btn.addEventListener('click',()=>{
+  state['riskCat'+btn.dataset.riskPick]=btn.dataset.riskCatValue;renderRiesgo();
+ }));
+ if(state.page==='riesgo'){renderRiskPanelMap('2014');renderRiskPanelMap('2026');}
+}
 function renderRiesgo(){
  const root=DOM('riesgo-content');if(!root)return;
  const actual=state.riskTopic||'amenaza';const chosen=RISK_TOPICS.find(x=>x.key===actual)||RISK_TOPICS[0];
@@ -375,16 +424,14 @@ function renderRiesgo(){
  const dataRows=items.map(x=>{const pct=Number(x.porcentaje_barrio)||0;return '<div class="v7-row"><div class="v7-row-label"><b>'+htmlEscape(x.nombre)+'</b><span>'+fmt(x.hectareas,2)+' ha · '+fmt(pct,2)+' % del barrio</span></div><div class="v7-bar-bg"><i style="width:'+Math.max(0,Math.min(100,pct))+'%;background:#7e9e91"></i></div></div>'}).join('');
  const local=selected?'<div class="surface-card"><span class="eyebrow">CONSULTA TERRITORIAL</span><h3>'+htmlEscape(chosen.label)+' en '+htmlEscape(selected.properties.barrio)+'</h3><p>'+htmlEscape(chosen.sub)+'</p>'+(summaryAvailable?(items.length?'<div class="v7-bars">'+dataRows+'</div><p class="caption">Cada porcentaje se refiere a la superficie del barrio que intersecta esa categoría. Las categorías pueden superponerse y no tienen por qué sumar 100 %.</p>':'<p>No se registra intersección en la cartografía cruzada para este barrio. Esto no significa ausencia de amenaza ni restricciones.</p>'):'<p>Consulta esta capa directamente en el mapa territorial. La ficha no presenta superficies porque no se dispone de un cruce por barrio verificado para esta temática.</p>')+'</div>':'<div class="surface-card"><h3>Selecciona un barrio</h3><p>Busca el barrio en la barra superior. Aquí aparecerán las categorías, hectáreas y porcentajes que se registran en su territorio.</p></div>';
  root.innerHTML='<div class="opening-card"><span class="eyebrow">PANORAMA DE CALI</span><h3>¿Qué es el riesgo de desastres?</h3><div class="v7-grid"><div><b>Amenaza</b><p>Un fenómeno que puede causar daños, como una inundación, un deslizamiento o un sismo.</p></div><div><b>Vulnerabilidad</b><p>Condiciones que hacen que las personas o las construcciones puedan sufrir mayores daños.</p></div><div><b>Riesgo</b><p>La posibilidad de sufrir daños cuando una amenaza afecta personas o bienes vulnerables.</p></div></div></div>'+
- '<section class="section-card risk-panorama"><span class="eyebrow">RIESGO Y HÁBITAT EN LA CIUDAD</span><h3>¿Cómo se distribuyen territorialmente las amenazas y las decisiones sobre el hábitat?</h3><p>El mapa permite localizar la cartografía y el gráfico muestra la magnitud de sus superficies. Son lecturas complementarias: el número de polígonos no expresa la extensión territorial.</p><div class="risk-map-tabs">'+['condicion_riesgo','condicion_amenaza','asentamientos','inundacion_fluvial2014','amenaza'].map(k=>'<button class="small-btn '+((state.riskMapTopic||'condicion_riesgo')===k?'selected':'')+'" data-risk-map-topic="'+k+'">'+htmlEscape({condicion_riesgo:'Condición de riesgo',condicion_amenaza:'Condición de amenaza',asentamientos:'Asentamientos',inundacion_fluvial2014:'Inundaciones 2014',amenaza:'Amenazas 2026'}[k])+'</button>').join('')+'</div><div id="risk-mini-map" class="risk-mini-map" aria-label="Mapa de riesgos del distrito"></div><p class="caption" id="risk-map-status">Cargando mapa territorial…</p>'+renderRiskDistrictDashboard()+'</section>'+
+ '<section class="section-card risk-panorama"><span class="eyebrow">RIESGO Y HÁBITAT EN CALI</span>'+renderRiskDistrictDashboard()+'</section>'+
  '<section class="section-card"><span class="eyebrow">LECTURA DE LA CARTOGRAFÍA</span><h3>¿Qué significan las categorías?</h3>'+classes+'<p class="caption">Las condiciones de amenaza y riesgo orientan estudios y medidas; no representan por sí solas una orden de demolición o reasentamiento.</p></section>'+
  '<section class="section-card"><span class="eyebrow">HÁBITAT Y VIVIENDA</span><h3>¿Qué alternativas de intervención identifica el POT?</h3><p>En los polígonos de asentamientos aparecen categorías de regularización, estudios detallados, obras de mitigación, reubicación y otras condiciones de manejo. Sus superficies se pueden comparar en el gráfico de arriba seleccionando «Hábitat y asentamientos».</p><button class="small-btn" data-risk-layer="asentamientos">Explorar asentamientos en el mapa territorial</button></section>'+
  (selected?selectedBadge():'')+
  '<section class="section-card"><span class="eyebrow">FICHA DEL BARRIO</span><h3>¿Qué se identifica en tu territorio?</h3><p>Selecciona una categoría para consultar su distribución en el barrio y verla en el mapa.</p><div class="topic-tabs">'+RISK_TOPICS.map(x=>'<button type="button" class="'+(x.key===chosen.key?'selected':'')+'" data-risk-topic="'+x.key+'">'+htmlEscape(x.label)+'</button>').join('')+'</div>'+local+'<div class="v7-note"><b>Cómo interpretar el mapa:</b> las categorías de diferentes años y fenómenos no siempre son equivalentes. Un área con condición de riesgo no es automáticamente suelo de riesgo no mitigable.</div><button class="btn btn-dark" data-risk-layer="'+chosen.key+'">Ver '+htmlEscape(chosen.label.toLowerCase())+' en el mapa territorial →</button></section>'+
  (chosen.key==='microzonas_aproximadas'?'<section class="section-card"><h3>Microzonificación sísmica de Cali</h3><p>Las microzonas permiten conocer diferencias en el comportamiento local del suelo durante un sismo. Esta delimitación se digitalizó aproximadamente a partir del mapa MZSC-RS2; no sirve para certificar la microzona de un predio.</p><img class="v7-micro-map" src="assets/microzonas_aproximadas_v7.png" alt="Mapa orientativo de microzonas sísmicas de Cali"><p class="caption">Mapa orientativo. Fuente normativa: Decreto 411.0.20.0158 de 2014 y mapa MZSC-RS2.</p></section>':'');
  root.querySelectorAll('[data-risk-topic]').forEach(b=>b.addEventListener('click',()=>{state.riskTopic=b.dataset.riskTopic;renderRiesgo()}));
- root.querySelectorAll('[data-risk-district]').forEach(b=>b.addEventListener('click',()=>{state.riskDistrictTopic=b.dataset.riskDistrict;const dashboard=root.querySelector('.risk-dash');if(dashboard)dashboard.outerHTML=renderRiskDistrictDashboard();const node=root.querySelector('.risk-dash');node?.querySelectorAll('[data-risk-district]').forEach(btn=>btn.addEventListener('click',()=>{state.riskDistrictTopic=btn.dataset.riskDistrict;renderRiesgo()}));}));
- root.querySelectorAll('[data-risk-map-topic]').forEach(b=>b.addEventListener('click',()=>{state.riskMapTopic=b.dataset.riskMapTopic;renderRiesgo()}));
- if(state.page==='riesgo')renderRiskMiniMap();
+ bindRiskPeriodControls(root);
 }
 async function loadData(){const keys=[['barrios','barrios.geojson'],['resumen','resumen_barrios.json'],['normas','normativa_gestion.json'],['indicadores','indicadores2026.json'],['sueloComparacion','comparacion_suelo_2014_2026.json'],['leyendas','leyendas.json'],['transformacion','indicadores_transformacion_exploratorios.json'],['transicionesV7','transiciones_actividad_v7.json'],['usosNormaV7','lectura_normativa_usos_v7.json'],['microzonasBarrio','microzonas_por_barrio_APROXIMADAS.json'],['tratamientosNormaV7','lectura_tratamientos_v7.json']];await Promise.all(keys.map(async ([key,file])=>{try{const r=await fetch('data/'+file);if(!r.ok)throw Error(file);const d=await r.json();if(key==='barrios'){state.barrios=d.features||[];DOM('search-info').textContent=`${state.barrios.length} barrios y sectores consultables`;}else state[key]=d;}catch(e){console.error('Error cargando',file,e);if(key==='indicadores')DOM('home-stats').innerHTML=`<p class="loading-msg">No se pudieron cargar los indicadores (${file}).</p>`;}}));if(state.leafReady)populateLegends();renderInicio();renderNorma();renderGestion();renderRiesgo();renderExtrasPortadaV7();renderNormaTopicExtras();renderExtrasGestionV7();renderExtrasRiesgoV7();if(state.leafReady)drawBarrios();}
 
