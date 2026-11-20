@@ -234,7 +234,7 @@ async function updateSwipeLayers(){
   DOM('map-right-clip').dataset.comparator='2026';
   state.mapRight.invalidateSize({pan:false});state.mapRight.setView(state.map.getCenter(),state.map.getZoom(),{animate:false});
   setSwipePercent(DOM('compare-slider').value);drawHighlights();
-  DOM('map-status').textContent=`Izquierda: 2014 (${CONFIG[pair[0]].label}) · Derecha: propuesta 2026 (${CONFIG[pair[1]].label})`;
+  DOM('map-status').textContent=`${CONFIG[pair[0]].label}: ${oldGeo.features.length} polígonos (2014) · ${CONFIG[pair[1]].label}: ${newGeo.features.length} polígonos (2026). Si no se ven, hay un problema de visualización, no de carga de datos.`;
  }catch(err){console.error('Comparador:',err);DOM('map-status').textContent='No fue posible cargar las dos capas. Comprueba la conexión.'}
 }
 function updateCompareStyles(){if(state.mapMode==='compare')updateSwipeLayers()}
