@@ -172,3 +172,15 @@
 .risk-period-panel .caption{font-size:10px;line-height:1.55}
 @media(max-width:850px){.risk-period-grid{grid-template-columns:1fr}.risk-period-map{height:370px}}
 @media(max-width:500px){.risk-period-panel{padding:10px}.risk-period-map{height:290px}}
+
+/* V9.4: diferenciación visual explícita entre los dos periodos */
+.risk-dash-header{padding:4px 0 10px}
+.risk-period-panel{border-top:5px solid #5a8ba3}
+.risk-period-panel.risk-period-2014{border-top-color:#667f98}
+.risk-period-panel.risk-period-2026{border-top-color:#317b5d}
+.risk-period-panel .risk-period-heading{align-items:center}
+.risk-period-panel.risk-period-2014 .risk-period-heading h3{color:#466985}
+.risk-period-panel.risk-period-2026 .risk-period-heading h3{color:#24664d}
+.risk-period-panel .risk-bar-panel{border-top:1px solid #e3ebe5;padding-top:10px}
+.risk-period-panel .risk-control-label{font-size:12px}
+.risk-period-panel .risk-bar-panel>h4{margin-bottom:8px}
