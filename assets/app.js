@@ -342,7 +342,7 @@ function renderEdificabilidadV7(){
  const info=barrioInfo(),cats=state.selected?entries(info,'edificabilidad_zonas2014'):[];
  const rows=cats.map(x=>{
   const raw=String(x.nombre??'').trim();
-  const value=/^\\d+(?:[.,]\\d+)?$/.test(raw)?Number(raw.replace(',','.')):null;
+  const value=/^\d+(?:[.,]\d+)?$/.test(raw)?Number(raw.replace(',','.')):null;
   return {...x,indice:value,denominacion:raw};
  });
  const numeric=rows.filter(x=>x.indice!==null&&x.indice>0);
