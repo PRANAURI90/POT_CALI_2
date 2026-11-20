@@ -132,7 +132,6 @@
 .risk-map-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .risk-map-tabs .small-btn.selected{background:#1d6354;color:white;border-color:#1d6354}
 .risk-mini-map{height:415px;min-height:340px;width:100%;position:relative;isolation:isolate;z-index:0;border:1px solid #d7e2da;border-radius:12px;overflow:hidden;background:#e9f1eb}
-.risk-mini-map .leaflet-pane{z-index:400}
 .risk-dash{margin-top:16px;border:1px solid #dce7de;border-radius:14px;background:#f9fbf8;padding:20px}
 .risk-dash-header h3{font:700 24px Georgia,serif;margin:6px 0}
 .risk-dash-header p{max-width:750px;color:#536d5d;line-height:1.6}
