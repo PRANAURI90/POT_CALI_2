@@ -184,3 +184,13 @@
 .risk-period-panel .risk-bar-panel{border-top:1px solid #e3ebe5;padding-top:10px}
 .risk-period-panel .risk-control-label{font-size:12px}
 .risk-period-panel .risk-bar-panel>h4{margin-bottom:8px}
+
+/* Mapa 02 · leyenda de amenazas por fenómeno y nivel · v10.2 */
+.hazard-legend-group{padding:9px 0 7px;border-bottom:1px solid #dce6df}
+.hazard-legend-group:first-child{padding-top:3px}
+.hazard-legend-heading{font-size:10.5px;font-weight:800;line-height:1.4;color:#304e42;padding:4px 0 6px;display:flex;align-items:baseline;justify-content:space-between;gap:5px}
+.hazard-legend-heading small{font-size:9px;color:#74877f;font-weight:600;white-space:nowrap}
+.hazard-legend-group .layer-filter-row{padding:3px 2px 3px 6px}
+.hazard-legend-group .layer-filter{font-size:10.5px}
+.hazard-legend-group .swatch{width:13px;height:13px;flex:0 0 13px}
+.hazard-legend-note{font-size:9.5px;line-height:1.5;color:#61746a;margin:10px 2px 3px}
