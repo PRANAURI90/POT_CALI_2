@@ -88,6 +88,7 @@ function contextScan(){
 function mapGo(layer){
  const dialog=$('#glosario-dialog');if(dialog?.open)dialog.close();
  pageTo('mapa');
+ if(typeof state!=='undefined'&&state.mapMode==='compare')modeMap('explore');
  const cb=document.querySelector('#layers [data-layer="'+layer+'"]');
  if(cb&&!cb.checked){cb.checked=true;cb.dispatchEvent(new Event('change',{bubbles:true}));}
  const label=layer.includes('2014')?'POT 2014':'Propuesta POT 2026';
