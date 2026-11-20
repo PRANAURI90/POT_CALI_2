@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#113a31">
+  <meta name="description" content="Observatorio ciudadano del POT de Cali. Consulta el territorio, compara cartografía 2014–2026 y estudia instrumentos, riesgos y beneficios con fuentes verificables.">
+  <title>LABORATORIO DE ESTILOS · Cali: ¿Qué cambia en mi territorio? · Observatorio ciudadano</title>
+  <link rel="stylesheet" href="assets/leaflet.css?v=7.2-estable.1">
+  <link rel="stylesheet" href="assets/styles.css?v=9.4-estable.1">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,750&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&family=Libre+Baskerville:wght@400;700&family=Manrope:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="lab-style">
+:root{--lab-heading:Georgia,serif;--lab-body:Inter,ui-sans-serif,system-ui,sans-serif}
+html[data-lab-font="georgia"]{--lab-heading:Georgia,serif;--lab-body:Inter,system-ui,sans-serif}
+html[data-lab-font="fraunces"]{--lab-heading:'Fraunces',Georgia,serif;--lab-body:'DM Sans',Arial,sans-serif}
+html[data-lab-font="baskerville"]{--lab-heading:'Libre Baskerville',Georgia,serif;--lab-body:'Source Sans 3',Arial,sans-serif}
+html[data-lab-font="manrope"]{--lab-heading:'Manrope',Arial,sans-serif;--lab-body:'Manrope',Arial,sans-serif}
+html[data-lab-font="plex"]{--lab-heading:'IBM Plex Serif',Georgia,serif;--lab-body:'IBM Plex Sans',Arial,sans-serif}
+html[data-lab-palette="bosque"]{--lab-deep:#163D32;--lab-forest:#225E4C;--lab-ink:#18382F;--lab-accent:#BC9951;--lab-page:#F6F8F4;--lab-soft:#EAF0E9;--lab-border:#D8E4D9;--lab-muted:#62786A;--lab-punch:#2E7F60;--lab-light:#FFFFFF}
+html[data-lab-palette="oceano"]{--lab-deep:#133448;--lab-forest:#1F5269;--lab-ink:#173E4B;--lab-accent:#E2A36E;--lab-page:#F4F7F8;--lab-soft:#E6F0F3;--lab-border:#D4E4E9;--lab-muted:#5A7280;--lab-punch:#2C8194;--lab-light:#FFFFFF}
+html[data-lab-palette="tierra"]{--lab-deep:#53392F;--lab-forest:#76523F;--lab-ink:#433B33;--lab-accent:#C28A51;--lab-page:#FBF8F2;--lab-soft:#F3ECE1;--lab-border:#E9DCCD;--lab-muted:#796C5F;--lab-punch:#AD6D4B;--lab-light:#FFFFFF}
+html[data-lab-palette="civico"]{--lab-deep:#2F294B;--lab-forest:#4A4170;--lab-ink:#302D45;--lab-accent:#D0A85A;--lab-page:#F8F7FB;--lab-soft:#EFEDF6;--lab-border:#E2DFED;--lab-muted:#726C85;--lab-punch:#6557A2;--lab-light:#FFFFFF}
+html[data-lab-palette="tinta"]{--lab-deep:#21282C;--lab-forest:#343F44;--lab-ink:#222C30;--lab-accent:#DBA461;--lab-page:#FAFBFB;--lab-soft:#EFF2F2;--lab-border:#DFE5E6;--lab-muted:#66747B;--lab-punch:#4C6872;--lab-light:#FFFFFF}
+html[data-lab-palette]{--ink:var(--lab-ink);--forest:var(--lab-forest);--deep:var(--lab-deep);--leaf:var(--lab-punch);--muted:var(--lab-muted);--faint:var(--lab-muted);--line:var(--lab-border);--mist:var(--lab-soft);--gold:var(--lab-accent)}
+html[data-lab-palette] body{background:var(--lab-page)}
+html[data-lab-palette] .site-head,html[data-lab-palette] .section-card,html[data-lab-palette] .surface-card,html[data-lab-palette] .opening-card,html[data-lab-palette] .stat-card,html[data-lab-palette] .chart-card,html[data-lab-palette] .risk-period-panel{background:var(--lab-light);border-color:var(--lab-border)}
+html[data-lab-palette] .territory-bar,html[data-lab-palette] .map-mode,html[data-lab-palette] .risk-dash,html[data-lab-palette] .tag-top,html[data-lab-palette] .topic-tabs{background:var(--lab-soft)}
+html[data-lab-palette] .legal-strip{background:color-mix(in srgb,var(--lab-accent) 15%,white);color:var(--lab-ink);border-color:var(--lab-border)}
+html[data-lab-palette] .home-hero{background:var(--lab-deep)}
+html[data-lab-palette] .site-mark,html[data-lab-palette] .btn-dark,html[data-lab-palette] .risk-map-tabs .small-btn.selected{background:var(--lab-forest);color:white}
+html[data-lab-palette] .nav-btn.active{color:var(--lab-forest);border-bottom-color:var(--lab-punch)}
+html[data-lab-palette] .nav-btn:not(.active),html[data-lab-palette] .section-card p,html[data-lab-palette] .opening-card p{color:var(--lab-muted)}
+html[data-lab-palette] .eyebrow,html[data-lab-palette] .stat-card .stat-kicker{color:var(--lab-punch)}
+html[data-lab-palette] .stat-card strong,html[data-lab-palette] .section-card h4,html[data-lab-palette] .risk-kpis strong,html[data-lab-palette] .risk-period-panel .risk-period-heading h3{color:var(--lab-forest)}
+html[data-lab-palette] .home-hero h2 em{color:var(--lab-accent)}
+html[data-lab-palette] a{color:var(--lab-punch)}
+html[data-lab-palette] .seg-btn.selected,html[data-lab-palette] .topic-tabs button.selected{background:var(--lab-forest);color:white}
+html[data-lab-palette] .risk-period-panel.risk-period-2014{border-top-color:var(--lab-muted)}
+html[data-lab-palette] .risk-period-panel.risk-period-2026{border-top-color:var(--lab-punch)}
+html[data-lab-font] body,html[data-lab-font] button,html[data-lab-font] input,html[data-lab-font] select,html[data-lab-font] textarea{font-family:var(--lab-body)!important}
+html[data-lab-font] .site-head h1,html[data-lab-font] .home-hero h2,html[data-lab-font] .hero-question strong,html[data-lab-font] .page-heading h2,html[data-lab-font] .section-heading h3,html[data-lab-font] .surface-card h3,html[data-lab-font] .section-card h3,html[data-lab-font] .opening-card h3,html[data-lab-font] .selected-summary h3,html[data-lab-font] .stat-card strong,html[data-lab-font] .risk-dash-header h3,html[data-lab-font] .risk-period-heading h3,html[data-lab-font] .risk-kpis strong,html[data-lab-font] .chart-card h4{font-family:var(--lab-heading)!important}
+body{padding-top:88px!important}
+#lab-toolbar{position:fixed;top:0;left:0;right:0;z-index:15000;min-height:82px;background:#15262A;color:#FFF;border-bottom:3px solid #CFB17A;box-shadow:0 7px 30px #172e2a30;padding:11px clamp(12px,2vw,32px);display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+#lab-toolbar .lab-brand{min-width:190px;margin-right:auto}
+#lab-toolbar .lab-brand b{display:block;font:700 15px system-ui,sans-serif}
+#lab-toolbar .lab-brand small{display:block;color:#C7D4CF;font:11px system-ui,sans-serif;margin-top:3px}
+#lab-toolbar label{display:flex;flex-direction:column;gap:3px;font:600 10px system-ui,sans-serif;letter-spacing:.02em;color:#CDD8D3}
+#lab-toolbar select{min-width:160px;max-width:240px;background:#FFF;color:#17342B;border:0;border-radius:7px;padding:9px;font:600 12px system-ui,sans-serif;cursor:pointer}
+#lab-toolbar .lab-reset,#lab-toolbar .lab-back{border:1px solid #89A49B;background:transparent;color:#FFF;border-radius:7px;padding:9px 12px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font:600 12px system-ui,sans-serif}
+#lab-toolbar .lab-reset{cursor:pointer}
+#lab-toolbar .lab-swatches{display:flex;gap:4px;margin-top:7px}
+#lab-toolbar .lab-swatches i{width:17px;height:17px;border-radius:50%;display:block;border:1px solid #ffffff60}
+#lab-toolbar .lab-swatch-label{font:600 11px system-ui,sans-serif}
+@media(max-width:850px){body{padding-top:155px!important}#lab-toolbar{min-height:143px}#lab-toolbar .lab-brand{min-width:100%;margin:0}#lab-toolbar label{flex:1}#lab-toolbar select{min-width:130px;width:100%}#lab-toolbar .lab-swatches{display:none}}
+@media(max-width:510px){body{padding-top:205px!important}#lab-toolbar{min-height:193px}#lab-toolbar .lab-back{display:none}}
+</style>
+
+</head>
+<body>
+
+<div id="lab-toolbar" role="region" aria-label="Laboratorio de estilos del Observatorio">
+  <div class="lab-brand"><b>Laboratorio visual · POT Cali</b><small>Prueba estética, sin alterar la página principal</small>
+    <div class="lab-swatches" id="lab-swatches"><i style="background:#163d32"></i><i style="background:#225e4c"></i><i style="background:#bc9951"></i><i style="background:#eaf0e9"></i></div>
+  </div>
+  <label>Paleta de colores<select id="lab-palette">
+    <option value="bosque">01 · Bosque editorial</option>
+    <option value="oceano">02 · Azul técnico</option>
+    <option value="tierra">03 · Tierra y territorio</option>
+    <option value="civico">04 · Violeta cívico</option>
+    <option value="tinta">05 · Tinta minimalista</option>
+  </select></label>
+  <label>Combinación de letras<select id="lab-font">
+    <option value="georgia">01 · Georgia + Inter (actual)</option>
+    <option value="fraunces">02 · Fraunces + DM Sans</option>
+    <option value="baskerville">03 · Libre Baskerville + Source Sans</option>
+    <option value="manrope">04 · Manrope (moderna)</option>
+    <option value="plex">05 · IBM Plex Serif + Sans</option>
+  </select></label>
+  <button type="button" class="lab-reset" id="lab-reset">Restablecer</button>
+  <a class="lab-back" href="../">Volver al original</a>
+</div>
+<a class="skip" href="#main">Saltar al contenido</a>
+<header class="site-head">
+  <div class="head-main">
+    <div class="site-mark" aria-hidden="true">C<span>↗</span></div>
+    <div><div class="eyebrow">OBSERVATORIO CIUDADANO DEL ORDENAMIENTO TERRITORIAL</div><h1>Cali, ¿qué cambia en mi territorio?</h1></div>
+    <div class="header-tools"><span class="tag-top">POT 2014 <b>vs.</b> propuesta 2026</span><a class="head-link" href="https://drive.google.com/drive/folders/1Sydz1ahyHOcWgw5WrFsMjUJkDCQZ85Fr" target="_blank" rel="noopener">Fuentes cartográficas ↗</a></div>
+  </div>
+  <nav class="top-nav" aria-label="Secciones principales">
+    <button class="nav-btn active" data-page="inicio" aria-current="page"><span class="nav-number">01</span> Inicio</button>
+    <button class="nav-btn" data-page="mapa"><span class="nav-number">02</span> Mapa territorial</button>
+    <button class="nav-btn" data-page="norma"><span class="nav-number">03</span> Comparación normativa</button>
+    <button class="nav-btn" data-page="gestion"><span class="nav-number">04</span> Gestión e incentivos</button>
+    <button class="nav-btn" data-page="riesgo"><span class="nav-number">05</span> Riesgo y hábitat</button>
+  </nav>
+</header>
+<div class="legal-strip"><strong>Versión de estudio · 2026.</strong> El POT de 2026 es una <strong>propuesta</strong>, no una norma adoptada. Los cruces cartográficos identifican áreas y categorías; no equivalen a una licencia, certificación predial ni conclusión automática sobre beneficios económicos.</div>
+<div class="territory-bar">
+  <div class="territory-bar-title"><span class="eyebrow">TU TERRITORIO</span><strong id="current-territory">Cali · vista distrital</strong></div>
+  <div class="search-box"><span aria-hidden="true">⌕</span><label class="sr-only" for="search">Buscar barrio o sector</label><input id="search" type="search" placeholder="Buscar barrio o sector de Cali…" autocomplete="off" aria-describedby="search-info"><div id="search-results" class="search-dropdown" aria-live="polite"></div></div>
+  <button id="clear-territory" class="ghost-btn" type="button" hidden>✕ Limpiar barrio</button>
+  <span class="search-meta" id="search-info">342 barrios y sectores de referencia</span>
+</div>
+<main id="main">
+  <section class="page active" id="page-inicio" aria-labelledby="title-inicio">
+    <div class="page-inner home-content">
+      <div class="home-hero">
+        <div><span class="eyebrow dark-eyebrow">EL POT, MÁS ALLÁ DEL MAPA</span><h2 id="title-inicio">¿Qué ciudad se propone para Cali, <em>y para quién?</em></h2><p>Un plan de ordenamiento decide dónde se puede construir, qué se protege, qué infraestructura se exige y cómo se reparten los beneficios de transformar el suelo. Aquí contrastamos la propuesta de 2026 con el POT vigente.</p><div class="hero-actions"><button class="btn btn-light" data-goto="mapa">Explorar mi barrio <span>→</span></button><button class="btn btn-line" data-goto="gestion">¿Quién se beneficia? <span>↗</span></button></div></div>
+        <div class="hero-question"><span class="eyebrow">LA PREGUNTA CENTRAL</span><strong>¿Qué recibe la ciudad cuando se autorizan nuevos aprovechamientos privados?</strong><p>Verificamos normas, cesiones, instrumentos, incentivos y garantías para quienes ya viven en el territorio.</p></div>
+      </div>
+      <div class="section-heading"><div><span class="eyebrow">UNA FOTO DE LA PROPUESTA</span><h3>El territorio en cifras</h3><p>Comparación cartográfica 2014–2026 calculada a partir de las dos geodatabases. El proyecto de 2026 todavía no es norma vigente.</p></div><span class="micro-label">Fuentes: GDB POT 2014 y GDB propuesta 2026</span></div>
+      <div class="stat-grid" id="home-stats"><div class="loading-msg">Cargando indicadores de la propuesta…</div></div>
+      <div id="home-transformations" aria-label="Indicadores de tratamientos y usos"></div><div id="v7-home" aria-label="Transiciones reales de áreas de actividad"></div>
+      <section class="intro-maps-card" aria-labelledby="intro-maps-title">
+        <div class="intro-maps-heading"><div><span class="eyebrow">CARTOGRAFÍA DE REFERENCIA · DETALLE OPCIONAL</span><h3 id="intro-maps-title">¿Dónde cambia la clasificación del suelo?</h3><p>Resumen visual compacto de los límites urbano, rural y de expansión. Puedes ampliarlo en el comparador. Ambos mapas usan la misma proyección, escala y extensión.</p></div><button type="button" class="btn btn-dark intro-compare-button" data-open-swipe="true">Explorar con la ventana corrediza →</button></div>
+        <div class="intro-maps-grid" role="group" aria-label="Clasificación del suelo comparada entre 2014 y 2026">
+          <figure class="intro-map-panel"><figcaption><b>POT 2014 · vigente*</b><span>Urbano: 11.942,9 ha · Expansión: 1.636,6 ha</span></figcaption><img src="assets/clasificacion_2014_intro.png" width="848" height="920" alt="Mapa del perímetro urbano, expansión y suelo rural de Cali según la geodatabase POT 2014 vigente" loading="eager" decoding="sync"></figure>
+          <figure class="intro-map-panel"><figcaption><b>Propuesta POT 2026</b><span>Urbano: 12.717,8 ha · Expansión: 2.259,6 ha</span></figcaption><img src="assets/clasificacion_2026_intro.png" width="848" height="920" alt="Mapa del perímetro urbano, expansión y suelo rural de Cali según la propuesta de revisión 2026" loading="eager" decoding="sync"></figure>
+        </div>
+        <div class="intro-map-legend" aria-label="Leyenda común"><span><i style="background:#3D8D84"></i> Urbano</span><span><i style="background:#E0B45F"></i> Expansión</span><span><i style="background:#D9E5D8"></i> Rural</span></div>
+        <p class="intro-maps-note"><strong>Cómo leerlos:</strong> el amarillo corresponde al suelo de expansión y el azul verdoso al perímetro urbano. Las diferencias son cartográficas y no significan que un terreno ya esté urbanizado o tenga licencia. <strong>*</strong>La GDB del POT 2014 disponible contiene actualizaciones posteriores a su adopción; el suelo rural de esa fecha se representa mediante una diferencia geométrica sobre el perímetro municipal.</p>
+      </section>
+      <div class="home-two-col">
+        <section class="surface-card"><div class="card-head"><span class="eyebrow">CLASIFICACIÓN DEL SUELO</span><h3>¿Cuánto suelo propone cada categoría?</h3></div><div id="home-soil-bars" class="soil-bars"></div><p class="caption">Superficies calculadas con las geometrías originales de 2014 y 2026 en un sistema proyectado común. La categoría rural de 2014 se derivó como área municipal menos suelo urbano y de expansión; las delimitaciones municipales difieren entre las fuentes.</p></section>
+        <section class="surface-card"><div class="card-head"><span class="eyebrow">ALCANCE DEL ANÁLISIS</span><h3>Lo que ya sabemos y lo que falta</h3></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Tratamientos y transiciones por barrio</b><p>Intersecciones espaciales de ambas geodatabases, con hectáreas y porcentajes.</p></div></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Reglas generales de gestión</b><p>Lectura de artículos sobre planes parciales, renovación y vías de actuación.</p></div></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Cambio de perímetros 2014–2026</b><p>Calculado con perímetros urbanos y de expansión de ambas geodatabases. El mapa permite visualizar las diferencias.</p></div></div><div class="checkline"><span class="checkdot wait">·</span><div><b>Edificabilidad propuesta 2026</b><p>La fuente aportada contiene estructura de campos, pero no polígonos.</p></div></div></section>
+      </div>
+      <div class="home-risk-panel" id="home-risk-stats"></div><div class="section-heading"><div><span class="eyebrow">LECTURA CRÍTICA DEL MODELO</span><h3>Cuatro preguntas para evaluar el POT</h3></div></div>
+      <div class="question-grid">
+        <article class="question-card"><span>01 / CRECIMIENTO</span><h4>¿La ciudad crece hacia afuera o aprovecha su suelo urbano?</h4><p>Contrastar expansión, consolidación y renovación, sin suponer que más suelo disponible equivale a mejor acceso a vivienda y servicios.</p><button data-goto="mapa">Ver las capas territoriales →</button></article>
+        <article class="question-card"><span>02 / DISTRIBUCIÓN</span><h4>¿Quién recibe derechos de construir y quién asume las cargas?</h4><p>Examinar la relación entre aprovechamientos, planes parciales, cesiones, incentivos y obligaciones públicas.</p><button data-goto="gestion">Estudiar gestión e incentivos →</button></article>
+        <article class="question-card"><span>03 / HABITANTES</span><h4>¿Qué garantías tienen quienes ya viven en sectores de renovación?</h4><p>Verificar si existen medidas explícitas de protección a moradores, permanencia y prevención de desplazamiento.</p><button data-goto="gestion">Examinar protección a moradores →</button></article>
+        <article class="question-card"><span>04 / SEGURIDAD</span><h4>¿Se densifica con información suficiente sobre amenazas y suelo?</h4><p>Contrastar las decisiones urbanísticas con riesgo, efectos sísmicos y necesidad de estudios técnicos detallados.</p><button data-goto="riesgo">Ver riesgo y hábitat →</button></article>
+      </div>
+      <div class="method-note"><b>Cómo leemos los datos:</b> una modificación cartográfica es un hecho espacial; su efecto jurídico depende de la norma. Un beneficio urbanístico potencial no prueba una ganancia económica. Las preguntas críticas están abiertas y se responden con fuentes, no con presunciones.</div>
+    </div>
+  </section>
+
+  <section class="page" id="page-mapa" aria-labelledby="title-mapa">
+    <div class="map-layout">
+      <aside class="map-sidebar"><span class="eyebrow">EXPLORADOR CARTOGRÁFICO</span><h2 id="title-mapa">Capas del territorio</h2><p>Activa categorías y reconoce dónde están. Las leyendas corresponden a cada año y no implican equivalencia jurídica.</p>
+        <label class="barrios-label"><input id="barrios-visible" type="checkbox" checked><span class="swatch barrio-outline"></span> Barrios y sectores</label>
+        <div id="layers" class="layer-accordion" aria-label="Capas por periodo"></div>
+        <div class="sidebar-legend"><b>Cómo leer el mapa</b><p>Selecciona un barrio para resaltarlo en <span class="golden-mark">dorado</span> y conocer sus condiciones. Puedes usar la ventana corrediza para contrastar tratamientos o planes parciales.</p></div>
+      </aside>
+      <div class="map-main">
+        <div class="map-topbar"><div><h3>Mapa de Cali</h3><span id="map-status">Mapa por cargar</span></div><div class="map-utilities"><button id="map-reset" class="small-btn">Ver Cali</button><button id="base-toggle" class="small-btn">Mapa base</button></div></div>
+        <div class="map-mode"><span class="label-soft">VISUALIZACIÓN</span><div class="seg"><button class="seg-btn selected" data-map-mode="explore">Explorar capas</button><button class="seg-btn" data-map-mode="compare">Comparar 2014 / 2026</button></div><label id="compare-theme-wrap" class="theme-wrap" hidden>Comparar <select id="compare-theme"><option value="clasificacion">Clasificación del suelo · 2014/2026</option><option value="tratamientos">Tratamientos urbanísticos · 2014/2026</option><option value="usos">Áreas de actividad · 2014/2026</option><option value="planes">Planes parciales · 2014/2026</option></select></label></div>
+        <div class="map-frame" id="map-frame"><div id="map" class="leaf-map" aria-label="Mapa territorial interactivo"></div><div id="map-right-clip" class="map-right-clip" hidden><div id="map-right" class="leaf-map" aria-label="Mapa comparativo propuesto 2026"></div></div><div id="compare-divider" class="map-divider" hidden><div class="divider-handle">↔</div></div><div id="map-period-tags" class="map-period-tags" hidden><span id="compare-left-label">◀ POT 2014 · vigente</span><span id="compare-right-label">Propuesta POT 2026 ▶</span></div><div id="selected-pill" class="selected-pill" hidden>● <span id="selected-pill-name"></span></div><div id="compare-slider-wrap" class="compare-slider-wrap" hidden><label for="compare-slider">Arrastra: 2014 a la izquierda · 2026 a la derecha</label><input type="range" id="compare-slider" min="10" max="90" step="1" value="50"></div></div>
+        <div class="map-foot"><span>Superficies calculadas sobre geometrías originales; el mapa usa geometrías simplificadas.</span><span>GDB POT 2014 actualizada y GDB propuesta 2026.</span></div>
+      </div>
+      <aside class="map-inspector"><div class="inspector-head"><span class="eyebrow">TERRITORIO SELECCIONADO</span><h3 id="inspector-title">Selecciona un barrio</h3><p id="inspector-meta">Haz clic en el mapa o busca un barrio en la barra superior.</p></div><div id="map-inspector-content" class="inspector-content"><div class="empty-state"><b>Comienza con tu barrio</b><p>El mapa permite localizarlo y analizarlo en una ficha amplia.</p></div></div><button id="open-normative" class="btn btn-dark" disabled>Ver comparación normativa →</button></aside>
+    </div>
+  </section>
+
+  <section class="page" id="page-norma" aria-labelledby="title-norma">
+    <div class="page-inner"><div class="page-heading"><div><span class="eyebrow">LECTURA POR TERRITORIO</span><h2 id="title-norma">Comparación normativa</h2><p>Qué establecía el POT vigente, qué propone 2026 y qué significa para tu barrio. Los gráficos conservan las hectáreas y porcentajes de superficie.</p></div><span class="stage-label">Cartografía verificada · efectos jurídicos condicionados</span></div><div id="norma-content" class="content-area"></div><div id="v7-tratamientos" class="content-area"></div><div id="v7-edificabilidad" class="content-area"></div><div id="v7-norma" class="content-area"></div></div>
+  </section>
+
+  <section class="page" id="page-gestion" aria-labelledby="title-gestion">
+    <div class="page-inner"><div class="page-heading"><div><span class="eyebrow">DISTRIBUCIÓN DE CARGAS Y BENEFICIOS</span><h2 id="title-gestion">Gestión e incentivos</h2><p>¿Quién puede desarrollar el suelo, qué requisitos debe cumplir, qué recibe como incentivo y qué se garantiza a los habitantes actuales?</p></div><span class="stage-label">Consulta de reglas generales, no certificado predial</span></div><div id="gestion-content" class="content-area"></div><div id="v7-gestion" class="content-area"></div></div>
+  </section>
+
+  <section class="page" id="page-riesgo" aria-labelledby="title-riesgo">
+    <div class="page-inner"><div class="page-heading"><div><span class="eyebrow">SEGURIDAD DEL TERRITORIO Y DE SUS HABITANTES</span><h2 id="title-riesgo">Gestión del Riesgo y Hábitat</h2><p>Qué amenazas y condicionamientos se han cartografiado en tu barrio, qué significa la microzonificación sísmica y qué requisitos deben verificarse.</p></div><span class="stage-label">No equivale a estudio de riesgo predial</span></div><div id="v7-riesgo" class="content-area"></div><div id="riesgo-content" class="content-area"></div></div>
+  </section>
+</main>
+<footer class="site-footer"><span>Observatorio ciudadano · V7.2 · mapa territorial corregido · fuentes y limitaciones documentadas · noviembre de 2026</span><span>Datos: <a href="https://drive.google.com/drive/folders/1SA5nS9Rf-7zp8-j0Vf7KuEQotfKeEqG4" target="_blank" rel="noopener">POT 2014</a> · <a href="https://drive.google.com/drive/folders/1Sydz1ahyHOcWgw5WrFsMjUJkDCQZ85Fr" target="_blank" rel="noopener">propuesta POT 2026</a> · <a href="METODOLOGIA_COMPARACION.md">metodología</a></span></footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="assets/app.js?v=9.4-estable.1"></script>
+
+<script id="lab-controls">
+(function(){
+ const palettes={
+ bosque:['#163D32','#225E4C','#BC9951','#EAF0E9'],
+ oceano:['#133448','#1F5269','#E2A36E','#E6F0F3'],
+ tierra:['#53392F','#76523F','#C28A51','#F3ECE1'],
+ civico:['#2F294B','#4A4170','#D0A85A','#EFEDF6'],
+ tinta:['#21282C','#343F44','#DBA461','#EFF2F2']
+ };
+ const pal=document.getElementById('lab-palette'),font=document.getElementById('lab-font');
+ const params=new URLSearchParams(location.search);
+ const selectedPal=palettes[params.get('palette')]?params.get('palette'):'bosque';
+ const validFonts=['georgia','fraunces','baskerville','manrope','plex'];
+ pal.value=selectedPal;font.value=validFonts.includes(params.get('font'))?params.get('font'):'georgia';
+ function apply(){
+  document.documentElement.dataset.labPalette=pal.value;
+  document.documentElement.dataset.labFont=font.value;
+  const colors=palettes[pal.value]||palettes.bosque;
+  document.getElementById('lab-swatches').innerHTML=colors.map(v=>'<i style="background:'+v+'"></i>').join('');
+  const url=new URL(location.href);url.searchParams.set('palette',pal.value);url.searchParams.set('font',font.value);history.replaceState({},'',url);
+ }
+ pal.addEventListener('change',apply);font.addEventListener('change',apply);
+ document.getElementById('lab-reset').addEventListener('click',()=>{pal.value='bosque';font.value='georgia';apply()});
+ apply();
+})();
+</script>
+</body>
+</html>
