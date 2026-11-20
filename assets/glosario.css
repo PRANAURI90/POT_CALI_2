@@ -1,0 +1,32 @@
+/* Glosario POT Cali · complemento al sistema visual existente */
+.glosario-intro{margin:0 0 18px;color:var(--muted,#5d6070);line-height:1.7}
+.glosario-toolbar{display:grid;grid-template-columns:minmax(260px,2fr) minmax(160px,1fr) minmax(170px,1fr);gap:14px;padding:18px;border:1px solid #dbd8e5;border-radius:17px;background:#fff}
+.glosario-toolbar label{font-size:12px;font-weight:800;letter-spacing:.015em;color:#493f65;display:flex;flex-direction:column;gap:7px}
+.glosario-toolbar input,.glosario-toolbar select{border:1px solid #cbc7db;border-radius:9px;background:#fff;padding:11px 12px;font:inherit;font-size:13px;color:#2d2b37;min-width:0;outline-offset:2px}
+.glosario-toolbar input:focus,.glosario-toolbar select:focus{border-color:#73609e}
+.glosario-cuenta{padding:15px 0 12px;font-size:12px;color:#706c7e}
+.glosario-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.glosario-card{background:#fff;border:1px solid #dedae8;border-radius:16px;padding:21px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.glosario-card h3{font-size:18px;line-height:1.35;color:#2c2440;margin:0}
+.glosario-card h3 small{font-size:12px;white-space:nowrap;color:#6c5e86}
+.glosario-card p{font-size:13px;line-height:1.7;color:#444451;margin:0;flex:1}
+.glosario-card-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:9px;align-items:center}
+.glosario-year{font-size:10.5px;font-weight:800;color:#574b75;background:#f0edf6;border-radius:5px;padding:6px 8px}
+.glosario-status{font-size:10px;color:#6a6675;line-height:1.45;max-width:180px}
+.glosario-source{font-size:11px;color:#777180;border-top:1px solid #eeeaf2;padding-top:10px;line-height:1.65}
+.glosario-card-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.glosario-link,.glosario-inline{border:1px solid #c7bfd9;border-radius:8px;background:#f8f5fc;color:#4c396e;padding:8px 11px;font-weight:800;font-size:11px;cursor:pointer;text-align:left}
+.glosario-link:hover,.glosario-inline:hover{background:#ebe4f5;border-color:#8976ae}
+.glosario-inline{padding:3px 7px;font-size:10px;margin-left:8px;white-space:normal}
+.glosario-note{font-size:11px;color:#777180;margin:20px 0;line-height:1.7}
+.glosario-empty{padding:25px;background:#fff;border:1px solid #e7e3ed;border-radius:13px;color:#655e72}
+.glosario-dialog{width:min(94vw,670px);max-height:85vh;overflow:auto;border:1px solid #d8d1e4;border-radius:19px;box-shadow:0 25px 70px #25203b55;padding:0;background:#fff;color:#34303e}
+.glosario-dialog::backdrop{background:#1e173c99}
+.glosario-dialog-top{position:sticky;top:0;background:#f4f1f8;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:800;z-index:2}
+#glosario-close{font-size:25px;line-height:1;border:0;background:transparent;color:#4b3c67;cursor:pointer;padding:3px 8px}
+.glosario-dialog-body{padding:24px;display:flex;flex-direction:column;gap:12px}
+.glosario-dialog-body h2{font-size:23px;margin:5px 0 10px;color:#302544}
+.glosario-dialog-body h3{font-size:13px;margin:10px 0 0;color:#493b6a}
+.glosario-dialog-body p{font-size:13px;line-height:1.75;margin:0}
+.glosario-precaution{background:#f7f5fa;border-left:3px solid #aa9abd;padding:12px 14px;border-radius:5px}
+@media(max-width:760px){.glosario-toolbar{grid-template-columns:1fr}.glosario-grid{grid-template-columns:1fr}.glosario-card{padding:17px}.glosario-dialog-body{padding:17px}}
