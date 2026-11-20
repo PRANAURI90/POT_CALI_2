@@ -75,6 +75,7 @@ html[data-lab-font="manrope"] body,html[data-lab-font="manrope"] button,html[dat
 html[data-lab-font="manrope"] h1,html[data-lab-font="manrope"] h2,html[data-lab-font="manrope"] h3,html[data-lab-font="manrope"] h4{font-family:'Manrope',Arial,sans-serif!important}
 
 </style>
+  <link rel="stylesheet" href="assets/glosario.css?v=1.0">
 </head>
 <body>
 <a class="skip" href="#main">Saltar al contenido</a>
@@ -90,6 +91,7 @@ html[data-lab-font="manrope"] h1,html[data-lab-font="manrope"] h2,html[data-lab-
     <button class="nav-btn" data-page="norma"><span class="nav-number">03</span> Comparación normativa</button>
     <button class="nav-btn" data-page="gestion"><span class="nav-number">04</span> Gestión e incentivos</button>
     <button class="nav-btn" data-page="riesgo"><span class="nav-number">05</span> Riesgo y hábitat</button>
+    <button class="nav-btn" data-page="glosario"><span class="nav-number">06</span> Glosario</button>
   </nav>
 </header>
 <div class="legal-strip"><strong>Versión de estudio · 2026.</strong> El POT de 2026 es una <strong>propuesta</strong>, no una norma adoptada. Los cruces cartográficos identifican áreas y categorías; no equivalen a una licencia, certificación predial ni conclusión automática sobre beneficios económicos.</div>
@@ -161,9 +163,18 @@ html[data-lab-font="manrope"] h1,html[data-lab-font="manrope"] h2,html[data-lab-
   <section class="page" id="page-riesgo" aria-labelledby="title-riesgo">
     <div class="page-inner"><div class="page-heading"><div><span class="eyebrow">SEGURIDAD DEL TERRITORIO Y DE SUS HABITANTES</span><h2 id="title-riesgo">Gestión del Riesgo y Hábitat</h2><p>Qué amenazas y condicionamientos se han cartografiado en tu barrio, qué significa la microzonificación sísmica y qué requisitos deben verificarse.</p></div><span class="stage-label">No equivale a estudio de riesgo predial</span></div><div id="v7-riesgo" class="content-area"></div><div id="riesgo-content" class="content-area"></div></div>
   </section>
+  <section class="page" id="page-glosario" aria-labelledby="title-glosario">
+    <div class="page-inner">
+      <div class="page-heading"><div><span class="eyebrow">CONCEPTOS Y NORMAS PARA ENTENDER EL POT</span><h2 id="title-glosario">Glosario ciudadano</h2><p>¿Qué significa cada término en el POT 2014 y en la propuesta 2026? Busca conceptos y consulta sus referencias, sin confundir ambas normas.</p></div><span class="stage-label">Síntesis pedagógicas · fuentes identificadas</span></div>
+      <div id="glosario-content" class="content-area"><p>Preparando catálogo…</p></div>
+    </div>
+  </section>
 </main>
+<dialog id="glosario-dialog" class="glosario-dialog" aria-label="Ficha de concepto"><div class="glosario-dialog-top"><span>Glosario · Ficha explicativa</span><button id="glosario-close" type="button" aria-label="Cerrar ficha">×</button></div><div class="glosario-dialog-body"></div></dialog>
+
 <footer class="site-footer"><span>Observatorio ciudadano · V10.1 · Violeta cívico + Manrope · fuentes y limitaciones documentadas · noviembre de 2026</span><span>Datos: <a href="https://drive.google.com/drive/folders/1SA5nS9Rf-7zp8-j0Vf7KuEQotfKeEqG4" target="_blank" rel="noopener">POT 2014</a> · <a href="https://drive.google.com/drive/folders/1Sydz1ahyHOcWgw5WrFsMjUJkDCQZ85Fr" target="_blank" rel="noopener">propuesta POT 2026</a> · <a href="METODOLOGIA_COMPARACION.md">metodología</a></span></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="assets/app.js?v=10.2-etiquetas-tratamientos.1"></script>
+<script src="assets/glosario.js?v=1.0"></script>
 </body>
 </html>
