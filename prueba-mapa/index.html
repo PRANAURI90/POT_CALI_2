@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#113a31">
+  <meta name="description" content="Observatorio ciudadano del POT de Cali. Consulta el territorio, compara cartografía 2014–2026 y estudia instrumentos, riesgos y beneficios con fuentes verificables.">
+  <title>PRUEBA MAPA · Cali: ¿Qué cambia en mi territorio? · Observatorio ciudadano</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyo2FGAW4JdSlc=" crossorigin="">
+  <link rel="stylesheet" href="prueba-mapa/styles.css?v=7.2-prueba.1">
+</head>
+<body>
+<div style="position:relative;z-index:10001;background:#fff3cd;padding:12px 20px;text-align:center;font:700 14px system-ui;color:#5f480b;border-bottom:2px solid #d6a344">VERSIÓN DE PRUEBA DEL MAPA — No modifica la web pública. <a href="../" style="color:#1c674f">Volver al sitio actual</a></div>
+<a class="skip" href="#main">Saltar al contenido</a>
+<header class="site-head">
+  <div class="head-main">
+    <div class="site-mark" aria-hidden="true">C<span>↗</span></div>
+    <div><div class="eyebrow">OBSERVATORIO CIUDADANO DEL ORDENAMIENTO TERRITORIAL</div><h1>Cali, ¿qué cambia en mi territorio?</h1></div>
+    <div class="header-tools"><span class="tag-top">POT 2014 <b>vs.</b> propuesta 2026</span><a class="head-link" href="https://drive.google.com/drive/folders/1Sydz1ahyHOcWgw5WrFsMjUJkDCQZ85Fr" target="_blank" rel="noopener">Fuentes cartográficas ↗</a></div>
+  </div>
+  <nav class="top-nav" aria-label="Secciones principales">
+    <button class="nav-btn active" data-page="inicio" aria-current="page"><span class="nav-number">01</span> Inicio</button>
+    <button class="nav-btn" data-page="mapa"><span class="nav-number">02</span> Mapa territorial</button>
+    <button class="nav-btn" data-page="norma"><span class="nav-number">03</span> Comparación normativa</button>
+    <button class="nav-btn" data-page="gestion"><span class="nav-number">04</span> Gestión e incentivos</button>
+    <button class="nav-btn" data-page="riesgo"><span class="nav-number">05</span> Riesgo y hábitat</button>
+  </nav>
+</header>
+<div class="legal-strip"><strong>Versión de estudio · 2026.</strong> El POT de 2026 es una <strong>propuesta</strong>, no una norma adoptada. Los cruces cartográficos identifican áreas y categorías; no equivalen a una licencia, certificación predial ni conclusión automática sobre beneficios económicos.</div>
+<div class="territory-bar">
+  <div class="territory-bar-title"><span class="eyebrow">TU TERRITORIO</span><strong id="current-territory">Cali · vista distrital</strong></div>
+  <div class="search-box"><span aria-hidden="true">⌕</span><label class="sr-only" for="search">Buscar barrio o sector</label><input id="search" type="search" placeholder="Buscar barrio o sector de Cali…" autocomplete="off" aria-describedby="search-info"><div id="search-results" class="search-dropdown" aria-live="polite"></div></div>
+  <button id="clear-territory" class="ghost-btn" type="button" hidden>✕ Limpiar barrio</button>
+  <span class="search-meta" id="search-info">342 barrios y sectores de referencia</span>
+</div>
+<main id="main">
+  <section class="page active" id="page-inicio" aria-labelledby="title-inicio">
+    <div class="page-inner home-content">
+      <div class="home-hero">
+        <div><span class="eyebrow dark-eyebrow">EL POT, MÁS ALLÁ DEL MAPA</span><h2 id="title-inicio">¿Qué ciudad se propone para Cali, <em>y para quién?</em></h2><p>Un plan de ordenamiento decide dónde se puede construir, qué se protege, qué infraestructura se exige y cómo se reparten los beneficios de transformar el suelo. Aquí contrastamos la propuesta de 2026 con el POT vigente.</p><div class="hero-actions"><button class="btn btn-light" data-goto="mapa">Explorar mi barrio <span>→</span></button><button class="btn btn-line" data-goto="gestion">¿Quién se beneficia? <span>↗</span></button></div></div>
+        <div class="hero-question"><span class="eyebrow">LA PREGUNTA CENTRAL</span><strong>¿Qué recibe la ciudad cuando se autorizan nuevos aprovechamientos privados?</strong><p>Verificamos normas, cesiones, instrumentos, incentivos y garantías para quienes ya viven en el territorio.</p></div>
+      </div>
+      <div class="section-heading"><div><span class="eyebrow">UNA FOTO DE LA PROPUESTA</span><h3>El territorio en cifras</h3><p>Comparación cartográfica 2014–2026 calculada a partir de las dos geodatabases. El proyecto de 2026 todavía no es norma vigente.</p></div><span class="micro-label">Fuentes: GDB POT 2014 y GDB propuesta 2026</span></div>
+      <div class="stat-grid" id="home-stats"><div class="loading-msg">Cargando indicadores de la propuesta…</div></div>
+      <div id="home-transformations" aria-label="Indicadores de tratamientos y usos"></div><div id="v7-home" aria-label="Transiciones reales de áreas de actividad"></div>
+      <section class="intro-maps-card" aria-labelledby="intro-maps-title">
+        <div class="intro-maps-heading"><div><span class="eyebrow">CARTOGRAFÍA DE REFERENCIA · DETALLE OPCIONAL</span><h3 id="intro-maps-title">¿Dónde cambia la clasificación del suelo?</h3><p>Resumen visual compacto de los límites urbano, rural y de expansión. Puedes ampliarlo en el comparador. Ambos mapas usan la misma proyección, escala y extensión.</p></div><button type="button" class="btn btn-dark intro-compare-button" data-open-swipe="true">Explorar con la ventana corrediza →</button></div>
+        <div class="intro-maps-grid" role="group" aria-label="Clasificación del suelo comparada entre 2014 y 2026">
+          <figure class="intro-map-panel"><figcaption><b>POT 2014 · vigente*</b><span>Urbano: 11.942,9 ha · Expansión: 1.636,6 ha</span></figcaption><img src="assets/clasificacion_2014_intro.png" width="848" height="920" alt="Mapa del perímetro urbano, expansión y suelo rural de Cali según la geodatabase POT 2014 vigente" loading="eager" decoding="sync"></figure>
+          <figure class="intro-map-panel"><figcaption><b>Propuesta POT 2026</b><span>Urbano: 12.717,8 ha · Expansión: 2.259,6 ha</span></figcaption><img src="assets/clasificacion_2026_intro.png" width="848" height="920" alt="Mapa del perímetro urbano, expansión y suelo rural de Cali según la propuesta de revisión 2026" loading="eager" decoding="sync"></figure>
+        </div>
+        <div class="intro-map-legend" aria-label="Leyenda común"><span><i style="background:#3D8D84"></i> Urbano</span><span><i style="background:#E0B45F"></i> Expansión</span><span><i style="background:#D9E5D8"></i> Rural</span></div>
+        <p class="intro-maps-note"><strong>Cómo leerlos:</strong> el amarillo corresponde al suelo de expansión y el azul verdoso al perímetro urbano. Las diferencias son cartográficas y no significan que un terreno ya esté urbanizado o tenga licencia. <strong>*</strong>La GDB del POT 2014 disponible contiene actualizaciones posteriores a su adopción; el suelo rural de esa fecha se representa mediante una diferencia geométrica sobre el perímetro municipal.</p>
+      </section>
+      <div class="home-two-col">
+        <section class="surface-card"><div class="card-head"><span class="eyebrow">CLASIFICACIÓN DEL SUELO</span><h3>¿Cuánto suelo propone cada categoría?</h3></div><div id="home-soil-bars" class="soil-bars"></div><p class="caption">Superficies calculadas con las geometrías originales de 2014 y 2026 en un sistema proyectado común. La categoría rural de 2014 se derivó como área municipal menos suelo urbano y de expansión; las delimitaciones municipales difieren entre las fuentes.</p></section>
+        <section class="surface-card"><div class="card-head"><span class="eyebrow">ALCANCE DEL ANÁLISIS</span><h3>Lo que ya sabemos y lo que falta</h3></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Tratamientos y transiciones por barrio</b><p>Intersecciones espaciales de ambas geodatabases, con hectáreas y porcentajes.</p></div></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Reglas generales de gestión</b><p>Lectura de artículos sobre planes parciales, renovación y vías de actuación.</p></div></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Cambio de perímetros 2014–2026</b><p>Calculado con perímetros urbanos y de expansión de ambas geodatabases. El mapa permite visualizar las diferencias.</p></div></div><div class="checkline"><span class="checkdot wait">·</span><div><b>Edificabilidad propuesta 2026</b><p>La fuente aportada contiene estructura de campos, pero no polígonos.</p></div></div></section>
+      </div>
+      <div class="home-risk-panel" id="home-risk-stats"></div><div class="section-heading"><div><span class="eyebrow">LECTURA CRÍTICA DEL MODELO</span><h3>Cuatro preguntas para evaluar el POT</h3></div></div>
+      <div class="question-grid">
+        <article class="question-card"><span>01 / CRECIMIENTO</span><h4>¿La ciudad crece hacia afuera o aprovecha su suelo urbano?</h4><p>Contrastar expansión, consolidación y renovación, sin suponer que más suelo disponible equivale a mejor acceso a vivienda y servicios.</p><button data-goto="mapa">Ver las capas territoriales →</button></article>
+        <article class="question-card"><span>02 / DISTRIBUCIÓN</span><h4>¿Quién recibe derechos de construir y quién asume las cargas?</h4><p>Examinar la relación entre aprovechamientos, planes parciales, cesiones, incentivos y obligaciones públicas.</p><button data-goto="gestion">Estudiar gestión e incentivos →</button></article>
+        <article class="question-card"><span>03 / HABITANTES</span><h4>¿Qué garantías tienen quienes ya viven en sectores de renovación?</h4><p>Verificar si existen medidas explícitas de protección a moradores, permanencia y prevención de desplazamiento.</p><button data-goto="gestion">Examinar protección a moradores →</button></article>
+        <article class="question-card"><span>04 / SEGURIDAD</span><h4>¿Se densifica con información suficiente sobre amenazas y suelo?</h4><p>Contrastar las decisiones urbanísticas con riesgo, efectos sísmicos y necesidad de estudios técnicos detallados.</p><button data-goto="riesgo">Ver riesgo y hábitat →</button></article>
+      </div>
+      <div class="method-note"><b>Cómo leemos los datos:</b> una modificación cartográfica es un hecho espacial; su efecto jurídico depende de la norma. Un beneficio urbanístico potencial no prueba una ganancia económica. Las preguntas críticas están abiertas y se responden con fuentes, no con presunciones.</div>
+    </div>
+  </section>
+
+  <section class="page" id="page-mapa" aria-labelledby="title-mapa">
+    <div class="map-layout">
+      <aside class="map-sidebar"><span class="eyebrow">EXPLORADOR CARTOGRÁFICO</span><h2 id="title-mapa">Capas del territorio</h2><p>Activa categorías y reconoce dónde están. Las leyendas corresponden a cada año y no implican equivalencia jurídica.</p>
+        <label class="barrios-label"><input id="barrios-visible" type="checkbox" checked><span class="swatch barrio-outline"></span> Barrios y sectores</label>
+        <div id="layers" class="layer-accordion" aria-label="Capas por periodo"></div>
+        <div class="sidebar-legend"><b>Cómo leer el mapa</b><p>Selecciona un barrio para resaltarlo en <span class="golden-mark">dorado</span> y conocer sus condiciones. Puedes usar la ventana corrediza para contrastar tratamientos o planes parciales.</p></div>
+      </aside>
+      <div class="map-main">
+        <div class="map-topbar"><div><h3>Mapa de Cali</h3><span id="map-status">Mapa por cargar</span></div><div class="map-utilities"><button id="map-reset" class="small-btn">Ver Cali</button><button id="base-toggle" class="small-btn">Mapa base</button></div></div>
+        <div class="map-mode"><span class="label-soft">VISUALIZACIÓN</span><div class="seg"><button class="seg-btn selected" data-map-mode="explore">Explorar capas</button><button class="seg-btn" data-map-mode="compare">Comparar 2014 / 2026</button></div><label id="compare-theme-wrap" class="theme-wrap" hidden>Comparar <select id="compare-theme"><option value="clasificacion">Clasificación del suelo · 2014/2026</option><option value="tratamientos">Tratamientos urbanísticos · 2014/2026</option><option value="usos">Áreas de actividad · 2014/2026</option><option value="planes">Planes parciales · 2014/2026</option></select></label></div>
+        <div class="map-frame" id="map-frame"><div id="map" class="leaf-map" aria-label="Mapa territorial interactivo"></div><div id="map-right-clip" class="map-right-clip" hidden><div id="map-right" class="leaf-map" aria-label="Mapa comparativo propuesto 2026"></div></div><div id="compare-divider" class="map-divider" hidden><div class="divider-handle">↔</div></div><div id="map-period-tags" class="map-period-tags" hidden><span id="compare-left-label">◀ POT 2014 · vigente</span><span id="compare-right-label">Propuesta POT 2026 ▶</span></div><div id="selected-pill" class="selected-pill" hidden>● <span id="selected-pill-name"></span></div><div id="compare-slider-wrap" class="compare-slider-wrap" hidden><label for="compare-slider">Arrastra: 2014 a la izquierda · 2026 a la derecha</label><input type="range" id="compare-slider" min="10" max="90" step="1" value="50"></div></div>
+        <div class="map-foot"><span>Superficies calculadas sobre geometrías originales; el mapa usa geometrías simplificadas.</span><span>GDB POT 2014 actualizada y GDB propuesta 2026.</span></div>
+      </div>
+      <aside class="map-inspector"><div class="inspector-head"><span class="eyebrow">TERRITORIO SELECCIONADO</span><h3 id="inspector-title">Selecciona un barrio</h3><p id="inspector-meta">Haz clic en el mapa o busca un barrio en la barra superior.</p></div><div id="map-inspector-content" class="inspector-content"><div class="empty-state"><b>Comienza con tu barrio</b><p>El mapa permite localizarlo y analizarlo en una ficha amplia.</p></div></div><button id="open-normative" class="btn btn-dark" disabled>Ver comparación normativa →</button></aside>
+    </div>
+  </section>
+
+  <section class="page" id="page-norma" aria-labelledby="title-norma">
+    <div class="page-inner"><div class="page-heading"><div><span class="eyebrow">LECTURA POR TERRITORIO</span><h2 id="title-norma">Comparación normativa</h2><p>Qué establecía el POT vigente, qué propone 2026 y qué significa para tu barrio. Los gráficos conservan las hectáreas y porcentajes de superficie.</p></div><span class="stage-label">Cartografía verificada · efectos jurídicos condicionados</span></div><div id="norma-content" class="content-area"></div><div id="v7-tratamientos" class="content-area"></div><div id="v7-edificabilidad" class="content-area"></div><div id="v7-norma" class="content-area"></div></div>
+  </section>
+
+  <section class="page" id="page-gestion" aria-labelledby="title-gestion">
+    <div class="page-inner"><div class="page-heading"><div><span class="eyebrow">DISTRIBUCIÓN DE CARGAS Y BENEFICIOS</span><h2 id="title-gestion">Gestión e incentivos</h2><p>¿Quién puede desarrollar el suelo, qué requisitos debe cumplir, qué recibe como incentivo y qué se garantiza a los habitantes actuales?</p></div><span class="stage-label">Consulta de reglas generales, no certificado predial</span></div><div id="gestion-content" class="content-area"></div><div id="v7-gestion" class="content-area"></div></div>
+  </section>
+
+  <section class="page" id="page-riesgo" aria-labelledby="title-riesgo">
+    <div class="page-inner"><div class="page-heading"><div><span class="eyebrow">SEGURIDAD DEL TERRITORIO Y DE SUS HABITANTES</span><h2 id="title-riesgo">Gestión del Riesgo y Hábitat</h2><p>Qué amenazas y condicionamientos se han cartografiado en tu barrio, qué significa la microzonificación sísmica y qué requisitos deben verificarse.</p></div><span class="stage-label">No equivale a estudio de riesgo predial</span></div><div id="v7-riesgo" class="content-area"></div><div id="riesgo-content" class="content-area"></div></div>
+  </section>
+</main>
+<footer class="site-footer"><span>Observatorio ciudadano · V7.0 beta · fuentes y limitaciones documentadas · noviembre de 2026</span><span>Datos: <a href="https://drive.google.com/drive/folders/1SA5nS9Rf-7zp8-j0Vf7KuEQotfKeEqG4" target="_blank" rel="noopener">POT 2014</a> · <a href="https://drive.google.com/drive/folders/1Sydz1ahyHOcWgw5WrFsMjUJkDCQZ85Fr" target="_blank" rel="noopener">propuesta POT 2026</a> · <a href="METODOLOGIA_COMPARACION.md">metodología</a></span></footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="prueba-mapa/app.js?v=7.2-prueba.1"></script>
+</body>
+</html>
