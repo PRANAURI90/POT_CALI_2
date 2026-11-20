@@ -353,7 +353,7 @@ function renderRiskBarPanel(year){
  if(!d)return '<div class="risk-bar-panel"><h4>Distribución por superficie</h4><p class="caption">Consulta las delimitaciones de esta capa en el mapa. El proyecto no incluye una tabla distrital de hectáreas desagregadas para esta selección.</p></div>';
  const max=Math.max(1,...d.rows.map(x=>x[1]));
  const cats=riskCategories(key),active=riskCatSelection(year,key);
- const clean=x=>String(x||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\\s*\\(codigo cartografico\\)/g,'').replace(/\\s*\\([^)]*\\)/g,'').trim();
+ const clean=x=>String(x||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(' (')[0].trim();
  const rows=d.rows.map((r,i)=>{
   const matched=cats.find(x=>clean(x.label)===clean(r[0])||clean(x.label).startsWith(clean(r[0])));
   const selected=matched?.cat===active;
