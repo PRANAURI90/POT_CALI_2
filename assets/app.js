@@ -366,7 +366,7 @@ function renderRiskBarPanel(year){
  const cats=riskCategories(key),active=riskCatSelection(year,key);
  const clean=x=>String(x||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(' (')[0].trim();
  const rows=d.rows.map((r,i)=>{
-  const matched=key==='amenaza'?cats.find(x=>{const m=String(r[0]).match(/^(Movimientos en masa|Avenidas torrenciales|Inundación) · categoría (\\d)/);if(!m)return false;return String(x.cat)===({'Movimientos en masa':'1','Avenidas torrenciales':'2','Inundación':'3'}[m[1]]+'|'+m[2])}):cats.find(x=>clean(x.label)===clean(r[0])||clean(x.label).startsWith(clean(r[0])));
+  const matched=key==='amenaza'?cats.find(x=>{const m=String(r[0]).match(/^(Movimientos en masa|Avenidas torrenciales|Inundación) · categoría (\d)/);if(!m)return false;return String(x.cat)===({'Movimientos en masa':'1','Avenidas torrenciales':'2','Inundación':'3'}[m[1]]+'|'+m[2])}):cats.find(x=>clean(x.label)===clean(r[0])||clean(x.label).startsWith(clean(r[0])));
   const selected=matched?.cat===active;
   const color=matched?.color||['#397b73','#629da0','#c58f67','#6e91b2','#9a8bb9'][i%5];
   return '<button type="button" class="risk-bar-row risk-bar-button '+(selected?'selected':'')+'" '+(matched?'data-risk-pick="'+year+'" data-risk-cat-value="'+htmlEscape(matched.cat)+'"':'disabled')+'><div class="risk-bar-label"><span>'+htmlEscape(r[0])+'</span><b>'+fmt(r[1],1)+' ha</b></div><div class="risk-bar-track"><i style="width:'+Math.max(.2,100*r[1]/max)+'%;background:'+color+'"></i></div></button>';
