@@ -110,13 +110,13 @@ function updateLayerLegend(key){
  const holder=document.querySelector(`[data-legend="${key}"]`);if(!holder)return;
  const cats=state.catEntries[key]||[];if(!cats.length){holder.innerHTML='<p class="layer-hint">Cargando categorías cartográficas…</p>';return}
  const selected=state.catAllowed[key]||new Set(cats.map(x=>x.cat));
+ const filterEnabled=state.mapMode==='compare'||state.active.has(key);
  const idxControl=key==='edificabilidad_zonas2014'?`<label class="index-switch">Mostrar índice <select data-indice-capa="${key}"><option value="ICB" ${(state.edificabilidadIndice||'ICB')==='ICB'?'selected':''}>Básico (ICB)</option><option value="ICA" ${state.edificabilidadIndice==='ICA'?'selected':''}>Adicional (ICA)</option></select></label>`:'';
  const wasOpen=holder.querySelector('details.layer-categories')?.open??false;
- holder.innerHTML=`<details class="layer-categories" ${wasOpen?'open':''}><summary>${cats.length} categorías disponibles</summary>${idxControl}<div class="layer-filter-tools"><button type="button" data-filter-all="${key}">Todas</button><button type="button" data-filter-none="${key}">Ninguna</button></div><div class="filter-scroll">${cats.map(x=>`<div class="layer-filter-row"><label class="layer-filter"><input type="checkbox" data-filter-layer="${key}" data-filter-cat="${htmlEscape(x.cat)}" ${selected.has(x.cat)?'checked':''}><i class="swatch" style="background:${x.color}"></i><span title="${htmlEscape(x.label||catLabel(key,x.cat))}">${htmlEscape(x.label||catLabel(key,x.cat))}</span><small class="category-count">${x.n}</small></label><button type="button" class="solo-filter" data-filter-only="${key}" data-only-cat="${htmlEscape(x.cat)}" title="Mostrar solo esta categoría">Solo</button></div>`).join('')}</div></details>`;
+ holder.innerHTML=`<details class="layer-categories" ${wasOpen?'open':''}><summary>${cats.length} categorías disponibles</summary>${idxControl}<div class="layer-filter-tools"><button type="button" data-filter-all="${key}">Todas</button><button type="button" data-filter-none="${key}">Ninguna</button></div><div class="filter-scroll">${cats.map(x=>`<div class="layer-filter-row"><label class="layer-filter"><input type="checkbox" data-filter-layer="${key}" data-filter-cat="${htmlEscape(x.cat)}" ${filterEnabled&&selected.has(x.cat)?'checked':''} ${filterEnabled?'':'disabled'}><i class="swatch" style="background:${x.color}"></i><span title="${htmlEscape(x.label||catLabel(key,x.cat))}">${htmlEscape(x.label||catLabel(key,x.cat))}</span><small class="category-count">${x.n}</small></label></div>`).join('')}</div></details>`;
  holder.querySelectorAll('[data-filter-layer]').forEach(inp=>inp.addEventListener('change',()=>{if(inp.checked)selected.add(inp.dataset.filterCat);else selected.delete(inp.dataset.filterCat);state.catAllowed[key]=selected;restyleLayer(key)}));
  holder.querySelector('[data-filter-all]').addEventListener('click',()=>{state.catAllowed[key]=new Set(cats.map(x=>x.cat));updateLayerLegend(key);restyleLayer(key)});
  holder.querySelector('[data-filter-none]').addEventListener('click',()=>{state.catAllowed[key]=new Set();updateLayerLegend(key);restyleLayer(key)});
- holder.querySelectorAll('[data-filter-only]').forEach(b=>b.addEventListener('click',()=>{state.catAllowed[key]=new Set([b.dataset.onlyCat]);updateLayerLegend(key);restyleLayer(key);const parent=document.querySelector(`[data-layer="${key}"]`);if(parent&&!parent.checked){parent.checked=true;toggleLayer(key,true)}}));
  const select=holder.querySelector('[data-indice-capa]');if(select)select.addEventListener('change',()=>{state.edificabilidadIndice=select.value;const data=state.leyendas?.[key]?.indices?.[select.value];if(data){state.catEntries[key]=data;state.catAllowed[key]=new Set(data.map(x=>x.cat));}else if(state.geo[key])buildLegend(key,state.geo[key]);updateLayerLegend(key);restyleLayer(key)});
 }
 
@@ -150,7 +150,7 @@ function makeSidebar(){
  DOM('layers').querySelectorAll('[data-layer]').forEach(b=>b.addEventListener('change',()=>toggleLayer(b.dataset.layer,b.checked)));
  if(state.leyendas)populateLegends();
 }
-async function toggleLayer(key,on){if(on)state.active.add(key);else state.active.delete(key);if(!state.map)return;if(state.mapMode==='compare'){if(SWIPE_THEMES[state.compareTheme]?.includes(key))restyleLayer(key);return;}try{if(on){await ensureLayer(key);state.layers[key].addTo(state.map)}else if(state.layers[key])state.map.removeLayer(state.layers[key]);}catch(e){console.error(e);DOM('map-status').textContent=`No fue posible cargar: ${CONFIG[key].label}`}}
+async function toggleLayer(key,on){if(on)state.active.add(key);else state.active.delete(key);updateLayerLegend(key);if(!state.map)return;if(state.mapMode==='compare'){if(SWIPE_THEMES[state.compareTheme]?.includes(key))restyleLayer(key);return;}try{if(on){await ensureLayer(key);state.layers[key].addTo(state.map)}else if(state.layers[key])state.map.removeLayer(state.layers[key]);}catch(e){console.error(e);DOM('map-status').textContent=`No fue posible cargar: ${CONFIG[key].label}`}}
 function initMap(){if(state.leafReady)return;if(!window.L){DOM('map').innerHTML='<p style="padding:24px;color:#824235">Leaflet no se cargó. Comprueba tu conexión a internet y recarga el sitio.</p>';return}state.map=L.map('map',{preferCanvas:true,zoomControl:true,maxZoom:19}).setView([3.43,-76.54],11);state.map.attributionControl.setPrefix(false);state.map.createPane('barrios');state.map.getPane('barrios').style.zIndex=480;state.map.createPane('resaltado');state.map.getPane('resaltado').style.zIndex=650;state.map.getPane('resaltado').style.pointerEvents='none';state.base=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(state.map);makeSidebar();state.leafReady=true;for(const key of state.active)toggleLayer(key,true);drawBarrios();updateHeader();}
 function drawBarrios(){if(!state.leafReady||!state.barrios.length||state.barrioLayer)return;const gj={type:'FeatureCollection',features:state.barrios};state.barrioLayer=L.geoJSON(gj,{pane:'barrios',style:{color:'#365f62',weight:1.1,opacity:.72,fillColor:'#f8f2cf',fillOpacity:.015},onEachFeature:(feature,layer)=>{state.byCode.set(String(feature.properties.codigo),{feature,layer});layer.on('click',e=>{L.DomEvent.stopPropagation(e);setSelected(feature,layer)});layer.bindTooltip(htmlEscape(feature.properties.barrio),{sticky:true})}});if(state.barriosVisible)state.barrioLayer.addTo(state.map);const b=state.barrioLayer.getBounds();if(b.isValid()&&!state.selected)state.map.fitBounds(b.pad(.025),{maxZoom:12});drawHighlights();DOM('map-status').textContent=`${state.barrios.length} barrios y sectores disponibles`}
 function removeHighlights(){if(state.highlight&&state.map){state.map.removeLayer(state.highlight);state.highlight=null}if(state.highlightRight&&state.mapRight){state.mapRight.removeLayer(state.highlightRight);state.highlightRight=null}}
@@ -186,7 +186,7 @@ function ensureRightMap(){
 const SWIPE_THEMES={usos:['areas_actividad2014','areas_actividad'],clasificacion:['clasificacion2014','clasificacion'],tratamientos:['tratamientos2014','tratamientos'],planes:['planes2014','planes_parciales']};
 function updateCompareLegendVisibility(){
  const compare=state.mapMode==='compare';const paired=new Set(SWIPE_THEMES[state.compareTheme]||[]);
- document.querySelectorAll('#layers .layer-unit').forEach(el=>{const key=el.querySelector('[data-layer]')?.dataset.layer;const isPair=paired.has(key);el.classList.toggle('compare-paired',compare&&isPair);el.hidden=compare&&!isPair;const chk=el.querySelector('[data-layer]');if(chk){chk.disabled=compare;chk.title=compare?'En comparación, activa/desactiva cada categoría en los filtros inferiores':'Activar capa';}});
+ document.querySelectorAll('#layers .layer-unit').forEach(el=>{const key=el.querySelector('[data-layer]')?.dataset.layer;const isPair=paired.has(key);el.classList.toggle('compare-paired',compare&&isPair);el.hidden=compare&&!isPair;const chk=el.querySelector('[data-layer]');if(chk){chk.disabled=compare;chk.checked=compare?isPair:state.active.has(key);chk.title=compare?'En comparación, activa/desactiva cada categoría en los filtros inferiores':'Activar capa';}});
  document.querySelectorAll('#layers>details').forEach(group=>{const hasVisible=!!group.querySelector('.layer-unit:not([hidden])');group.hidden=compare&&!hasVisible;if(compare&&hasVisible)group.open=true;});
 }
 async function updateSwipeLayers(){
@@ -202,6 +202,7 @@ async function updateSwipeLayers(){
   if(state.compareLayers.left)state.map.removeLayer(state.compareLayers.left);
   if(state.compareLayers.right)state.mapRight.removeLayer(state.compareLayers.right);
   state.compareLayers.left=left;state.compareLayers.right=right;
+  for(const key of pair)updateLayerLegend(key);
   left.addTo(state.map);right.addTo(state.mapRight);
   DOM('map-right-clip').dataset.comparator='2026';
   state.mapRight.invalidateSize({pan:false});state.mapRight.setView(state.map.getCenter(),state.map.getZoom(),{animate:false});
@@ -217,6 +218,7 @@ async function modeMap(mode){
  for(const id of ['map-right-clip','compare-divider','map-period-tags','compare-slider-wrap','compare-theme-wrap'])DOM(id).hidden=!compare;
  DOM('layers').classList.toggle('comparison-active',compare);
  updateCompareLegendVisibility();
+ Object.keys(state.catEntries).forEach(updateLayerLegend);
  if(compare){
   for(const key of state.active)if(state.layers[key])state.map.removeLayer(state.layers[key]);
   ensureRightMap();
