@@ -37,7 +37,7 @@ const CONFIG={
 };
 const PALETTE=['#6e9ec6','#e2a267','#82a78a','#b17caf','#ca6777','#8f97cf','#e0c16c','#6caba5','#b9a385','#8292a0','#a2c280','#ca8ea9','#a9a8ce'];
 const TREAT_COLORS={C1:'#87b1d7',C2:'#4e91bd',C3:'#366a96',C4:'#254e75',R1:'#d36b75',R2:'#e7a17a',R3:'#c38aaf',D1:'#9888d0',D2:'#8372ba',DE:'#9888d0',CO:'#68a889',CON:'#68a889',MI:'#e2bb65',ND:'#9da4a4',INS:'#a0a6b0',PE:'#88b18d'};
-const state={page:'inicio',topic:'tratamientos',barrios:[],byCode:new Map(),barriosGeo:null,resumen:null,normas:null,indicadores:null,transformacion:null,sueloComparacion:null,selected:null,selectedLayer:null,map:null,mapRight:null,base:null,baseRight:null,barrioLayer:null,barrioRight:null,highlight:null,highlightRight:null,geo:{},layers:{},active:new Set(['tratamientos']),catAllowed:{},catEntries:{},mapMode:'explore',compareTheme:'clasificacion',compareLayers:{left:null,right:null},syncGuard:false,leafReady:false,barriosVisible:true};
+const state={page:'inicio',topic:'tratamientos',barrios:[],byCode:new Map(),barriosGeo:null,resumen:null,normas:null,indicadores:null,transformacion:null,sueloComparacion:null,selected:null,selectedLayer:null,map:null,mapRight:null,base:null,baseRight:null,barrioLayer:null,barrioRight:null,highlight:null,highlightRight:null,geo:{},layers:{},active:new Set(['tratamientos']),catAllowed:{},catEntries:{},mapMode:'explore',compareTheme:'tratamientos',compareLayers:{left:null,right:null},syncGuard:false,leafReady:false,barriosVisible:true};
 const asCode=(r,year)=>{
  const orig=String(r?.codigo_original??r?.atributos?.CODIGO??'').trim();
  if(year===2026)return ({'1':'CO','2':'CO','3':'C1','4':'C2','5':'C3','6':'C4','7':'D1','8':'D2','9':'MI','10':'R1','11':'R2','12':'NA'})[orig]||'';
@@ -110,13 +110,13 @@ function updateLayerLegend(key){
  const holder=document.querySelector(`[data-legend="${key}"]`);if(!holder)return;
  const cats=state.catEntries[key]||[];if(!cats.length){holder.innerHTML='<p class="layer-hint">Cargando categorías cartográficas…</p>';return}
  const selected=state.catAllowed[key]||new Set(cats.map(x=>x.cat));
+ const filterEnabled=state.mapMode==='compare'?Boolean(SWIPE_THEMES[state.compareTheme]?.includes(key)):state.active.has(key);
  const idxControl=key==='edificabilidad_zonas2014'?`<label class="index-switch">Mostrar índice <select data-indice-capa="${key}"><option value="ICB" ${(state.edificabilidadIndice||'ICB')==='ICB'?'selected':''}>Básico (ICB)</option><option value="ICA" ${state.edificabilidadIndice==='ICA'?'selected':''}>Adicional (ICA)</option></select></label>`:'';
  const wasOpen=holder.querySelector('details.layer-categories')?.open??false;
- holder.innerHTML=`<details class="layer-categories" ${wasOpen?'open':''}><summary>${cats.length} categorías disponibles</summary>${idxControl}<div class="layer-filter-tools"><button type="button" data-filter-all="${key}">Todas</button><button type="button" data-filter-none="${key}">Ninguna</button></div><div class="filter-scroll">${cats.map(x=>`<div class="layer-filter-row"><label class="layer-filter"><input type="checkbox" data-filter-layer="${key}" data-filter-cat="${htmlEscape(x.cat)}" ${selected.has(x.cat)?'checked':''}><i class="swatch" style="background:${x.color}"></i><span title="${htmlEscape(x.label||catLabel(key,x.cat))}">${htmlEscape(x.label||catLabel(key,x.cat))}</span><small class="category-count">${x.n}</small></label><button type="button" class="solo-filter" data-filter-only="${key}" data-only-cat="${htmlEscape(x.cat)}" title="Mostrar solo esta categoría">Solo</button></div>`).join('')}</div></details>`;
+ holder.innerHTML=`<details class="layer-categories" ${wasOpen?'open':''}><summary>${cats.length} categorías disponibles</summary>${idxControl}<div class="layer-filter-tools"><button type="button" data-filter-all="${key}">Todas</button><button type="button" data-filter-none="${key}">Ninguna</button></div><div class="filter-scroll">${cats.map(x=>`<div class="layer-filter-row"><label class="layer-filter"><input type="checkbox" data-filter-layer="${key}" data-filter-cat="${htmlEscape(x.cat)}" ${filterEnabled&&selected.has(x.cat)?'checked':''} ${filterEnabled?'':'disabled'}><i class="swatch" style="background:${x.color}"></i><span title="${htmlEscape(x.label||catLabel(key,x.cat))}">${htmlEscape(x.label||catLabel(key,x.cat))}</span><small class="category-count">${x.n}</small></label></div>`).join('')}</div></details>`;
  holder.querySelectorAll('[data-filter-layer]').forEach(inp=>inp.addEventListener('change',()=>{if(inp.checked)selected.add(inp.dataset.filterCat);else selected.delete(inp.dataset.filterCat);state.catAllowed[key]=selected;restyleLayer(key)}));
  holder.querySelector('[data-filter-all]').addEventListener('click',()=>{state.catAllowed[key]=new Set(cats.map(x=>x.cat));updateLayerLegend(key);restyleLayer(key)});
  holder.querySelector('[data-filter-none]').addEventListener('click',()=>{state.catAllowed[key]=new Set();updateLayerLegend(key);restyleLayer(key)});
- holder.querySelectorAll('[data-filter-only]').forEach(b=>b.addEventListener('click',()=>{state.catAllowed[key]=new Set([b.dataset.onlyCat]);updateLayerLegend(key);restyleLayer(key);const parent=document.querySelector(`[data-layer="${key}"]`);if(parent&&!parent.checked){parent.checked=true;toggleLayer(key,true)}}));
  const select=holder.querySelector('[data-indice-capa]');if(select)select.addEventListener('change',()=>{state.edificabilidadIndice=select.value;const data=state.leyendas?.[key]?.indices?.[select.value];if(data){state.catEntries[key]=data;state.catAllowed[key]=new Set(data.map(x=>x.cat));}else if(state.geo[key])buildLegend(key,state.geo[key]);updateLayerLegend(key);restyleLayer(key)});
 }
 
@@ -147,10 +147,10 @@ async function ensureLayer(key){
 }
 function makeSidebar(){
  DOM('layers').innerHTML=GROUPS.map(g=>`<details ${g.open?'open':''}><summary><span>${htmlEscape(g.title)}</span><span class="group-count">${g.keys.length} capas</span></summary><div class="layer-list">${g.keys.map(k=>`<div class="layer-unit"><label class="layer-main-label"><input type="checkbox" data-layer="${k}" ${state.active.has(k)?'checked':''}><i class="swatch" style="background:${CONFIG[k].base}"></i><span class="layer-name">${htmlEscape(CONFIG[k].label)}</span></label><div class="layer-legend" data-legend="${k}"></div></div>`).join('')}</div></details>`).join('');
- DOM('layers').querySelectorAll('[data-layer]').forEach(b=>b.addEventListener('change',()=>toggleLayer(b.dataset.layer,b.checked)));
+ DOM('layers').querySelectorAll('[data-layer]').forEach(b=>b.addEventListener('change',()=>{if(state.mapMode==='compare'){const theme=Object.keys(SWIPE_THEMES).find(t=>SWIPE_THEMES[t].includes(b.dataset.layer));if(theme){selectCompareTheme(theme);return}}toggleLayer(b.dataset.layer,b.checked)}));
  if(state.leyendas)populateLegends();
 }
-async function toggleLayer(key,on){if(on)state.active.add(key);else state.active.delete(key);if(!state.map)return;if(state.mapMode==='compare'){if(SWIPE_THEMES[state.compareTheme]?.includes(key))restyleLayer(key);return;}try{if(on){await ensureLayer(key);state.layers[key].addTo(state.map)}else if(state.layers[key])state.map.removeLayer(state.layers[key]);}catch(e){console.error(e);DOM('map-status').textContent=`No fue posible cargar: ${CONFIG[key].label}`}}
+async function toggleLayer(key,on){if(on)state.active.add(key);else state.active.delete(key);updateLayerLegend(key);if(!state.map)return;if(state.mapMode==='compare'){if(SWIPE_THEMES[state.compareTheme]?.includes(key))restyleLayer(key);return;}try{if(on){await ensureLayer(key);state.layers[key].addTo(state.map)}else if(state.layers[key])state.map.removeLayer(state.layers[key]);}catch(e){console.error(e);DOM('map-status').textContent=`No fue posible cargar: ${CONFIG[key].label}`}}
 function initMap(){if(state.leafReady)return;if(!window.L){DOM('map').innerHTML='<p style="padding:24px;color:#824235">Leaflet no se cargó. Comprueba tu conexión a internet y recarga el sitio.</p>';return}state.map=L.map('map',{preferCanvas:true,zoomControl:true,maxZoom:19}).setView([3.43,-76.54],11);state.map.attributionControl.setPrefix(false);state.map.createPane('barrios');state.map.getPane('barrios').style.zIndex=480;state.map.createPane('resaltado');state.map.getPane('resaltado').style.zIndex=650;state.map.getPane('resaltado').style.pointerEvents='none';state.base=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(state.map);makeSidebar();state.leafReady=true;for(const key of state.active)toggleLayer(key,true);drawBarrios();updateHeader();}
 function drawBarrios(){if(!state.leafReady||!state.barrios.length||state.barrioLayer)return;const gj={type:'FeatureCollection',features:state.barrios};state.barrioLayer=L.geoJSON(gj,{pane:'barrios',style:{color:'#365f62',weight:1.1,opacity:.72,fillColor:'#f8f2cf',fillOpacity:.015},onEachFeature:(feature,layer)=>{state.byCode.set(String(feature.properties.codigo),{feature,layer});layer.on('click',e=>{L.DomEvent.stopPropagation(e);setSelected(feature,layer)});layer.bindTooltip(htmlEscape(feature.properties.barrio),{sticky:true})}});if(state.barriosVisible)state.barrioLayer.addTo(state.map);const b=state.barrioLayer.getBounds();if(b.isValid()&&!state.selected)state.map.fitBounds(b.pad(.025),{maxZoom:12});drawHighlights();DOM('map-status').textContent=`${state.barrios.length} barrios y sectores disponibles`}
 function removeHighlights(){if(state.highlight&&state.map){state.map.removeLayer(state.highlight);state.highlight=null}if(state.highlightRight&&state.mapRight){state.mapRight.removeLayer(state.highlightRight);state.highlightRight=null}}
@@ -185,9 +185,36 @@ function ensureRightMap(){
 }
 const SWIPE_THEMES={usos:['areas_actividad2014','areas_actividad'],clasificacion:['clasificacion2014','clasificacion'],tratamientos:['tratamientos2014','tratamientos'],planes:['planes2014','planes_parciales']};
 function updateCompareLegendVisibility(){
- const compare=state.mapMode==='compare';const paired=new Set(SWIPE_THEMES[state.compareTheme]||[]);
- document.querySelectorAll('#layers .layer-unit').forEach(el=>{const key=el.querySelector('[data-layer]')?.dataset.layer;const isPair=paired.has(key);el.classList.toggle('compare-paired',compare&&isPair);el.hidden=compare&&!isPair;const chk=el.querySelector('[data-layer]');if(chk){chk.disabled=compare;chk.title=compare?'En comparación, activa/desactiva cada categoría en los filtros inferiores':'Activar capa';}});
- document.querySelectorAll('#layers>details').forEach(group=>{const hasVisible=!!group.querySelector('.layer-unit:not([hidden])');group.hidden=compare&&!hasVisible;if(compare&&hasVisible)group.open=true;});
+ const compare=state.mapMode==='compare';
+ const paired=new Set(SWIPE_THEMES[state.compareTheme]||[]);
+ document.querySelectorAll('#layers .layer-unit').forEach(el=>{
+  const key=el.querySelector('[data-layer]')?.dataset.layer;
+  const isPair=paired.has(key),chk=el.querySelector('[data-layer]');
+  el.hidden=false;
+  el.classList.toggle('compare-paired',compare&&isPair);
+  el.classList.toggle('compare-other',compare&&!isPair);
+  const legend=el.querySelector('.layer-legend');
+  if(legend)legend.hidden=compare&&!isPair;
+  if(chk){
+   chk.disabled=false;
+   chk.checked=compare?isPair:state.active.has(key);
+   chk.title=compare?'Seleccionar este tema para comparar 2014 y 2026':'Activar u ocultar esta capa';
+  }
+ });
+ document.querySelectorAll('#layers>details').forEach(group=>{group.hidden=false;});
+ if(compare){
+  const pair=SWIPE_THEMES[state.compareTheme]||[];
+  for(const key of pair){const el=document.querySelector(`#layers [data-layer="${key}"]`)?.closest('details');if(el)el.open=true;}
+ }
+}
+function selectCompareTheme(theme){
+ if(!SWIPE_THEMES[theme])return;
+ state.compareTheme=theme;
+ const select=DOM('compare-theme');
+ if(select)select.value=theme;
+ updateCompareLegendVisibility();
+ Object.keys(state.catEntries).forEach(updateLayerLegend);
+ if(state.mapMode==='compare')updateSwipeLayers();
 }
 async function updateSwipeLayers(){
  if(state.mapMode!=='compare'||!state.mapRight)return;
@@ -202,11 +229,12 @@ async function updateSwipeLayers(){
   if(state.compareLayers.left)state.map.removeLayer(state.compareLayers.left);
   if(state.compareLayers.right)state.mapRight.removeLayer(state.compareLayers.right);
   state.compareLayers.left=left;state.compareLayers.right=right;
+  for(const key of pair)updateLayerLegend(key);
   left.addTo(state.map);right.addTo(state.mapRight);
   DOM('map-right-clip').dataset.comparator='2026';
   state.mapRight.invalidateSize({pan:false});state.mapRight.setView(state.map.getCenter(),state.map.getZoom(),{animate:false});
   setSwipePercent(DOM('compare-slider').value);drawHighlights();
-  DOM('map-status').textContent=`Izquierda: 2014 (${CONFIG[pair[0]].label}) · Derecha: propuesta 2026 (${CONFIG[pair[1]].label})`;
+  DOM('map-status').textContent=`${CONFIG[pair[0]].label}: ${oldGeo.features.length} polígonos (2014) · ${CONFIG[pair[1]].label}: ${newGeo.features.length} polígonos (2026). Si no se ven, hay un problema de visualización, no de carga de datos.`;
  }catch(err){console.error('Comparador:',err);DOM('map-status').textContent='No fue posible cargar las dos capas. Comprueba la conexión.'}
 }
 function updateCompareStyles(){if(state.mapMode==='compare')updateSwipeLayers()}
@@ -214,9 +242,11 @@ async function modeMap(mode){
  if(!state.map)return;state.mapMode=mode;
  document.querySelectorAll('[data-map-mode]').forEach(b=>b.classList.toggle('selected',b.dataset.mapMode===mode));
  const compare=mode==='compare';
+ if(compare){const activeTheme=Object.keys(SWIPE_THEMES).find(t=>SWIPE_THEMES[t].some(k=>state.active.has(k)));if(activeTheme)state.compareTheme=activeTheme;DOM('compare-theme').value=state.compareTheme;}
  for(const id of ['map-right-clip','compare-divider','map-period-tags','compare-slider-wrap','compare-theme-wrap'])DOM(id).hidden=!compare;
  DOM('layers').classList.toggle('comparison-active',compare);
  updateCompareLegendVisibility();
+ Object.keys(state.catEntries).forEach(updateLayerLegend);
  if(compare){
   for(const key of state.active)if(state.layers[key])state.map.removeLayer(state.layers[key]);
   ensureRightMap();
@@ -314,5 +344,5 @@ function renderExtrasRiesgoV7(){const host=v7El('v7-riesgo');if(!host||!state.mi
  host.innerHTML=`<div class="v7-section-title"><span class="eyebrow">MICROZONIFICACIÓN SÍSMICA · CAPA EXPLORATORIA</span><h3>${state.selected?'Microzonas que intersectan '+htmlEscape(state.selected.properties.barrio):'Las diez microzonas de respuesta sísmica de Cali'}</h3><p>Polígonos digitalizados de manera <b>aproximada</b> a partir del mapa MZSC-RS2 (INGEOMINAS–DAGMA, 2005). El Decreto 411.0.20.0158 de 2014 adopta la microzonificación y sus parámetros de diseño.</p></div><div class="v7-grid"><section class="surface-card"><img class="v7-micro-map" src="assets/microzonas_aproximadas_v7.png" alt="Mapa exploratorio de diez microzonas sísmicas digitalizadas sobre Cali; delimitación aproximada" loading="lazy"><p class="caption">Mapa orientativo basado en digitalización aproximada. No reemplaza mapa adoptado.</p></section><section class="surface-card"><h4>${state.selected?'Distribución espacial aproximada':'Zonas cartografiadas'}</h4>${zones.length?v7Bar(zones.map(z=>({nombre:'Zona '+z.zona,ha:z.hectareas,color:'#9d82b9'})),10):`<p>${state.selected?'No hay intersección registrada en la digitalización aproximada. No significa ausencia de exigencias sísmicas.':'Selecciona un barrio para consultar intersecciones y porcentajes aproximados.'}</p>`}${zones.length?`<p class="caption">${zones.map(z=>`Zona ${htmlEscape(z.zona)}: ${fmt(z.porcentaje_barrio)} % del barrio`).join(' · ')}. Proporciones exploratorias.</p>`:''}</section><section class="surface-card"><h4>¿Qué representa una microzona?</h4><div class="v7-scheme"><div><b>1 · Amenaza</b><span>Movimiento sísmico esperado y efectos de sitio</span></div><div><b>2 · Exposición</b><span>Personas, edificios e infraestructura potencialmente afectados</span></div><div><b>3 · Vulnerabilidad</b><span>Fragilidad física y social frente al movimiento sísmico</span></div><div><b>4 · Riesgo</b><span>Pérdidas y daños potenciales según escenarios</span></div></div></section></div><div class="v7-grid"><article class="surface-card"><h4>Qué obliga a revisar la norma de microzonificación</h4><p>Los parámetros de respuesta del sitio y los espectros para diseño sismorresistente dependen de la zona y del tipo de estructura. El mapa señala condiciones especiales en sectores susceptibles a licuación, corrimiento lateral y franjas de transición.</p><p class="caption">Fuentes: Decreto 411.0.20.0158/2014, arts. 2–5 y tablas de diseño; mapa MZSC-RS2. No usar esta digitalización para diseñar ni autorizar construcciones.</p><button class="v7-link" data-goto="mapa">Ver capa de microzonas en el mapa →</button></article><article class="surface-card"><h4>Estudio GEM–TREQ (2022)</h4><p>Modelo urbano de exposición de más de 340.000 edificaciones y 13 escenarios sísmicos. El estudio identificó que más del 48 % de los habitantes del modelo vivía en estructuras de uno o dos pisos con provisiones sismorresistentes bajas.</p><p><b>Interpretación:</b> el comportamiento del suelo no basta para estimar daños; se necesitan condiciones constructivas, uso, ocupación y vulnerabilidad.</p><p class="caption">GEM–TREQ, Evaluación del riesgo sísmico para Santiago de Cali (junio de 2022), resumen ejecutivo pp. 10–13; modelo de exposición referido a 2020, no censo de 2026.</p></article></div><div class="v7-note"><strong>AVISO CARTOGRÁFICO:</strong> límites digitalizados de forma aproximada. Si un barrio cae en dos zonas o cerca del borde no debe asignarse una única zona oficial. Consultar el mapa adoptado y el geovisor técnico para decisiones prediales.</div>`;
 }
 
-function bindEvents(){document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>pageTo(b.dataset.page)));document.body.addEventListener('click',e=>{const swipe=e.target.closest?.('[data-open-swipe]');if(swipe){pageTo('mapa');modeMap('compare');return;}const go=e.target.closest?.('[data-goto],[data-go]');if(go)pageTo(go.dataset.goto||go.dataset.go)});DOM('search').addEventListener('input',searchChange);DOM('search').addEventListener('keydown',e=>{if(e.key==='Escape')DOM('search-results').replaceChildren();if(e.key==='Enter'){const f=searchMatches(e.target.value)[0];if(f){setSelected(f,null,state.page==='inicio');DOM('search-results').replaceChildren()}}});document.addEventListener('click',e=>{if(!e.target.closest?.('.search-box'))DOM('search-results').replaceChildren()});DOM('clear-territory').addEventListener('click',clearSelected);DOM('barrios-visible').addEventListener('change',e=>{state.barriosVisible=e.target.checked;if(!state.leafReady)return;for(const [map,layer] of [[state.map,state.barrioLayer],[state.mapRight,state.barrioRight]]){if(!map||!layer)continue;if(state.barriosVisible)layer.addTo(map);else map.removeLayer(layer)}});DOM('open-normative').addEventListener('click',()=>pageTo('norma'));DOM('map-reset').addEventListener('click',resetMap);DOM('base-toggle').addEventListener('click',()=>{if(!state.base||!state.map)return;const on=state.map.hasLayer(state.base);if(on)state.map.removeLayer(state.base);else state.base.addTo(state.map);if(state.mapRight&&state.baseRight){if(on)state.mapRight.removeLayer(state.baseRight);else state.baseRight.addTo(state.mapRight)}});document.querySelectorAll('[data-map-mode]').forEach(b=>b.addEventListener('click',()=>modeMap(b.dataset.mapMode)));DOM('compare-theme').addEventListener('change',e=>{state.compareTheme=e.target.value;updateCompareLegendVisibility();updateSwipeLayers()});DOM('compare-slider').addEventListener('input',e=>setSwipePercent(e.target.value));window.addEventListener('resize',()=>{state.map?.invalidateSize({pan:false});state.mapRight?.invalidateSize({pan:false})});}
+function bindEvents(){document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>pageTo(b.dataset.page)));document.body.addEventListener('click',e=>{const swipe=e.target.closest?.('[data-open-swipe]');if(swipe){pageTo('mapa');modeMap('compare');return;}const go=e.target.closest?.('[data-goto],[data-go]');if(go)pageTo(go.dataset.goto||go.dataset.go)});DOM('search').addEventListener('input',searchChange);DOM('search').addEventListener('keydown',e=>{if(e.key==='Escape')DOM('search-results').replaceChildren();if(e.key==='Enter'){const f=searchMatches(e.target.value)[0];if(f){setSelected(f,null,state.page==='inicio');DOM('search-results').replaceChildren()}}});document.addEventListener('click',e=>{if(!e.target.closest?.('.search-box'))DOM('search-results').replaceChildren()});DOM('clear-territory').addEventListener('click',clearSelected);DOM('barrios-visible').addEventListener('change',e=>{state.barriosVisible=e.target.checked;if(!state.leafReady)return;for(const [map,layer] of [[state.map,state.barrioLayer],[state.mapRight,state.barrioRight]]){if(!map||!layer)continue;if(state.barriosVisible)layer.addTo(map);else map.removeLayer(layer)}});DOM('open-normative').addEventListener('click',()=>pageTo('norma'));DOM('map-reset').addEventListener('click',resetMap);DOM('base-toggle').addEventListener('click',()=>{if(!state.base||!state.map)return;const on=state.map.hasLayer(state.base);if(on)state.map.removeLayer(state.base);else state.base.addTo(state.map);if(state.mapRight&&state.baseRight){if(on)state.mapRight.removeLayer(state.baseRight);else state.baseRight.addTo(state.mapRight)}});document.querySelectorAll('[data-map-mode]').forEach(b=>b.addEventListener('click',()=>modeMap(b.dataset.mapMode)));DOM('compare-theme').addEventListener('change',e=>selectCompareTheme(e.target.value));DOM('compare-slider').addEventListener('input',e=>setSwipePercent(e.target.value));window.addEventListener('resize',()=>{state.map?.invalidateSize({pan:false});state.mapRight?.invalidateSize({pan:false})});}
 document.addEventListener('DOMContentLoaded',()=>{bindEvents();loadData();});
