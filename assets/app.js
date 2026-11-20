@@ -408,6 +408,7 @@ function bindRiskPeriodControls(root){
 }
 function renderRiesgo(){
  const root=DOM('riesgo-content');if(!root)return;
+ destroyRiskPanelMaps();
  const actual=state.riskTopic||'amenaza';const chosen=RISK_TOPICS.find(x=>x.key===actual)||RISK_TOPICS[0];
  const info=barrioInfo(),selected=state.selected,code=String(selected?.properties?.codigo||'');
  const zones=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
