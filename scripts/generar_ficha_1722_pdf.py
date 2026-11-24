@@ -10,6 +10,7 @@ from shapely.ops import unary_union
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
 from reportlab.lib.utils import ImageReader
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 ROOT=Path(__file__).resolve().parents[1]
 D=ROOT/'data'
@@ -68,14 +69,22 @@ def base(n,k,title,sub):
     txt(36,30,'OBSERVATORIO CIUDADANO · POT CALI · PILOTO 2026',7,MUTED)
     txt(W-65,30,f'{n}/6',8,NAVY,True)
 def page():c.showPage()
-def bar_chart(x,y,items,width=475,height=15,maximum=None):
+def bar_chart(x,y,items,width=475,height=15,maximum=None,step=64):
+    """Cada etiqueta ocupa su propia línea, claramente separada de la barra."""
     maximum=maximum or max(v for name,v,co in items)
+    assert maximum>0 and width>0 and step>=height+34
     for label,v,color in items:
-        txt(x,y+19,label,9,INK,True)
+        # Etiquetas por encima de la barra. El valor queda a la derecha y NO en el relleno.
+        baseline=y+height+17
+        available=width-100
+        assert stringWidth(label,'Helvetica-Bold',9)<available, 'Etiqueta demasiado larga: '+label
+        txt(x,baseline,label,9,INK,True)
+        c.setFillColor(HexColor(NAVY))
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(x+width,baseline,f'{v:.2f} ha')
         rect(x,y,width,height,'#E9EEF1',r=4)
         if v>0:rect(x,y,max(1,width*v/maximum),height,color,r=4)
-        txt(x+width-70,y+19,f'{v:.2f} ha',9,INK,True)
-        y-=52
+        y-=step
 def inset(y,heading,lines,fill='#EDF4F5'):
     rect(36,y-70,W-72,88,fill,r=9)
     txt(51,y-1,heading,10,NAVY,True)
@@ -88,9 +97,9 @@ txt(188,591,'del barrio pasa de C1 a R1',15,NAVY,True)
 para(188,570,['20,06 ha de consolidación urbanística (2014)','a redensificación alta (propuesta 2026).'],9.5,17)
 txt(54,517,'Adicionalmente, 17,98 ha pasan de C1 a D2.',10,INK,True)
 txt(36,454,'TRATAMIENTOS · PROPUESTA 2026',11,NAVY,True)
-bar_chart(45,405,[('R1 · Redensificación alta',20.15,'#D67E6F'),('C3 · Consolidación moderada',18.60,'#7DA6A2'),('D2 · Desarrollo urbano',17.98,'#D7B36D')],490,16)
-inset(211,'LECTURA TERRITORIAL',['La reconfiguración cartográfica no equivale a licencias automáticas.','Deben verificarse aprovechamientos, instrumentos, cargas y soporte urbano.'])
-txt(36,94,'POT 2014: C1 56,46 ha; C3 0,19 ha. Propuesta: R1 20,15; C3 18,60; D2 17,98 ha.',8,MUTED)
+bar_chart(45,405,[('R1 · Redensificación alta',20.15,'#D67E6F'),('C3 · Consolidación moderada',18.60,'#7DA6A2'),('D2 · Desarrollo urbano',17.98,'#D7B36D')],490,16,step=64)
+inset(173,'LECTURA TERRITORIAL',['La reconfiguración cartográfica no equivale a licencias automáticas.','Deben verificarse aprovechamientos, instrumentos, cargas y soporte urbano.'])
+txt(36,85,'POT 2014: C1 56,46 ha; C3 0,19 ha. Propuesta: R1 20,15; C3 18,60; D2 17,98 ha.',8,MUTED)
 page()
 # 2
 base(2,'02 / COMPARACIÓN NORMATIVA','Tratamientos y transiciones','Dos mapas normativos distintos, no equivalencias jurídicas automáticas.')
@@ -102,23 +111,23 @@ txt(325,575,'R1: 20,15 ha',15,'#AB4D45',True)
 txt(325,545,'C3: 18,60 ha',15,GREEN,True)
 txt(325,515,'D2: 17,98 ha',15,'#956B31',True)
 txt(36,418,'TRANSICIONES DESTACADAS',11,NAVY,True)
-bar_chart(43,360,[('C1 → R1',20.06,'#CF6560'),('C1 → D2',17.98,'#D9AA64')],490,19)
-inset(202,'¿POR QUÉ IMPORTA?',['El tratamiento R1 cambia de significado: redesarrollo (2014) frente a','redensificación alta (2026). D2 exige revisar urbanización e instrumentos.'])
+bar_chart(43,360,[('C1 → R1',20.06,'#CF6560'),('C1 → D2',17.98,'#D9AA64')],490,19,step=68)
+inset(185,'¿POR QUÉ IMPORTA?',['El tratamiento R1 cambia de significado: redesarrollo (2014) frente a','redensificación alta (2026). D2 exige revisar urbanización e instrumentos.'])
 txt(36,94,'Fuentes: GDB asociadas al Observatorio; Acuerdo 0373/2014; Proyecto de Acuerdo 2026.',8,MUTED)
 page()
 # 3
 base(3,'03 / ÁREAS DE ACTIVIDAD','Usos y convivencia urbana','Clasificación cartográfica propuesta: no autoriza actividades específicas.')
 txt(36,628,'PROPUESTA 2026 · ÁREAS DE ACTIVIDAD',11,NAVY,True)
-bar_chart(43,576,[('Área de Proximidad',28.59,'#D9A064'),('Área Multifuncional',27.97,'#C76879')],490,24)
-txt(36,430,'TRANSICIONES DE ÁREA DE ACTIVIDAD IDENTIFICADAS',10,NAVY,True)
+bar_chart(43,557,[('Área de Proximidad',28.59,'#D9A064'),('Área Multifuncional',27.97,'#C76879')],490,19,step=70)
+txt(36,413,'TRANSICIONES DE ÁREA DE ACTIVIDAD IDENTIFICADAS',10,NAVY,True)
 items=[('Residencial neta → Proximidad',13.973),('Mixta → Multifuncional',12.242),('Mixta → Proximidad',5.265),('No aplica → Multifuncional',3.687),('No aplica → Proximidad',3.0),('Residencial neta → Multifuncional',2.933)]
 for i,(label,val) in enumerate(items):
-    y=396-i*39
+    y=380-i*39
     txt(42,y,label,8.6,INK)
     rect(284,y-1,230,13,'#E6ECEE',r=3)
     rect(284,y-1,230*val/14,13,'#5B9794' if i%2==0 else '#DA9779',r=3)
     txt(523,y,f'{val:.2f}',8,NAVY,True)
-inset(145,'PRECAUCIÓN',['Para determinar usos permitidos, condicionados o prohibidos es obligatorio','consultar las matrices de actividades y las disposiciones especiales.'])
+inset(129,'PRECAUCIÓN',['Para determinar usos permitidos, condicionados o prohibidos es obligatorio','consultar las matrices de actividades y las disposiciones especiales.'])
 page()
 # 4
 base(4,'04 / AMENAZA Y TERRITORIO','Mapa de amenazas · propuesta 2026','Intersecciones espaciales calculadas para el polígono barrial 1722.')
@@ -134,7 +143,7 @@ for i,(label,ha,pct,color) in enumerate([('Alta',23.5825,41.552,'#CF4446'),('Med
     txt(205,y+10,f'{ha:.2f} ha',12,NAVY,True)
     txt(382,y+10,f'{pct:.2f} %',12,NAVY,True)
 rect(36,65,W-72,66,'#F3F5F6',r=8)
-para(48,111,['Movimientos en masa y avenidas torrenciales: sin intersección detectable (>0,01 ha).','No implica ausencia de peligro. Resultados exploratorios sobre GeoJSON simplificados.','Las categorías de inundación se solapan aproximadamente 0,79 ha.'],8,15)
+para(48,111,['Movimientos en masa y avenidas torrenciales: sin cruce detectable desde 0,01 ha.','No equivale a ausencia de peligro; cartografía web simplificada y exploratoria.','En inundación, las categorías se solapan en unas 0,79 ha.'],8,15)
 page()
 # 5
 base(5,'05 / GESTIÓN DEL RIESGO','Interpretar los resultados','Amenaza, exposición, vulnerabilidad y riesgo son dimensiones diferentes.')
@@ -142,9 +151,9 @@ rect(36,519,W-72,114,'#F0F4F7',r=12)
 txt(54,593,'56,75 ha',25,NAVY,True)
 txt(234,598,'Superficie barrial de referencia',11,INK,True)
 txt(54,560,'0,79 ha',21,'#B76258',True)
-txt(234,565,'Solapamiento entre categorías de inundación',10,INK)
+txt(234,565,'Superposición entre categorías de inundación',9.5,INK)
 txt(36,477,'QUÉ SE PUEDE CONCLUIR',11,NAVY,True)
-para(40,448,['El visor permite identificar coincidencias espaciales con categorías','de amenaza por inundación. Estas superficies no determinan por sí','mismas riesgo de cada vivienda ni condiciones de mitigabilidad.'],10,18)
+para(40,448,['Los polígonos de inundación cubren, sin doble conteo, aproximadamente','40,80 ha (71,9 % del barrio). Esto no equivale a riesgo de las viviendas','ni permite establecer mitigabilidad sin estudios detallados.'],10,18)
 txt(36,356,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA',11,NAVY,True)
 rect(36,228,W-72,102,'#EAF3F0',r=12)
 txt(55,276,'4D',30,GREEN,True)
@@ -166,7 +175,8 @@ for i,(num,q) in enumerate(questions):
     y=625-i*93
     rect(36,y-55,W-72,76,'#F2F5F6',r=8)
     txt(51,y-10,num,18,GREEN,True)
-    txt(91,y-8,q[:78],9.5,INK,True)
+    assert stringWidth(q,'Helvetica-Bold',9.5)<W-112, 'Pregunta excede caja: '+q
+    txt(91,y-8,q,9.5,INK,True)
     para(91,y-28,['Requiere soporte técnico, localización y verificación normativa.'],8,14,MUTED)
 rect(36,93,W-72,72,'#E7F1EF',r=8)
 txt(49,144,'TRAZABILIDAD',9,GREEN,True)
