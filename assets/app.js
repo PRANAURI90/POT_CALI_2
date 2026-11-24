@@ -511,12 +511,12 @@ function barrioRiskSvg(barrio,parts,title,subtitle){
   const polys=g.type==='Polygon'?[g.coordinates]:(g.type==='MultiPolygon'?g.coordinates:[]);
   return polys.map(poly=>poly.map(r=>r.map((p,i)=>(i?'L':'M')+xy(p).join(',')).join(' ')+' Z').join(' ')).join(' ');
  }
+ const svgHeight=Math.max(650,572+Math.ceil(parts.length/2)*24+30);
  const background='<rect x="0" y="0" width="900" height="'+svgHeight+'" fill="#ffffff"/><rect x="42" y="89" width="816" height="440" rx="12" fill="#f7f7f8" stroke="#e5e2ea"/>';
  const shape='<path d="'+path(barrio.geometry)+'" fill="#e8e7ee" stroke="#3a3658" stroke-width="2.1" fill-rule="evenodd"/>';
  const fills=parts.map(p=>'<path d="'+path(p.geometry.geometry)+'" fill="'+p.color+'" fill-opacity=".73" stroke="'+p.color+'" stroke-width="1.1" fill-rule="evenodd"/>').join('');
  const outline='<path d="'+path(barrio.geometry)+'" fill="none" stroke="#342e55" stroke-width="2.8"/>';
  const legend=parts.map((p,i)=>'<rect x="'+(56+i%2*405)+'" y="'+(546+Math.floor(i/2)*24)+'" width="13" height="13" rx="2" fill="'+p.color+'"/><text x="'+(76+i%2*405)+'" y="'+(557+Math.floor(i/2)*24)+'" font-family="Arial" font-size="12" fill="#403a55">'+htmlEscape(p.label)+'</text>').join('');
- const svgHeight=Math.max(650,572+Math.ceil(parts.length/2)*24+30);
  const footer='<text x="55" y="'+(svgHeight-17)+'" font-family="Arial" font-size="10" fill="#6b6873">GeoJSON de consulta 2026 · intersección aproximada · no válido para decisión predial</text>';
  const tt='<text x="52" y="40" font-family="Arial" font-size="22" font-weight="bold" fill="#302c52">'+htmlEscape(title)+'</text><text x="52" y="65" font-family="Arial" font-size="14" fill="#6a6475">'+htmlEscape(subtitle)+'</text>';
  return '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="'+svgHeight+'" viewBox="0 0 900 '+svgHeight+'">'+background+tt+shape+fills+outline+legend+footer+'</svg>';
