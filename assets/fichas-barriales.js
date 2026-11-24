@@ -64,7 +64,9 @@ function buildMapCanvas(barrio,shapes,phen,width=700,height=430){
  }
  function geom(g,fill,stroke,widthLine=1.5){
   if(!g)return;cx.beginPath();
-  const polys=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
+  const geometry=g.type==='Feature'?g.geometry:g;
+  if(!geometry)return;
+  const polys=geometry.type==='Polygon'?[geometry.coordinates]:geometry.type==='MultiPolygon'?geometry.coordinates:[];
   for(const p of polys)drawCoords(p,true);
   if(fill){cx.fillStyle=fill;cx.fill('evenodd')}
   if(stroke){cx.strokeStyle=stroke;cx.lineWidth=widthLine;cx.stroke()}
@@ -88,7 +90,8 @@ async function getThreat(barrio){
  if(typeof barrioRiskIntersect!=='function')throw Error('Intersección SIG no disponible');
  const result=await barrioRiskIntersect(barrio,'amenaza');
  if(!result||!Number.isFinite(result.bArea))throw Error('Datos SIG incompletos');
- const rows=result.rows.map(r=>{const [fen,level]=r.cat.split('|');return {fen,level,ha:r.ha,pct:r.pct,geometry:r.geometry,label:r.label,color:r.color}});
+ const rows=result.rows.map(r=>{const [fen,level]=r.cat.split('|');return {fen,level,ha:r.ha,pct:r.pct,geometry:r.geometry?.type==='Feature'?r.geometry.geometry:r.geometry,label:r.label,color:r.color}});
+ if(rows.some(r=>r.ha>0&&(!r.geometry||!['Polygon','MultiPolygon'].includes(r.geometry.type))))throw Error('La geometría de amenaza no es un polígono representable');
  return {rows,errors:result.errors,bArea:result.bArea};
 }
 async function downloadBarrio(){
