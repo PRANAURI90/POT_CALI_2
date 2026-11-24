@@ -193,43 +193,6 @@ async function downloadBarrio(){
   line(pdf,14,255,'Se muestran las cuatro áreas de mayor superficie para cada instrumento.',8,COLORS.muted);
   line(pdf,14,264,'Para conocer usos permitidos o condicionados, consultar matrices y articulado.',8,COLORS.muted);
   pdf.addPage();
-  // PÁGINA 3
-  base(pdf,6,'06 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
-  if(threat){
-   const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
-   for(let i=0;i<3;i++){
-    const [fen,title]=titles[i],xx=14+i*62;
-    line(pdf,xx,75,title,8.2,COLORS.navy,true,60);
-    const canvas=buildMapCanvas(barrio,threat.rows,fen,540,390);
-    pdf.addImage(canvas.toDataURL('image/jpeg',0.88),'JPEG',xx,85,57,43);
-    const subset=threat.rows.filter(r=>r.fen===fen);
-    if(!subset.length){line(pdf,xx,135,'Sin intersección',7.5,COLORS.muted,true,57);line(pdf,xx,140,'detectable >=0,01 ha',7,COLORS.muted,false,57);}
-    else{
-     let ry=135;
-     for(const level of ['1','2','3','0']){
-      const row=subset.find(r=>r.level===level);if(!row)continue;
-      fillColor(pdf,RISK_COLORS[level]);pdf.rect(xx,ry-3,2.5,2.5,'F');
-      line(pdf,xx+4,ry,LEVEL[level]+': '+num(row.ha)+' ha',7.8,COLORS.navy,true,52);
-      line(pdf,xx+4,ry+5,pct(row.pct)+' del barrio',7.3,COLORS.muted,false,52);
-      ry+=13;
-     }
-    }
-   }
-   fillColor(pdf,'#F0F3F7');pdf.roundedRect(14,191,182,68,3,3,'F');
-   let ty=202;
-   ty=line(pdf,19,ty,'INTERPRETACIÓN DE LOS CRUCES',10,COLORS.navy,true,174)+2;
-   ty=line(pdf,19,ty,'Superficie barrial calculada: '+ha(threat.bArea)+'.',8.5,COLORS.navy,false,170)+3;
-   ty=line(pdf,19,ty,'Las clases de un mismo fenómeno pueden solaparse; no sumar porcentajes sin disolver categorías.',8.2,COLORS.navy,false,169)+2;
-   if(threat.errors)ty=line(pdf,19,ty,'Precaución: '+threat.errors+' geometrías no procesadas; resultados incompletos.',8.4,COLORS.danger,true,168);
-   else line(pdf,19,ty,'Sin intersección significa ausencia de cruce detectable, no ausencia de peligro.',8.2,COLORS.muted,false,168);
-  }else{
-   fillColor(pdf,'#FFF0E9');pdf.roundedRect(14,79,182,68,3,3,'F');
-   line(pdf,19,91,'NO FUE POSIBLE CALCULAR LOS MAPAS DE AMENAZA',10,COLORS.danger,true,170);
-   line(pdf,19,103,'No se asignan porcentajes ni se interpreta como ausencia de peligro.',9,COLORS.navy,false,170);
-   line(pdf,19,114,'Motivo: '+threatError,8,COLORS.muted,false,170);
-  }
-  line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
-  pdf.addPage();
   // PÁGINA 4: instrumentos de gestión. Diferenciar coincidencia cartográfica de reglas generales.
   const plans14=entriesFor(info,'planes2014');
   const plans26=entriesFor(info,'planes2026');
@@ -305,6 +268,43 @@ async function downloadBarrio(){
   }
   line(pdf,14,267,'ICA = Índice de Construcción Adicional; NO equivale al impuesto ICA.',8,COLORS.danger,true);
   line(pdf,14,274,'No se calculan beneficios tributarios, avalúos ni plusvalía predial.',7.8,COLORS.muted);
+  pdf.addPage();
+  // PÁGINA 6: cartografía de amenazas.
+  base(pdf,6,'06 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
+  if(threat){
+   const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
+   for(let i=0;i<3;i++){
+    const [fen,title]=titles[i],xx=14+i*62;
+    line(pdf,xx,75,title,8.2,COLORS.navy,true,60);
+    const canvas=buildMapCanvas(barrio,threat.rows,fen,540,390);
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.88),'JPEG',xx,85,57,43);
+    const subset=threat.rows.filter(r=>r.fen===fen);
+    if(!subset.length){line(pdf,xx,135,'Sin intersección',7.5,COLORS.muted,true,57);line(pdf,xx,140,'detectable >=0,01 ha',7,COLORS.muted,false,57);}
+    else{
+     let ry=135;
+     for(const level of ['1','2','3','0']){
+      const row=subset.find(r=>r.level===level);if(!row)continue;
+      fillColor(pdf,RISK_COLORS[level]);pdf.rect(xx,ry-3,2.5,2.5,'F');
+      line(pdf,xx+4,ry,LEVEL[level]+': '+num(row.ha)+' ha',7.8,COLORS.navy,true,52);
+      line(pdf,xx+4,ry+5,pct(row.pct)+' del barrio',7.3,COLORS.muted,false,52);
+      ry+=13;
+     }
+    }
+   }
+   fillColor(pdf,'#F0F3F7');pdf.roundedRect(14,191,182,68,3,3,'F');
+   let ty=202;
+   ty=line(pdf,19,ty,'INTERPRETACIÓN DE LOS CRUCES',10,COLORS.navy,true,174)+2;
+   ty=line(pdf,19,ty,'Superficie barrial calculada: '+ha(threat.bArea)+'.',8.5,COLORS.navy,false,170)+3;
+   ty=line(pdf,19,ty,'Las clases de un mismo fenómeno pueden solaparse; no sumar porcentajes sin disolver categorías.',8.2,COLORS.navy,false,169)+2;
+   if(threat.errors)ty=line(pdf,19,ty,'Precaución: '+threat.errors+' geometrías no procesadas; resultados incompletos.',8.4,COLORS.danger,true,168);
+   else line(pdf,19,ty,'Sin intersección significa ausencia de cruce detectable, no ausencia de peligro.',8.2,COLORS.muted,false,168);
+  }else{
+   fillColor(pdf,'#FFF0E9');pdf.roundedRect(14,79,182,68,3,3,'F');
+   line(pdf,19,91,'NO FUE POSIBLE CALCULAR LOS MAPAS DE AMENAZA',10,COLORS.danger,true,170);
+   line(pdf,19,103,'No se asignan porcentajes ni se interpreta como ausencia de peligro.',9,COLORS.navy,false,170);
+   line(pdf,19,114,'Motivo: '+threatError,8,COLORS.muted,false,170);
+  }
+  line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
   pdf.addPage();
   // PÁGINA 4
   base(pdf,7,'07 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
