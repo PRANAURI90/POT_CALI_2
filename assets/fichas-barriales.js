@@ -48,6 +48,26 @@ function labelTreatment(raw,year){
  for(const [re,label] of aliases)if(re.test(s)||re.test(c))return label;
  return value.toLocaleLowerCase('es').replace(/^\p{L}/u,x=>x.toUpperCase());
 }
+function hintTreatment(label){
+ const v=pdfText(label).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ if(/CONSERVACION|^CSU|^CTL/.test(v))return 'Protege valores del territorio.';
+ if(/CONSOLIDACION|^C[1-4]$/.test(v))return 'Regula la transformación del tejido.';
+ if(/RENOVACION|REDENSIFICACION|^R[1-3]$/.test(v))return 'Orienta la renovación del sector.';
+ if(/DESARROLLO|^D[12]$/.test(v))return 'Regula urbanización de suelo.';
+ if(/MEJORAMIENTO/.test(v))return 'Busca cualificar el hábitat.';
+ return 'Verificar régimen de la categoría.';
+}
+function hintActivity(label){
+ const v=pdfText(label).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ if(/PROXIMIDAD/.test(v))return 'Actividades de escala cercana.';
+ if(/MULTIFUNCIONAL|MIXTA/.test(v))return 'Convivencia de diferentes usos.';
+ if(/INTEGRACION/.test(v))return 'Articulación de funciones urbanas.';
+ if(/DINAMIZACION/.test(v))return 'Actividades económicas orientadas.';
+ if(/RESIDENCIAL/.test(v))return 'Predomina la función de vivienda.';
+ if(/INDUSTRIAL/.test(v))return 'Ámbito con función productiva.';
+ if(/PEMP|CONSERVACION/.test(v))return 'Ámbito con régimen especial.';
+ return 'Consultar matriz de actividades.';
+}
 function line(pdf,x,y,text,size=10,color=COLORS.navy,bold=false,maxWidth=178){
  pdf.setFont('helvetica',bold?'bold':'normal');pdf.setFontSize(size);changeColor(pdf,color);
  const lines=pdf.splitTextToSize(pdfText(text),maxWidth);
@@ -158,8 +178,8 @@ async function downloadBarrio(){
   line(pdf,111,104,'PROPUESTA POT 2026',10,COLORS.purple,true,85);
   let leftY=115,rightY=115;
   const max14=Math.max(1,...tr14.map(x=>x.ha)),max26=Math.max(1,...tr26.map(x=>x.ha));
-  for(const row of tr14.slice(0,3))leftY=bar(pdf,15,leftY,labelTreatment(row.name,2014),row.ha,max14,COLORS.green,83)+5;
-  for(const row of tr26.slice(0,3))rightY=bar(pdf,111,rightY,labelTreatment(row.name,2026),row.ha,max26,COLORS.pink,83)+5;
+  for(const row of tr14.slice(0,3)){leftY=bar(pdf,15,leftY,labelTreatment(row.name,2014),row.ha,max14,COLORS.green,83);line(pdf,15,leftY-5,hintTreatment(row.name),6.7,'#8993A1',false,79);leftY+=8;}
+  for(const row of tr26.slice(0,3)){rightY=bar(pdf,111,rightY,labelTreatment(row.name,2026),row.ha,max26,COLORS.pink,83);line(pdf,111,rightY-5,hintTreatment(row.name),6.7,'#8993A1',false,79);rightY+=8;}
   line(pdf,14,255,'Se muestran las tres categorías de mayor superficie por cada período.',8,COLORS.muted);
   line(pdf,14,264,'Cada barra expresa hectáreas de intersección, no predios ni licencias.',8,COLORS.muted);
   pdf.addPage();
@@ -190,8 +210,8 @@ async function downloadBarrio(){
   line(pdf,111,104,'PROPUESTA 2026',10,COLORS.purple,true);
   let y14=115,y26=115;
   const mx14=Math.max(1,...ac14.map(x=>x.ha)),mx26=Math.max(1,...ac26.map(x=>x.ha));
-  for(const row of ac14.slice(0,4))y14=bar(pdf,15,y14,row.name,row.ha,mx14,COLORS.green,83)+5;
-  for(const row of ac26.slice(0,4))y26=bar(pdf,111,y26,row.name,row.ha,mx26,COLORS.orange,83)+5;
+  for(const row of ac14.slice(0,4)){y14=bar(pdf,15,y14,row.name,row.ha,mx14,COLORS.green,83);line(pdf,15,y14-5,hintActivity(row.name),6.7,'#8993A1',false,79);y14+=7;}
+  for(const row of ac26.slice(0,4)){y26=bar(pdf,111,y26,row.name,row.ha,mx26,COLORS.orange,83);line(pdf,111,y26-5,hintActivity(row.name),6.7,'#8993A1',false,79);y26+=7;}
   line(pdf,14,255,'Se muestran las cuatro áreas de mayor superficie para cada instrumento.',8,COLORS.muted);
   line(pdf,14,264,'Para conocer usos permitidos o condicionados, consultar matrices y articulado.',8,COLORS.muted);
   pdf.addPage();
