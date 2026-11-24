@@ -118,7 +118,7 @@ function base(pdf,n,k,title,sub,selected){
  line(pdf,14,61,sub,8.1,COLORS.muted,false,184);
  pdf.setDrawColor(...hexRgb(COLORS.line));pdf.line(14,280,196,280);
  line(pdf,14,286,'POT 2014 vigente (GDB actualizada) - propuesta 2026 no adoptada',7,COLORS.muted);
- pdf.setFontSize(8);changeColor(pdf,COLORS.navy);pdf.text(n+'/9',195,286,{align:'right'});
+ // La numeración física se agrega al final: un capítulo puede ocupar varias páginas.
 }
 function entriesFor(info,key){
  return (info?.capas?.[key]?.categorias||[]).map(r=>({name:pdfText(r.nombre||r.codigo||'Sin categoría'),ha:Number(r.hectareas||0),pct:Number(r.porcentaje_barrio||0)})).filter(r=>r.ha>.009).sort((a,b)=>b.ha-a.ha);
@@ -395,7 +395,7 @@ async function downloadBarrio(){
     const refLines=pdf.splitTextToSize(pdfText(rg.ref),170);
     const titleH=titleLines.length*4.0,ruleH=ruleLines.length*4.15;
     const impactH=impactLines.length*3.85,refH=refLines.length*3.5;
-    const height=14+titleH+ruleH+impactH+refH+12;
+    const height=24+titleH+ruleH+impactH+refH+8;
     fillColor(pdf,'#F3F4F8');pdf.roundedRect(14,y,182,height,3,3,'F');
     let yy=y+8;
     yy=line(pdf,19,yy,rg.title,8.6,COLORS.purple,true,170)+1;
@@ -408,7 +408,7 @@ async function downloadBarrio(){
   for(const rg of regimes){
     const ruleLines=pdf.splitTextToSize(pdfText(rg.rule),170).length;
     const impactLines=pdf.splitTextToSize(pdfText(rg.impact),170).length;
-    const approx=46+ruleLines*4.2+impactLines*4;
+    const approx=55+ruleLines*5+impactLines*5;
     if(rY+approx>257){
       line(pdf,14,272,'Continúa el análisis de instrumentos del barrio en la página siguiente.',7.4,COLORS.muted);
       pdf.addPage();
@@ -500,6 +500,13 @@ async function downloadBarrio(){
   line(pdf,14,261,'Acuerdo 0373 de 2014 · Proyecto de Acuerdo POT 2026',8,COLORS.navy,false,180);
   line(pdf,14,268,'Datos: resumen_barrios.json, transiciones y GeoJSON de la plataforma.',8,COLORS.navy,false,180);
   line(pdf,14,275,'Microzonas digitalizadas aproximadas; no certifican riesgo ni diseño sísmico.',7.6,COLORS.muted,false,184);
+  // Número de página real, incluidas las continuaciones de instrumentos.
+  const totalPages=pdf.getNumberOfPages();
+  for(let pn=1;pn<=totalPages;pn++){
+    pdf.setPage(pn);
+    pdf.setFont('helvetica','bold');pdf.setFontSize(8);changeColor(pdf,COLORS.navy);
+    pdf.text(pn+' / '+totalPages,195,286,{align:'right'});
+  }
   const filename='Ficha_barrial_'+safe(name)+'_'+safe(code)+'_POT_Cali.pdf';
   const blob=pdf.output('blob');
   if(!(blob instanceof Blob)||blob.size<5000)throw Error('El PDF generado no tiene contenido válido');
