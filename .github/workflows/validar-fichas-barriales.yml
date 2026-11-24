@@ -91,10 +91,12 @@ jobs:
           from PIL import Image
           from io import BytesIO
           pdf=fitz.open('/tmp/ficha_1722.pdf')
-          assert len(pdf)==5, f'Número de páginas inesperado: {len(pdf)}'
-          page=pdf[3]
+          assert len(pdf)==7, f'Número de páginas inesperado: {len(pdf)}'
+          page=pdf[5]
           txt=page.get_text()
           assert 'INUNDACIÓN' in txt and 'Alta' in txt, 'No se imprimieron los indicadores de inundación'
+          assert 'GESTIÓN' in pdf[3].get_text(), 'Falta capítulo de gestión'
+          assert 'plusvalía' in pdf[4].get_text().lower(), 'Falta instrumento de plusvalía'
           transition=pdf[1].get_text()
           assert 'POT 2014:' in transition and 'Propuesta 2026:' in transition, 'No se identifica origen y destino de transición'
           assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transiciones'
