@@ -8,6 +8,7 @@ const COLORS={navy:'#2F294B',purple:'#6253A8',muted:'#677287',line:'#E3E8EC',pap
 const RISK_COLORS={'1':'#CF4446','2':'#E8BC39','3':'#39976A','0':'#8D97A1'};
 const PHENOM={'1':'Movimientos en masa','2':'Avenidas torrenciales','3':'Inundación'};
 const LEVEL={'1':'Alta','2':'Media','3':'Baja','0':'Otra condición'};
+let pdfReadyUrl=null;
 const hexRgb=(h)=>h.replace('#','').match(/.{2}/g).map(v=>parseInt(v,16));
 const changeColor=(pdf,h)=>pdf.setTextColor(...hexRgb(h));
 const fillColor=(pdf,h)=>pdf.setFillColor(...hexRgb(h));
@@ -191,8 +192,17 @@ async function downloadBarrio(){
   line(pdf,14,261,'Acuerdo 0373 de 2014 · Proyecto de Acuerdo POT 2026',8,COLORS.navy,false,180);
   line(pdf,14,268,'Datos: resumen_barrios.json, transiciones y GeoJSON de la plataforma.',8,COLORS.navy,false,180);
   line(pdf,14,275,'Microzonas digitalizadas aproximadas; no certifican riesgo ni diseño sísmico.',7.6,COLORS.muted,false,184);
-  pdf.save('Ficha_barrial_'+safe(name)+'_'+safe(code)+'_POT_Cali.pdf');
-  if(message)message.textContent='Ficha PDF generada para '+name+'.';
+  const filename='Ficha_barrial_'+safe(name)+'_'+safe(code)+'_POT_Cali.pdf';
+  const blob=pdf.output('blob');
+  if(!(blob instanceof Blob)||blob.size<5000)throw Error('El PDF generado no tiene contenido válido');
+  if(pdfReadyUrl)URL.revokeObjectURL(pdfReadyUrl);
+  pdfReadyUrl=URL.createObjectURL(blob);
+  const link=document.getElementById('download-barrio-ready');
+  if(link){link.href=pdfReadyUrl;link.download=filename;link.hidden=false;link.textContent='Descargar PDF generado · '+name;}
+  // Se intenta la descarga inicial; el enlace visible es el respaldo cuando el
+  // navegador restringe descargas automáticas repetidas desde una misma página.
+  if(link)link.click();
+  if(message)message.textContent='Ficha preparada para '+name+'. Si el archivo no se descargó automáticamente, usa el enlace de abajo.';
  }catch(e){
   console.error('Generación ficha barrial',e);
   if(message)message.textContent='No fue posible completar la ficha: '+(e.message||e);
@@ -206,7 +216,7 @@ function init(){
  const original=window.MutationObserver;
  if(original){
   const node=document.getElementById('inspector-title');
-  new MutationObserver(()=>{btn.disabled=!state.selected;const status=document.getElementById('download-barrio-status');if(status)status.textContent='';}).observe(node,{childList:true,characterData:true,subtree:true});
+  new MutationObserver(()=>{btn.disabled=!state.selected;const status=document.getElementById('download-barrio-status');if(status)status.textContent='';const link=document.getElementById('download-barrio-ready');if(link)link.hidden=true;}).observe(node,{childList:true,characterData:true,subtree:true});
  }
 }
 document.addEventListener('DOMContentLoaded',init);
