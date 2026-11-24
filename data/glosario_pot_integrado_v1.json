@@ -10,7 +10,7 @@
       "El DTS es soporte técnico, no sustituto del articulado",
       "No generar equivalencias entre categorías de los dos POT"
     ],
-    "total": 53,
+    "total": 55,
     "verificados": 50,
     "pendientes": 3,
     "bloque_nuevo": "Tratamientos urbanísticos 2014/2026 y precisiones sobre modalidades C1-C4, R1-R3, D1-D2",
@@ -21,7 +21,7 @@
       "Síntesis redactadas de fuente primaria, no citas literales íntegras."
     ],
     "descripcion": "Glosario ciudadano de consulta; las explicaciones son síntesis y no sustituyen el articulado.",
-    "pendiente": "Transcripciones literales, validación de atributos y correspondencias cartográficas; completar otras temáticas.",
+    "pendiente": "Las dos fichas PEMP añadidas describen solo el alcance cartográfico y el carácter patrimonial; el contenido normativo específico debe verificarse. Los registros de tratamiento 2026 tienen identificadores únicos.",
     "observaciones_interfaz": "Cada período se presenta en una columna independiente y alfabética; no se homologan términos. Identificadores duplicados de los registros de tratamiento 2026 corregidos para vincular fichas inequívocas."
   },
   "conceptos": [
@@ -1029,6 +1029,42 @@
       "observacion": "",
       "fuente_complementaria": "DTS componente urbano 2026, pp. 775–777",
       "criterio_de_lectura": "No homologar automáticamente categorías entre 2014 y 2026.",
+      "definicion_literal_verificada": false,
+      "es_propuesta": true
+    },
+    {
+      "id": "2026-pemp-centro",
+      "periodo": 2026,
+      "estado_normativo": "Propuesta POT 2026 · no adoptada",
+      "tipo": "ambito_cartografico_de_proteccion_patrimonial",
+      "grupo": "Ámbitos patrimoniales PEMP",
+      "concepto": "PEMP Centro Histórico",
+      "codigo": "",
+      "articulo": "Instrumento PEMP particular; por verificar",
+      "fuente": "Capa de áreas de actividad de la propuesta POT 2026; indicador cartográfico del observatorio",
+      "extracto_normativo": "El registro cartográfico identifica un ámbito denominado PEMP Centro Histórico. No se ha verificado en esta ficha el contenido íntegro del Plan Especial de Manejo y Protección aplicable.",
+      "explicacion_ciudadana": "Es una delimitación asociada a la protección y manejo del patrimonio cultural. No se debe interpretar como una de las cinco áreas de actividad ordinarias ni como autorización automática de usos; es necesario consultar el PEMP específico y las disposiciones urbanísticas aplicables.",
+      "cartografia": "Áreas de actividad 2026 (GeoJSON web)",
+      "estado_verificacion": "denominacion_cartografica_verificada_norma_especifica_pendiente",
+      "observacion": "Superficie orientativa del cuadro de actividades: 52.9 ha. El régimen patrimonial específico y el acto de adopción del PEMP no fueron contrastados en esta ficha.",
+      "definicion_literal_verificada": false,
+      "es_propuesta": true
+    },
+    {
+      "id": "2026-pemp-canas",
+      "periodo": 2026,
+      "estado_normativo": "Propuesta POT 2026 · no adoptada",
+      "tipo": "ambito_cartografico_de_proteccion_patrimonial",
+      "grupo": "Ámbitos patrimoniales PEMP",
+      "concepto": "PEMP Cañas Gordas",
+      "codigo": "",
+      "articulo": "Instrumento PEMP particular; por verificar",
+      "fuente": "Capa de áreas de actividad de la propuesta POT 2026; indicador cartográfico del observatorio",
+      "extracto_normativo": "El registro cartográfico identifica un ámbito denominado PEMP Cañas Gordas. No se ha verificado en esta ficha el contenido íntegro del Plan Especial de Manejo y Protección aplicable.",
+      "explicacion_ciudadana": "Es una delimitación asociada a la protección y manejo del patrimonio cultural. No se debe interpretar como una de las cinco áreas de actividad ordinarias ni como autorización automática de usos; es necesario consultar el PEMP específico y las disposiciones urbanísticas aplicables.",
+      "cartografia": "Áreas de actividad 2026 (GeoJSON web)",
+      "estado_verificacion": "denominacion_cartografica_verificada_norma_especifica_pendiente",
+      "observacion": "Superficie orientativa del cuadro de actividades: 10.4 ha. El régimen patrimonial específico y el acto de adopción del PEMP no fueron contrastados en esta ficha.",
       "definicion_literal_verificada": false,
       "es_propuesta": true
     }
