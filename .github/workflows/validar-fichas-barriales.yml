@@ -22,7 +22,7 @@ jobs:
           js=Path('assets/fichas-barriales.js').read_text()
           css=Path('assets/styles.css').read_text()
           assert h.count('id="download-barrio-pdf"')==1
-          assert 'src="assets/fichas-barriales.js?v=2.0-editorial"' in h
+          assert 'src="assets/fichas-barriales.js?v=3.0-instrumentos"' in h
           assert 'jspdf.umd.min.js' in h
           assert 'barrioRiskIntersect' in js
           assert "entriesFor(info,'actividad2026')" in js
