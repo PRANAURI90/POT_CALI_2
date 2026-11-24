@@ -68,6 +68,28 @@ function hintActivity(label){
  if(/PEMP|CONSERVACION/.test(v))return 'Ámbito con régimen especial.';
  return 'Consultar matriz de actividades.';
 }
+function treatmentFamily(value){
+ const n=pdfText(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ if(/RENOVACION|REDENSIFICACION|^R[123]$/.test(n))return 'renovacion';
+ if(/CONSOLIDACION|^C[1-4]$/.test(n))return 'consolidacion';
+ if(/DESARROLLO|^D[12]$|^DE$/.test(n))return 'desarrollo';
+ if(/CONSERVACION|^CTL$|^CSU$|^CON$/.test(n))return 'conservacion';
+ if(/MEJORAMIENTO|^MI$/.test(n))return 'mejoramiento';
+ return 'otro';
+}
+function treatmentMeaning(from,to){
+ const f=treatmentFamily(from), t=treatmentFamily(to);
+ if(f==='renovacion'&&t==='renovacion')return 'El barrio sigue en una familia de renovación, pero cambian su modalidad y las formas de intervención que plantea la norma. El mismo código no conserva necesariamente las mismas reglas.';
+ if(f==='consolidacion'&&t==='renovacion')return 'La propuesta traslada esta superficie de conservación o transformación gradual del tejido a una lógica de renovación. Deben examinarse densidad, instrumentos, cargas y protección a residentes.';
+ if(f==='consolidacion'&&t==='desarrollo')return 'Parte del barrio cambia de consolidación a desarrollo. Conviene aclarar qué suelo se considera urbanizable y con qué obras, cesiones y procedimientos podría intervenirse.';
+ if(t==='conservacion')return 'La propuesta orienta esta superficie a protección patrimonial o contextual. Las intervenciones quedan sujetas a las reglas y delimitaciones específicas de conservación.';
+ if(t==='mejoramiento')return 'La propuesta plantea cualificar el hábitat y los soportes urbanos. No se trata, por sí solo, de una autorización de mayor edificabilidad.';
+ if(f===t)return 'Aunque conserve una familia o denominación semejante, deben compararse las definiciones y condiciones de ambos POT; la coincidencia cartográfica no prueba equivalencia jurídica.';
+ return 'Esta porción del barrio cambia de clasificación entre los dos instrumentos. Para saber su efecto real se deben comparar las reglas de uso, edificabilidad, gestión y cargas aplicables.';
+}
+function softParagraph(pdf,x,y,text,width=174,size=9){
+ return line(pdf,x,y,text,size,COLORS.navy,false,width)+3;
+}
 function line(pdf,x,y,text,size=10,color=COLORS.navy,bold=false,maxWidth=178){
  pdf.setFont('helvetica',bold?'bold':'normal');pdf.setFontSize(size);changeColor(pdf,color);
  const lines=pdf.splitTextToSize(pdfText(text),maxWidth);
@@ -96,7 +118,7 @@ function base(pdf,n,k,title,sub,selected){
  line(pdf,14,61,sub,8.1,COLORS.muted,false,184);
  pdf.setDrawColor(...hexRgb(COLORS.line));pdf.line(14,280,196,280);
  line(pdf,14,286,'POT 2014 vigente (GDB actualizada) - propuesta 2026 no adoptada',7,COLORS.muted);
- pdf.setFontSize(8);changeColor(pdf,COLORS.navy);pdf.text(n+'/7',195,286,{align:'right'});
+ pdf.setFontSize(8);changeColor(pdf,COLORS.navy);pdf.text(n+'/9',195,286,{align:'right'});
 }
 function entriesFor(info,key){
  return (info?.capas?.[key]?.categorias||[]).map(r=>({name:pdfText(r.nombre||r.codigo||'Sin categoría'),ha:Number(r.hectareas||0),pct:Number(r.porcentaje_barrio||0)})).filter(r=>r.ha>.009).sort((a,b)=>b.ha-a.ha);
@@ -221,8 +243,34 @@ async function downloadBarrio(){
   }
   line(pdf,14,275,'Mismo código no implica mismo régimen: p. ej., R2 se redefine en la propuesta 2026.',7.1,COLORS.muted);
   pdf.addPage();
-  // PÁGINA 3: áreas de actividad, separadas de los tratamientos.
-  base(pdf,3,'03 / ÁREAS DE ACTIVIDAD','¿Cómo se distribuyen los usos?','Áreas de actividad de cada instrumento territorial; no permisos individuales.',p);
+  // PÁGINA 3: interpretación ciudadana, separada de la métrica y del mapa.
+  base(pdf,3,'03 / LECTURA DEL CAMBIO','¿Qué significa para el barrio?','Interpretación de las modificaciones propuestas, no un dictamen sobre predios.',p);
+  if(effectiveTrans.length){
+    const main=effectiveTrans[0],prev=labelTreatment(main.from,2014),next=labelTreatment(main.to,2026);
+    const percent=area>0?pct(100*main.ha/area):null;
+    fillColor(pdf,'#F1F0F7');pdf.roundedRect(14,71,182,47,3,3,'F');
+    line(pdf,19,82,'EL CAMBIO MÁS EXTENSO DEL BARRIO',9.3,COLORS.purple,true);
+    line(pdf,19,93,ha(main.ha)+(percent?' ('+percent+' del barrio)':''),13,COLORS.navy,true);
+    line(pdf,19,103,'Antes: '+prev,8.2,COLORS.navy,false,165);
+    line(pdf,19,112,'Propuesta: '+next,8.2,COLORS.purple,false,165);
+    line(pdf,14,137,'¿QUÉ QUIERE DECIR?',10,COLORS.purple,true);
+    let y=149;
+    y=softParagraph(pdf,16,y,treatmentMeaning(main.from,main.to),175,9.3)+8;
+    line(pdf,14,y,'¿QUÉ NO SE PUEDE CONCLUIR?',10,COLORS.purple,true);
+    y+=12;
+    y=softParagraph(pdf,16,y,'El mapa no demuestra que aumenten los pisos, que un proyecto quede aprobado ni que todos los propietarios reciban un beneficio. Para ello deben comprobarse los índices, las delimitaciones y los instrumentos exigidos.',174,8.8)+5;
+    line(pdf,14,y,'¿QUÉ DEBE VERIFICARSE?',10,COLORS.purple,true);
+    y+=11;
+    y=softParagraph(pdf,16,y,'Consultar los artículos de cada tratamiento, los requisitos de plan parcial o plan de manzana, el reparto de cargas y beneficios, y las medidas frente a moradores y riesgos.',174,8.7);
+  }else{
+    line(pdf,16,83,'No hay un cruce de tratamientos superior a 0,01 ha registrado.',9,COLORS.navy);
+    line(pdf,16,96,'La ausencia de cruce no implica identidad normativa entre los POT.',8.5,COLORS.muted);
+  }
+  line(pdf,14,268,'Fuente: transiciones espaciales calculadas de POT 2014 y propuesta 2026.',7.5,COLORS.muted);
+  line(pdf,14,275,'Lectura interpretativa general; no sustituye la norma de un predio.',7.5,COLORS.muted);
+  pdf.addPage();
+  // PÁGINA 4: áreas de actividad, separadas de los tratamientos.
+  base(pdf,4,'04 / ÁREAS DE ACTIVIDAD','¿Cómo se distribuyen los usos?','Áreas de actividad de cada instrumento territorial; no permisos individuales.',p);
   line(pdf,14,77,'CÓMO LEER LAS ÁREAS DE ACTIVIDAD',9.8,COLORS.purple,true);
   line(pdf,14,86,'Muestran la orientación de uso, no actividades autorizadas predio a predio.',8.4,COLORS.navy);
   line(pdf,14,104,'POT 2014 - VIGENTE',10,COLORS.purple,true);
@@ -255,7 +303,7 @@ async function downloadBarrio(){
   const urbanRenew=treatmentCodes.has('R1')||treatmentCodes.has('R2');
   const development=treatmentCodes.has('D1')||treatmentCodes.has('D2');
   const conservation=treatmentCodes.has('CSU')||treatmentCodes.has('CTL')||treatmentCodes.has('CON');
-  base(pdf,4,'04 / GESTIÓN URBANÍSTICA','¿Con qué instrumentos se transforma?','Ámbitos cartografiados y reglas generales que requieren verificación por predio.',p);
+  base(pdf,5,'05 / GESTIÓN URBANÍSTICA','¿Con qué instrumentos se transforma?','Ámbitos cartografiados y reglas generales que requieren verificación por predio.',p);
   line(pdf,14,77,'COINCIDENCIAS CARTOGRÁFICAS EN EL BARRIO',10,COLORS.purple,true);
   let gy=90;
   const planLayers=[
@@ -286,8 +334,71 @@ async function downloadBarrio(){
   }
   line(pdf,14,268,'Refs.: Acuerdo 0373/2014 arts. 313-325; propuesta 2026 arts. 379-388 y 615.',7.2,COLORS.muted);
   pdf.addPage();
+  // PÁGINA 6: reglas e instrumentos concretos asociados al tratamiento cartografiado.
+  base(pdf,6,'06 / INSTRUMENTOS CONCRETOS','¿Qué procedimiento podría aplicar?','Las opciones dependen del tratamiento y de las condiciones específicas del ámbito.',p);
+  const regimes=[];
+  if(treatmentCodes.has('R1'))regimes.push({
+   title:'RENOVACIÓN CON REDENSIFICACIÓN ALTA · R1',
+   rule:'Propuesta: actuación individual en predios o agrupaciones menores de 3.000 m²; plan de manzana desde 3.000 m²; plan parcial a partir de dos manzanas, con condiciones y excepciones.',
+   impact:'Esto abre distintas vías de intervención. No significa que cada predio pueda construir más sin cumplir cargas o estudios.',
+   ref:'Proyecto de Acuerdo 2026: arts. 387, 615 y 619.'
+  });
+  if(treatmentCodes.has('R2'))regimes.push({
+   title:'RENOVACIÓN CON REDENSIFICACIÓN MEDIA · R2',
+   rule:'La propuesta contempla actuación individual, plan de manzana y plan parcial según ámbito. Bajo el POT 2014, R2 era reactivación y el cuadro del art. 319 no permitía plan parcial de renovación.',
+   impact:'Lo relevante es el cambio de modalidad y de procedimiento, no la repetición del código R2.',
+   ref:'POT 2014: arts. 317, 319 y 321; propuesta: 387 y 615.'
+  });
+  if(treatmentCodes.has('D2'))regimes.push({
+   title:'DESARROLLO URBANO · D2',
+   rule:'La propuesta admite proyecto urbanístico general o licencia. Requiere plan parcial cuando exista gestión asociada por unidades de actuación o cuando se superen 10 ha netas urbanizables y se involucren al menos dos predios.',
+   impact:'No equivale a eliminar el plan parcial para cualquier terreno: hay que revisar tamaño, propiedad, afectaciones y cargas.',
+   ref:'Proyecto de Acuerdo 2026: arts. 383 y 615.'
+  });
+  if(treatmentCodes.has('D1'))regimes.push({
+   title:'DESARROLLO · D1',
+   rule:'El plan parcial es obligatorio en suelo de expansión y en ámbitos urbanos delimitados. Se contemplan otras vías en suelo urbano sin delimitación, conforme a la propuesta.',
+   impact:'La ruta de trámite depende de la clasificación del suelo y de la delimitación vigente.',
+   ref:'Proyecto de Acuerdo 2026: arts. 381, 382 y 615.'
+  });
+  if([...treatmentCodes].some(x=>/^C[1-4]$/.test(x)))regimes.push({
+   title:'CONSOLIDACIÓN · C1 A C4',
+   rule:'Los planes parciales en consolidación solo se contemplan bajo la excepción de delimitación mediante Proyecto Urbanístico Integral (PUI). Se proponen reglas particulares para otros ámbitos.',
+   impact:'Tener consolidación no activa por sí mismo un plan parcial ni una mayor edificabilidad.',
+   ref:'Proyecto de Acuerdo 2026: art. 379.'
+  });
+  if(treatmentCodes.has('MI'))regimes.push({
+   title:'MEJORAMIENTO INTEGRAL',
+   rule:'Se plantean Planes de Gestión del Hábitat (PGHAB) para coordinar intervenciones de mejoramiento y soportes urbanos.',
+   impact:'Un PGHAB no equivale automáticamente a un plan parcial de renovación.',
+   ref:'Proyecto de Acuerdo 2026: art. 380.'
+  });
+  if(conservation)regimes.push({
+   title:'CONSERVACIÓN CULTURAL Y CONTEXTUAL',
+   rule:'Se proponen modalidades de protección de sectores y contextos urbanos. Las actuaciones deben respetar su régimen y delimitación.',
+   impact:'No toda intervención se prohíbe, pero tampoco se presume un incentivo o compensación.',
+   ref:'POT 2014: arts. 301-307; propuesta: arts. 377-378.'
+  });
+  if(!regimes.length)regimes.push({
+   title:'CONSULTA SEGÚN TRATAMIENTO DEL BARRIO',
+   rule:'La información disponible no identifica una modalidad especial de gestión en esta ficha. Debe consultarse el tratamiento preciso y el instrumento delimitado.',
+   impact:'La ausencia de una modalidad aquí no equivale a ausencia de obligaciones urbanísticas.',
+   ref:'Consultar matriz normativa y geodatabase del POT.'
+  });
+  let rY=79;
+  for(const rg of regimes.slice(0,3)){
+   fillColor(pdf,'#F3F4F8');pdf.roundedRect(14,rY-6,182,57,3,3,'F');
+   line(pdf,19,rY,rg.title,8.8,COLORS.purple,true,172);
+   let ly=line(pdf,19,rY+10,rg.rule,8.2,COLORS.navy,false,172);
+   ly=line(pdf,19,Math.max(rY+30,ly+2),rg.impact,7.6,COLORS.muted,false,171);
+   line(pdf,19,rY+46,rg.ref,7,COLORS.purple,false,173);
+   rY+=63;
+  }
+  if(regimes.length>3)line(pdf,14,261,'Otras modalidades del barrio deben revisarse en el análisis de la plataforma.',7.6,COLORS.muted);
+  line(pdf,14,273,'Las reglas se asocian a categorías del barrio, no a cada predio.',7.6,COLORS.muted);
+  pdf.addPage();
   // PÁGINA 5: financiación, incentivos, obligaciones y distinciones.
-  base(pdf,5,'05 / GESTIÓN E INCENTIVOS','¿Qué beneficios y cargas existen?','Instrumentos generales del POT; la ficha no acredita derechos o exenciones individuales.',p);
+  base(pdf,7,'07 / GESTIÓN E INCENTIVOS','¿Qué beneficios y cargas existen?','Instrumentos generales del POT; la ficha no acredita derechos o exenciones individuales.',p);
   const tools=[
     ['Edificabilidad adicional (ICA / ICP)','Capacidad edificatoria adicional a la básica.','Acceso condicionado a reglas y contraprestaciones.','Propuesta 2026, arts. 371, 388 y 616-620.'],
     ['Participación en plusvalía','Participación pública en incrementos de valor del suelo.','Exige verificar hecho generador y exigibilidad.','Verificar normativa y actos distritales aplicables.'],
@@ -308,7 +419,7 @@ async function downloadBarrio(){
   line(pdf,14,274,'No se calculan beneficios tributarios, avalúos ni plusvalía predial.',7.8,COLORS.muted);
   pdf.addPage();
   // PÁGINA 6: cartografía de amenazas.
-  base(pdf,6,'06 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
+  base(pdf,8,'08 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
   if(threat){
    const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
    for(let i=0;i<3;i++){
@@ -345,7 +456,7 @@ async function downloadBarrio(){
   line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
   pdf.addPage();
   // PÁGINA 4
-  base(pdf,7,'07 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
+  base(pdf,9,'09 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
   line(pdf,14,75,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA ORIENTATIVA',10,COLORS.purple,true);
   const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
   let my=87;
