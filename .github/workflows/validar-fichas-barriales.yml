@@ -106,6 +106,8 @@ jobs:
           assert 'EXTENSIÓN DEL BARRIO' in pdf[0].get_text(), 'Falta extensión en cabecera'
           assert 'construcción adicional' in all_text, 'Falta definición de ICA/ICP'
           assert 'Ordena un ámbito' in gestion.get_text(), 'Falta explicación del plan parcial'
+          _,riesgo=locate('09 / RIESGO Y GESTIÓN')
+          assert 'CONDICIÓN DE RIESGO' in riesgo.get_text(), 'Falta resumen independiente de condición de riesgo'
           _,interpretacion=locate('03 / LECTURA DEL CAMBIO')
           assert 'QUÉ QUIERE DECIR' in interpretacion.get_text(), 'Falta interpretación territorial'
           _,instrumentos=locate('06 / INSTRUMENTOS CONCRETOS')
