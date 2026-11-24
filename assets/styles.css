@@ -219,3 +219,12 @@
 @media(max-width:470px){.micro-kpis{grid-template-columns:1fr}.risk-period-grid-single .risk-period-map{min-height:280px}}
 
 .micro-treatment-label{display:flex;align-items:center;gap:7px;min-width:0}.micro-treatment-swatch{display:inline-block;width:12px;height:12px;min-width:12px;border-radius:3px;border:1px solid #ded9ea}
+
+/* Cruces territoriales exploratorios: condición de riesgo y amenaza 2026 */
+.micro-cross-section{margin:20px 0;padding:18px;border:1px solid #e2dfed;border-radius:12px;background:#f8f7fb}
+.micro-cross-section h4{margin-top:0}
+.micro-cross-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.micro-cross-summary>div{display:flex;flex-direction:column;gap:4px;background:#fff;padding:12px;border-radius:8px;border:1px solid #e2dfed}
+.micro-cross-summary b{font-size:18px;color:#4a4170}
+.micro-cross-summary small{font-size:11px;color:#726c85}
+@media(max-width:600px){.micro-cross-summary{grid-template-columns:1fr}}
