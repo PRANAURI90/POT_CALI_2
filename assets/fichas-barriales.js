@@ -69,7 +69,7 @@ function base(pdf,n,k,title,sub,selected){
  fillColor(pdf,COLORS.purple);pdf.rect(0,0,4,27,'F');
  line(pdf,14,10,'CALI, ¿QUÉ CAMBIA EN MI TERRITORIO?',11,'#FFFFFF',true);
  line(pdf,14,17,'OBSERVATORIO CIUDADANO DEL ORDENAMIENTO TERRITORIAL',7.5,'#E4E0F5');
- if(Number.isFinite(selected?.fichaAreaHa)&&selected.fichaAreaHa>0)line(pdf,14,24,'BARRIO '+pdfText(selected.barrio)+'  |  COMUNA '+pdfText(selected.comuna)+'  |  EXTENSIÓN CARTOGRÁFICA '+ha(selected.fichaAreaHa),7,'#DCD7F1',false,185);
+ if(Number.isFinite(selected?.fichaAreaHa)&&selected.fichaAreaHa>0)line(pdf,14,24,'COMUNA '+pdfText(selected.comuna)+'  |  CÓDIGO '+pdfText(selected.codigo)+'  |  EXTENSIÓN DEL BARRIO '+ha(selected.fichaAreaHa),7,'#DCD7F1',false,185);
  line(pdf,14,39,k,8,COLORS.purple,true);
  const size=pdfText(title).length>49?13:pdfText(title).length>35?15:18;
  line(pdf,14,49,title,size,COLORS.navy,true,184);
