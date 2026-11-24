@@ -30,3 +30,16 @@
 .glosario-dialog-body p{font-size:13px;line-height:1.75;margin:0}
 .glosario-precaution{background:#f7f5fa;border-left:3px solid #aa9abd;padding:12px 14px;border-radius:5px}
 @media(max-width:760px){.glosario-toolbar{grid-template-columns:1fr}.glosario-grid{grid-template-columns:1fr}.glosario-card{padding:17px}.glosario-dialog-body{padding:17px}}
+
+/* Dos glosarios independientes por vigencia y términos que abren su definición */
+.glosario-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+.glosario-period-column{min-width:0;background:#f9f8fc;border:1px solid #ded9e8;border-radius:17px;padding:14px}
+.glosario-period-column>header{position:sticky;top:0;z-index:1;background:#f9f8fc;padding:10px 8px 13px;border-bottom:1px solid #ddd7e7;margin-bottom:12px}
+.glosario-period-column>header h3{color:#302544;font-size:20px;margin:0 0 5px}
+.glosario-period-column>header p{font-size:12px;margin:0;color:#746e83}
+.glosario-period-list{display:flex;flex-direction:column;gap:12px}
+.glosario-term-link,.glossary-term{font:inherit;font-weight:inherit;color:#463479;border:0;border-bottom:1px dotted #685595;background:transparent;cursor:pointer;padding:0;text-align:left;line-height:inherit}
+.glosario-term-link:hover,.glossary-term:hover{color:#291953;border-bottom-style:solid}
+.glosario-term-link:focus-visible,.glossary-term:focus-visible{outline:2px solid #604795;outline-offset:3px;border-radius:2px}
+.glosario-period-column .glosario-card{padding:16px}
+@media(max-width:800px){.glosario-grid{grid-template-columns:1fr}.glosario-period-column>header{position:static}}

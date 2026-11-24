@@ -239,3 +239,7 @@
 .risk-legal-sources{font-size:11px;line-height:1.6;margin-top:14px}
 .risk-legal-sources a{color:#4b4388;text-decoration:underline}
 @media(max-width:900px){.risk-legal-grid{grid-template-columns:1fr}}
+
+/* Inicio: la clasificación del suelo ocupa ancho disponible tras retirar el bloque de alcance */
+.home-soil-only{grid-template-columns:minmax(0,1fr)}
+.home-soil-only>.surface-card{min-width:0}
