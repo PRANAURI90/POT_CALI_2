@@ -243,3 +243,15 @@
 /* Inicio: la clasificación del suelo ocupa ancho disponible tras retirar el bloque de alcance */
 .home-soil-only{grid-template-columns:minmax(0,1fr)}
 .home-soil-only>.surface-card{min-width:0}
+
+/* Portada · Definiciones normativas de tratamiento y área de actividad */
+.home-concepts{margin:20px 0 26px}
+.home-concepts .section-heading{margin-bottom:14px}
+.home-concepts-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.home-concept-card{min-width:0}
+.home-concept-card h4{font-size:18px;margin:0 0 11px;color:#342b56}
+.home-concept-card p{font-size:13px;line-height:1.7;margin:0 0 10px}
+.home-concept-card p.caption{font-size:11px;color:#756f81;margin-top:12px}
+.home-concept-relevance{margin-top:13px!important;padding-top:11px;border-top:1px solid #e6e1ec}
+.home-concepts-note{font-size:13px;line-height:1.7;color:#514a5b;padding:12px 15px;border-left:3px solid #70619e;margin:15px 0 0;background:#f8f6fb;border-radius:3px}
+@media(max-width:760px){.home-concepts-grid{grid-template-columns:1fr}}
