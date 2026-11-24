@@ -255,3 +255,13 @@
 .home-concept-relevance{margin-top:13px!important;padding-top:11px;border-top:1px solid #e6e1ec}
 .home-concepts-note{font-size:13px;line-height:1.7;color:#514a5b;padding:12px 15px;border-left:3px solid #70619e;margin:15px 0 0;background:#f8f6fb;border-radius:3px}
 @media(max-width:760px){.home-concepts-grid{grid-template-columns:1fr}}
+
+/* Leyenda del mapa de microzonificación: colores del propio GeoJSON, no de tratamientos */
+.micro-treatment-label{display:block;min-width:0}
+.micro-legend{margin:12px 0;padding:14px;border:1px solid #e2dfed;border-radius:10px;background:#faf9fc}
+.micro-legend h4{font-size:13px;font-weight:750;margin:0 0 12px;color:#302d45}
+.micro-legend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 14px}
+.micro-legend-item{display:flex;align-items:center;gap:8px;font-size:11px;line-height:1.4;color:#51495f;min-width:0}
+.micro-legend-swatch{width:13px;height:13px;flex:0 0 13px;border:1px solid rgba(0,0,0,.12);border-radius:3px;display:inline-block}
+.micro-legend .caption{margin:12px 0 0}
+@media(max-width:550px){.micro-legend-grid{grid-template-columns:1fr}}
