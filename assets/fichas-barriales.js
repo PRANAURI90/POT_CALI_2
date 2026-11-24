@@ -91,6 +91,22 @@ function treatmentMeaning(from,to){
  if(f===t)return 'Aunque conserve una familia o denominación semejante, deben compararse las definiciones y condiciones de ambos POT; la coincidencia cartográfica no prueba equivalencia jurídica.';
  return 'Esta porción del barrio cambia de clasificación entre los dos instrumentos. Para saber su efecto real se deben comparar las reglas de uso, edificabilidad, gestión y cargas aplicables.';
 }
+// Conclusiones y comprobaciones pendientes: artículos verificados por modalidad.
+function verifiedTransitionDetail(from,to){
+ const a=pdfText(from).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase();
+ const b=pdfText(to).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase();
+ if((/REACTIVACION|\\bR2\\b/.test(a))&&(/REDENSIFICACION MEDIA|\\bR2\\b/.test(b)))return {
+  meaning:'Hay un cambio normativo concreto: en el POT 2014 R2 no admitía plan parcial de renovación, pero sí proyecto de renovación de mínimo dos manzanas. La propuesta 2026 contempla actuación individual para predios o agrupaciones menores de 3.000 m², plan de manzana desde 3.000 m² hasta una manzana y plan parcial para ámbitos de mínimo dos manzanas. Fuente: arts. 317 y 319 del POT 2014; arts. 387, 615 y 619-620 del proyecto.',
+  limits:'El cambio permite identificar nuevas modalidades de gestión; no determina por sí mismo el número de pisos, el índice aplicable o la viabilidad de un predio. Las cesiones específicas del art. 388 de la propuesta corresponden a planes parciales y planes de manzana, no automáticamente a toda actuación individual.',
+  checks:'Falta localizar cada predio frente a las delimitaciones de instrumentos y al Corredor Verde, conocer el tamaño de la agrupación y contrastar índices, capacidad de servicios, restricciones ambientales y condiciones de riesgo. Estas son verificaciones territoriales, no artículos por identificar.'
+ };
+ if((/REDESARROLLO|\\bR1\\b/.test(a))&&(/REDENSIFICACION ALTA|\\bR1\\b/.test(b)))return {
+  meaning:'El POT 2014 exigía plan parcial para la renovación por redesarrollo R1, con un ámbito mínimo de 20.000 m². La propuesta 2026 redefine R1 como redensificación alta y contempla actuación individual menor de 3.000 m², plan de manzana desde 3.000 m² y plan parcial de mínimo dos manzanas. Fuente: arts. 316, 319-320 (2014) y 370, 387, 615, 619-620 (2026).',
+  limits:'La propuesta diversifica los instrumentos de gestión, pero el tratamiento no fija por sí solo los pisos de cada predio ni concede una licencia. El art. 388 señala cargas específicas para planes parciales y planes de manzana.',
+  checks:'Falta comprobar la delimitación concreta, el área y agrupación predial, el índice permitido, las cargas y la localización respecto del Corredor Verde, soportes urbanos y restricciones ambientales y de riesgo.'
+ };
+ return null;
+}
 function softParagraph(pdf,x,y,text,width=174,size=9){
  return line(pdf,x,y,text,size,COLORS.navy,false,width)+3;
 }
@@ -257,15 +273,16 @@ async function downloadBarrio(){
     line(pdf,19,93,ha(main.ha)+(percent?' ('+percent+' del barrio)':''),13,COLORS.navy,true);
     line(pdf,19,103,'Antes: '+prev,8.2,COLORS.navy,false,165);
     line(pdf,19,112,'Propuesta: '+next,8.2,COLORS.purple,false,165);
+    const verified=verifiedTransitionDetail(main.from,main.to);
     line(pdf,14,137,'¿QUÉ QUIERE DECIR?',10,COLORS.purple,true);
     let y=149;
-    y=softParagraph(pdf,16,y,treatmentMeaning(main.from,main.to),175,9.3)+8;
+    y=softParagraph(pdf,16,y,verified?.meaning||treatmentMeaning(main.from,main.to),175,verified?8.35:9.3)+6;
     line(pdf,14,y,'¿QUÉ NO SE PUEDE CONCLUIR?',10,COLORS.purple,true);
     y+=12;
-    y=softParagraph(pdf,16,y,'El mapa no demuestra que aumenten los pisos, que un proyecto quede aprobado ni que todos los propietarios reciban un beneficio. Para ello deben comprobarse los índices, las delimitaciones y los instrumentos exigidos.',174,8.8)+5;
+    y=softParagraph(pdf,16,y,verified?.limits||'La transición muestra la clasificación del suelo, pero no acredita pisos permitidos, autorización de un proyecto ni beneficio individual. Estas condiciones dependen de índices, delimitación del ámbito y reglas específicas.',174,verified?8.2:8.8)+4;
     line(pdf,14,y,'¿QUÉ DEBE VERIFICARSE?',10,COLORS.purple,true);
     y+=11;
-    y=softParagraph(pdf,16,y,'Consultar los artículos de cada tratamiento, los requisitos de plan parcial o plan de manzana, el reparto de cargas y beneficios, y las medidas frente a moradores y riesgos.',174,8.7);
+    y=softParagraph(pdf,16,y,verified?.checks||'Faltan la ubicación y dimensiones de los predios, las delimitaciones efectivas de los instrumentos, los soportes urbanos y la situación ambiental y de riesgo. Las reglas generales se detallan en las páginas de gestión.',174,verified?8.1:8.7);
   }else{
     line(pdf,16,83,'No hay un cruce de tratamientos superior a 0,01 ha registrado.',9,COLORS.navy);
     line(pdf,16,96,'La ausencia de cruce no implica identidad normativa entre los POT.',8.5,COLORS.muted);
