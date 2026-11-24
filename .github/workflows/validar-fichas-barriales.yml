@@ -91,7 +91,7 @@ jobs:
           from PIL import Image
           from io import BytesIO
           pdf=fitz.open('/tmp/ficha_1722.pdf')
-          assert 9<=len(pdf)<=16, f'Número de páginas inesperado: {len(pdf)}'
+          assert 9<=len(pdf)<=22, f'Número de páginas inesperado: {len(pdf)}'
           def locate(needle):
             hits=[(i,p) for i,p in enumerate(pdf) if needle in p.get_text()]
             assert hits, f'Falta capítulo o contenido: {needle}'
@@ -110,6 +110,11 @@ jobs:
           assert 'QUÉ QUIERE DECIR' in interpretacion.get_text(), 'Falta interpretación territorial'
           _,instrumentos=locate('06 / INSTRUMENTOS CONCRETOS')
           assert 'procedimiento' in instrumentos.get_text().lower(), 'Falta lectura específica de instrumentos'
+          full='\n'.join(p.get_text() for p in pdf)
+          assert 'COINCIDENCIA DE TRATAMIENTO' in full or 'SIN REGLA PARTICULAR' in full, 'Falta conexión entre norma y tratamiento barrial'
+          assert 'arts.' in full, 'Faltan referencias de artículos'
+          assert 'no delimita el instrumento' in full.lower(), 'Falta distinción entre tratamiento e instrumento delimitado'
+          assert 'POT 2014 VIGENTE' in full, 'Falta trazabilidad del régimen vigente'
           barrio1113=fitz.open('/tmp/ficha_1113.pdf')
           t1113=barrio1113[1].get_text()
           assert '32,75 ha' in t1113 and '0,17 ha' in t1113, 'Faltan hectáreas de transiciones 1113'
