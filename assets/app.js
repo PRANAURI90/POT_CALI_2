@@ -566,8 +566,8 @@ function renderBarrioRiskResult(key,result,barrio,code){
    if(subset.length)html+=barrioRiskCard(BARRIO_PHENOM[fen],'Niveles de amenaza que intersectan el barrio',barrio,subset,code);
    else noCoinciden.push(BARRIO_PHENOM[fen]);
   }
-  if(noCoinciden.length)html+='<p class="barrio-risk-empty"><b>Sin intersección cartográfica registrada:</b> '+noCoinciden.join(', ')+'. Esto no acredita ausencia total de amenaza; corresponde al alcance de estas capas simplificadas.</p>';
- }else html+=barrioRiskCard((RISK_TOPICS.find(x=>x.key===key)?.label||key),'Ámbitos cartografiados que intersectan el barrio',barrio,result.rows,code);
+  if(noCoinciden.length)html+='<p class="barrio-risk-empty"><b>'+(result.errors?'Sin intersección confirmada en los recortes procesados; quedan geometrías pendientes: ':'Sin intersección cartográfica registrada: ')+'</b>'+noCoinciden.join(', ')+'. Esto no acredita ausencia total de amenaza; corresponde al alcance de estas capas simplificadas.</p>';
+ }else html+=(result.errors&&!result.rows.length?'<p class="barrio-risk-warning">No se identificaron coincidencias en las geometrías procesables, pero los errores de geometría impiden descartar otros cruces.</p>':barrioRiskCard((RISK_TOPICS.find(x=>x.key===key)?.label||key),'Ámbitos cartografiados que intersectan el barrio',barrio,result.rows,code));
  if(key==='amenaza')html+=renderBarrioMicrozoneCard(barrio,code);
  const alert=result.errors?'<p class="barrio-risk-warning">Atención: '+result.errors+' geometrías no pudieron procesarse. Este cruce es incompleto y no se pueden descartar otras coincidencias.</p>':'';
  return '<div class="barrio-risk-report">'+alert+html+'<p class="caption">Porcentajes calculados sobre la superficie total del barrio seleccionado. La unión por categoría evita sumar dos veces superposiciones internas, pero diferentes fenómenos y categorías pueden coincidir entre sí. Fuente: GeoJSON simplificados de la propuesta POT 2026; cálculos exploratorios, no certificaciones prediales.</p></div>';
