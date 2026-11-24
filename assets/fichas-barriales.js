@@ -93,14 +93,14 @@ function treatmentMeaning(from,to){
 }
 // Conclusiones y comprobaciones pendientes: artículos verificados por modalidad.
 function verifiedTransitionDetail(from,to){
- const a=pdfText(from).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase();
- const b=pdfText(to).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase();
- if((/REACTIVACION|\\bR2\\b/.test(a))&&(/REDENSIFICACION MEDIA|\\bR2\\b/.test(b)))return {
+ const a=pdfText(from).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ const b=pdfText(to).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ if((/REACTIVACION|\bR2\b/.test(a))&&(/REDENSIFICACION MEDIA|\bR2\b/.test(b)))return {
   meaning:'Hay un cambio normativo concreto: en el POT 2014 R2 no admitía plan parcial de renovación, pero sí proyecto de renovación de mínimo dos manzanas. La propuesta 2026 contempla actuación individual para predios o agrupaciones menores de 3.000 m², plan de manzana desde 3.000 m² hasta una manzana y plan parcial para ámbitos de mínimo dos manzanas. Fuente: arts. 317 y 319 del POT 2014; arts. 387, 615 y 619-620 del proyecto.',
   limits:'El cambio permite identificar nuevas modalidades de gestión; no determina por sí mismo el número de pisos, el índice aplicable o la viabilidad de un predio. Las cesiones específicas del art. 388 de la propuesta corresponden a planes parciales y planes de manzana, no automáticamente a toda actuación individual.',
   checks:'Falta localizar cada predio frente a las delimitaciones de instrumentos y al Corredor Verde, conocer el tamaño de la agrupación y contrastar índices, capacidad de servicios, restricciones ambientales y condiciones de riesgo. Estas son verificaciones territoriales, no artículos por identificar.'
  };
- if((/REDESARROLLO|\\bR1\\b/.test(a))&&(/REDENSIFICACION ALTA|\\bR1\\b/.test(b)))return {
+ if((/REDESARROLLO|\bR1\b/.test(a))&&(/REDENSIFICACION ALTA|\bR1\b/.test(b)))return {
   meaning:'El POT 2014 exigía plan parcial para la renovación por redesarrollo R1, con un ámbito mínimo de 20.000 m². La propuesta 2026 redefine R1 como redensificación alta y contempla actuación individual menor de 3.000 m², plan de manzana desde 3.000 m² y plan parcial de mínimo dos manzanas. Fuente: arts. 316, 319-320 (2014) y 370, 387, 615, 619-620 (2026).',
   limits:'La propuesta diversifica los instrumentos de gestión, pero el tratamiento no fija por sí solo los pisos de cada predio ni concede una licencia. El art. 388 señala cargas específicas para planes parciales y planes de manzana.',
   checks:'Falta comprobar la delimitación concreta, el área y agrupación predial, el índice permitido, las cargas y la localización respecto del Corredor Verde, soportes urbanos y restricciones ambientales y de riesgo.'
