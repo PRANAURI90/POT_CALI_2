@@ -2,7 +2,7 @@ name: Calcular ficha amenazas barrio 1722
 on:
   push:
     branches: [ficha-amenaza-1722]
-    paths: ['.github/workflows/ficha-1722.yml', 'scripts/ficha_1722_amenaza_resultados.py']
+    paths: ['.github/workflows/ficha-1722.yml', 'scripts/ficha_1722_amenaza_resultados.py', 'scripts/generar_ficha_1722_pdf.py']
   workflow_dispatch:
 permissions:
   contents: write
@@ -14,11 +14,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install geopandas shapely pyproj pyogrio
+      - run: pip install geopandas shapely pyproj pyogrio matplotlib reportlab
       - run: python scripts/ficha_1722_amenaza_resultados.py
+      - run: python scripts/generar_ficha_1722_pdf.py
       - name: Commit resultado derivado
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/ficha_1722_amenaza_resultado.json
+          git add data/ficha_1722_amenaza_resultado.json fichas/Prados_del_Limonar_1722_Ficha_Territorial_2026.pdf fichas/mapa_amenazas_1722.png
           git diff --cached --quiet || (git commit -m "Calcular cruces de amenazas 1722 desde GeoJSON" && git push)
