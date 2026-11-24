@@ -91,21 +91,23 @@ jobs:
           from PIL import Image
           from io import BytesIO
           pdf=fitz.open('/tmp/ficha_1722.pdf')
-          assert len(pdf)==7, f'Número de páginas inesperado: {len(pdf)}'
-          page=pdf[5]
+          assert len(pdf)==9, f'Número de páginas inesperado: {len(pdf)}'
+          page=pdf[7]
           txt=page.get_text()
           assert 'INUNDACIÓN' in txt and 'Alta' in txt, 'No se imprimieron los indicadores de inundación'
-          assert 'GESTIÓN' in pdf[3].get_text(), 'Falta capítulo de gestión'
-          assert 'plusvalía' in pdf[4].get_text().lower(), 'Falta instrumento de plusvalía'
+          assert 'GESTIÓN' in pdf[4].get_text(), 'Falta capítulo de gestión'
+          assert 'plusvalía' in pdf[6].get_text().lower(), 'Falta instrumento de plusvalía'
           assert 'EXTENSIÓN DEL BARRIO' in pdf[0].get_text(), 'Falta extensión cartográfica en cabecera'
-          assert 'Capacidad edificatoria adicional' in pdf[4].get_text(), 'Falta definición pedagógica del incentivo'
-          assert 'Ordena un ámbito' in pdf[3].get_text(), 'Falta definición pedagógica del plan parcial'
+          assert 'Capacidad edificatoria adicional' in pdf[6].get_text(), 'Falta definición pedagógica del incentivo'
+          assert 'Ordena un ámbito' in pdf[4].get_text(), 'Falta definición pedagógica del plan parcial'
           assert 'LA TRANSICIÓN DE MAYOR SUPERFICIE' in transition or 'Sin transiciones' in transition, 'Falta jerarquía gráfica de transiciones'
           barrio1113=fitz.open('/tmp/ficha_1113.pdf')
           t1113=barrio1113[1].get_text()
           assert '32,75 ha' in t1113 and '0,17 ha' in t1113, 'No se ven las hectáreas de las dos transiciones del barrio 1113'
           assert '98,9' in t1113, 'No se muestra el porcentaje del barrio en la transición dominante'
           assert 'reactivación' in t1113.lower() and 'redensificación' in t1113.lower(), 'No se explica la redefinición de R2'
+          assert 'QUÉ QUIERE DECIR' in pdf[2].get_text(), 'Falta explicación del cambio territorial'
+          assert 'PROCEDIMIENTO' in pdf[5].get_text(), 'Falta lectura de instrumentos específicos'
           transition=pdf[1].get_text()
           assert ('Antes' in transition and 'Propuesta' in transition) or 'Sin transiciones' in transition, 'No se identifica origen y destino de transición'
           assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transiciones'
