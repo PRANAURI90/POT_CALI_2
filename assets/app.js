@@ -487,23 +487,157 @@ async function drawMicroMap(){
 }
 function bindMicrozoneSection(root){root.querySelector('#microzone-select')?.addEventListener('change',e=>{state.microzoneSelected=e.target.value;renderRiesgo()});drawMicroMap()}
 
+
+/* Intersecciones territoriales por barrio con GeoJSON de consulta.
+   Se calcula al seleccionar barrio, nunca se extrapola a predios.
+   Turf 6.5.0: recortes y disoluciones en cada categoría; se muestran fallas. */
+let barrioRiskSerial=0;
+const barrioRiskCache=new Map();
+const BARRIO_PHENOM={'1':'Movimientos en masa','3':'Inundación','2':'Avenidas torrenciales'};
+const BARRIO_LEVELS={'1':'Amenaza alta','2':'Amenaza media','3':'Amenaza baja','0':'Otra condición (código 0)'};
+function barrioRiskCategoryColor(key,cat){
+ return key==='amenaza'?calcColor('amenaza',cat,0):(riskCategories(key).find(c=>c.cat===cat)?.color||'#788e9a');
+}
+function barrioRiskSummaryBar(label,ha,pct,color){
+ return '<div class="barrio-risk-summary-row"><div><strong>'+htmlEscape(label)+'</strong><span>'+fmt(ha,2)+' ha · '+fmt(pct,2)+' % del barrio</span></div><div class="barrio-risk-track"><i style="background:'+color+';width:'+Math.max(0,Math.min(100,pct))+'%"></i></div></div>';
+}
+function barrioRiskSvg(barrio,parts,title,subtitle){
+ /* Un JPG sin teselas externas garantiza reproducibilidad y evita restricciones CORS. */
+ const t=window.turf,bb=t.bbox(barrio),lat=(bb[1]+bb[3])/2,cos=Math.cos(lat*Math.PI/180);
+ const spanX=Math.max(.000001,(bb[2]-bb[0])*cos),spanY=Math.max(.000001,bb[3]-bb[1]);
+ const scale=Math.min(680/spanX,410/spanY),cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;
+ const xy=p=>[(450+(p[0]-cx)*cos*scale).toFixed(2),(273-(p[1]-cy)*scale).toFixed(2)];
+ function path(g){
+  const polys=g.type==='Polygon'?[g.coordinates]:(g.type==='MultiPolygon'?g.coordinates:[]);
+  return polys.map(poly=>poly.map(r=>r.map((p,i)=>(i?'L':'M')+xy(p).join(',')).join(' ')+' Z').join(' ')).join(' ');
+ }
+ const svgHeight=Math.max(650,572+Math.ceil(parts.length/2)*24+30);
+ const background='<rect x="0" y="0" width="900" height="'+svgHeight+'" fill="#ffffff"/><rect x="42" y="89" width="816" height="440" rx="12" fill="#f7f7f8" stroke="#e5e2ea"/>';
+ const shape='<path d="'+path(barrio.geometry)+'" fill="#e8e7ee" stroke="#3a3658" stroke-width="2.1" fill-rule="evenodd"/>';
+ const fills=parts.map(p=>'<path d="'+path(p.geometry.geometry)+'" fill="'+p.color+'" fill-opacity=".73" stroke="'+p.color+'" stroke-width="1.1" fill-rule="evenodd"/>').join('');
+ const outline='<path d="'+path(barrio.geometry)+'" fill="none" stroke="#342e55" stroke-width="2.8"/>';
+ const legend=parts.map((p,i)=>'<rect x="'+(56+i%2*405)+'" y="'+(546+Math.floor(i/2)*24)+'" width="13" height="13" rx="2" fill="'+p.color+'"/><text x="'+(76+i%2*405)+'" y="'+(557+Math.floor(i/2)*24)+'" font-family="Arial" font-size="12" fill="#403a55">'+htmlEscape(p.label)+'</text>').join('');
+ const footer='<text x="55" y="'+(svgHeight-17)+'" font-family="Arial" font-size="10" fill="#6b6873">GeoJSON de consulta 2026 · intersección aproximada · no válido para decisión predial</text>';
+ const tt='<text x="52" y="40" font-family="Arial" font-size="22" font-weight="bold" fill="#302c52">'+htmlEscape(title)+'</text><text x="52" y="65" font-family="Arial" font-size="14" fill="#6a6475">'+htmlEscape(subtitle)+'</text>';
+ return '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="'+svgHeight+'" viewBox="0 0 900 '+svgHeight+'">'+background+tt+shape+fills+outline+legend+footer+'</svg>';
+}
+async function barrioRiskIntersect(barrio,key){
+ const t=window.turf;if(!t||typeof t.intersect!=='function'||typeof t.union!=='function')throw Error('Motor SIG no disponible');
+ const gj=await getGeo(key);if(!Array.isArray(gj.features))throw Error('GeoJSON incompleto');
+ const b=t.bbox(barrio),bArea=t.area(barrio)/10000;if(!(bArea>0))throw Error('Área barrial no válida');
+ const byCat=new Map();let errors=0;
+ for(const f of gj.features){
+  if(key==='asentamientos'&&String(f.properties?.ahdiobs||'').toLowerCase()==='no aplica')continue;
+  try{
+   const box=t.bbox(f);if(box[2]<=b[0]||box[0]>=b[2]||box[3]<=b[1]||box[1]>=b[3])continue;
+   const cut=t.intersect(barrio,f);if(!cut||t.area(cut)<100)continue;
+   const cat=String(groupCat(key,f.properties||{}));if(!byCat.has(cat))byCat.set(cat,[]);byCat.get(cat).push(cut);
+  }catch(e){errors++}
+ }
+ const rows=[];
+ for(const [cat,pieces] of byCat){
+  let geom=pieces[0],failed=false;
+  for(let i=1;i<pieces.length;i++){
+   try{geom=t.union(geom,pieces[i]);if(!geom){failed=true;break}}catch(e){failed=true;break}
+  }
+  if(failed){errors++;continue}
+  const ha=t.area(geom)/10000;if(ha<.01)continue;
+  if(!Number.isFinite(ha)||ha>bArea*1.002){errors++;continue}
+  rows.push({cat,ha,pct:100*ha/bArea,geometry:geom,color:barrioRiskCategoryColor(key,cat),label:catLabel(key,cat)});
+ }
+ return {rows:rows.sort((a,b)=>b.ha-a.ha),errors,bArea};
+}
+function barrioRiskCard(title,subtitle,barrio,rows,code){
+ const relevant=rows.filter(r=>r.ha>=.01),empty=relevant.length===0;
+ if(empty)return '<section class="barrio-risk-card"><h4>'+htmlEscape(title)+'</h4><p class="barrio-risk-empty">No se registran intersecciones cartográficas de esta categoría en el barrio (umbral: 0,01 ha). Esto no equivale a ausencia de amenaza.</p></section>';
+ const parts=relevant.map(r=>({geometry:r.geometry,color:r.color,label:r.shortLabel||r.label}));
+ const svg=barrioRiskSvg(barrio,parts,barrio.properties.barrio,title+' · propuesta 2026');
+ const mapId='risk-export-'+code+'-'+title.normalize('NFD').replace(/[^a-zA-Z0-9]/g,'').toLowerCase();
+ const bars=relevant.map(r=>barrioRiskSummaryBar(r.shortLabel||r.label,r.ha,r.pct,r.color)).join('');
+ return '<section class="barrio-risk-card"><h4>'+htmlEscape(title)+'</h4><p class="caption">'+htmlEscape(subtitle)+'</p><div class="barrio-risk-layout"><div class="barrio-risk-svg" id="'+mapId+'">'+svg+'</div><div class="barrio-risk-values">'+bars+'</div></div><button type="button" class="small-btn barrio-risk-download" data-risk-svg="'+mapId+'" data-risk-file="'+htmlEscape(barrio.properties.barrio+'-'+title)+'">Descargar mapa JPG</button></section>';
+}
+function renderBarrioRiskResult(key,result,barrio,code){
+ let html='';
+ if(key==='amenaza'){
+  const noCoinciden=[];
+  for(const fen of ['1','3','2']){
+   const subset=result.rows.filter(r=>r.cat.split('|')[0]===fen).map(r=>({...r,shortLabel:BARRIO_LEVELS[r.cat.split('|')[1]]||r.label}))
+    .sort((a,b)=>({'1':0,'2':1,'3':2,'0':3}[a.cat.split('|')[1]]??4)-({'1':0,'2':1,'3':2,'0':3}[b.cat.split('|')[1]]??4));
+   if(subset.length)html+=barrioRiskCard(BARRIO_PHENOM[fen],'Niveles de amenaza que intersectan el barrio',barrio,subset,code);
+   else noCoinciden.push(BARRIO_PHENOM[fen]);
+  }
+  if(noCoinciden.length)html+='<p class="barrio-risk-empty"><b>'+(result.errors?'Sin intersección confirmada en los recortes procesados; quedan geometrías pendientes: ':'Sin intersección cartográfica registrada: ')+'</b>'+noCoinciden.join(', ')+'. Esto no acredita ausencia total de amenaza; corresponde al alcance de estas capas simplificadas.</p>';
+ }else html+=(result.errors&&!result.rows.length?'<p class="barrio-risk-warning">No se identificaron coincidencias en las geometrías procesables, pero los errores de geometría impiden descartar otros cruces.</p>':barrioRiskCard((RISK_TOPICS.find(x=>x.key===key)?.label||key),'Ámbitos cartografiados que intersectan el barrio',barrio,result.rows,code));
+ if(key==='amenaza')html+=renderBarrioMicrozoneCard(barrio,code);
+ const alert=result.errors?'<p class="barrio-risk-warning">Atención: '+result.errors+' geometrías no pudieron procesarse. Este cruce es incompleto y no se pueden descartar otras coincidencias.</p>':'';
+ return '<div class="barrio-risk-report">'+alert+html+'<p class="caption">Porcentajes calculados sobre la superficie total del barrio seleccionado. La unión por categoría evita sumar dos veces superposiciones internas, pero diferentes fenómenos y categorías pueden coincidir entre sí. Fuente: GeoJSON simplificados de la propuesta POT 2026; cálculos exploratorios, no certificaciones prediales.</p></div>';
+}
+function renderBarrioMicrozoneCard(barrio,code){
+ const data=state.microzonasBarrio,rec=data?.barrios?.[code],zones=(rec?.zonas||[]).filter(z=>Number(z.hectareas)>0);
+ if(!data)return '<section class="barrio-risk-card"><h4>Microzonificación sísmica</h4><p>Información de cruce sísmico no disponible.</p></section>';
+ if(!zones.length)return '<section class="barrio-risk-card"><h4>Microzonificación sísmica</h4><p>No hay intersecciones registradas en la digitalización disponible. No significa ausencia de respuesta sísmica.</p></section>';
+ const rows=zones.map(z=>({cat:String(z.zona),ha:Number(z.hectareas),pct:Number(z.porcentaje_barrio),color:calcColor('microzonas_aproximadas',String(z.zona),0),label:'Zona '+z.zona+' · '+(MICRO_INFO[z.zona]?.[0]||'')})).sort((a,b)=>b.ha-a.ha);
+ const chart=rows.map(r=>barrioRiskSummaryBar(r.label,r.ha,r.pct,r.color)).join('');
+ return '<section class="barrio-risk-card"><h4>Microzonificación sísmica</h4><p class="caption">Respuesta local del suelo; no es una escala de niveles de riesgo sísmico. Mapa digitalizado aproximado.</p><div class="barrio-risk-micro-preview" id="barrio-risk-micro-preview"><p class="caption">Preparando representación geográfica de las microzonas coincidentes…</p></div><div class="barrio-risk-values">'+chart+'</div><p class="caption">Las hectáreas y porcentajes proceden del cruce previo en EPSG:9377. Linderos digitalizados no certificados.</p></section>';
+}
+async function loadBarrioMicroMap(barrio,code){
+ const host=DOM('barrio-risk-micro-preview');if(!host)return;
+ try{
+  const t=window.turf,gj=await getGeo('microzonas_aproximadas'),bb=t.bbox(barrio),pieces=[];
+  const names=new Set((state.microzonasBarrio?.barrios?.[code]?.zonas||[]).map(z=>String(z.zona)));
+  for(const feat of gj.features){
+   const z=String(feat.properties?.zona);if(!names.has(z))continue;
+   try{const fb=t.bbox(feat);if(fb[0]>=bb[2]||fb[2]<=bb[0]||fb[1]>=bb[3]||fb[3]<=bb[1])continue;
+    const cut=t.intersect(barrio,feat);if(cut&&t.area(cut)>100)pieces.push({geometry:cut,color:calcColor('microzonas_aproximadas',z,0),label:'Zona '+z+' · '+(MICRO_INFO[z]?.[0]||'')});
+   }catch(e){console.warn('Microzona',e)}
+  }
+  if(!host.isConnected||String(state.selected?.properties.codigo)!==code)return;
+  if(!pieces.length){host.innerHTML='<p class="caption">No fue posible representar las intersecciones de las microzonas; se mantienen las superficies calculadas previamente.</p>';return}
+  const id='risk-export-'+code+'-sismica';
+  host.innerHTML='<div class="barrio-risk-svg" id="'+id+'">'+barrioRiskSvg(barrio,pieces,barrio.properties.barrio,'Microzonificación sísmica · digitalización orientativa')+'</div><button type="button" class="small-btn barrio-risk-download" data-risk-svg="'+id+'" data-risk-file="'+htmlEscape(barrio.properties.barrio+'-microzonificacion-sismica')+'">Descargar mapa JPG</button>';
+  bindBarrioRiskDownloads(host);
+ }catch(e){host.textContent='No fue posible producir la representación gráfica de microzonificación.';console.error(e)}
+}
+function bindBarrioRiskDownloads(root){
+ root.querySelectorAll('[data-risk-svg]').forEach(btn=>btn.addEventListener('click',()=>{
+  const svg=DOM(btn.dataset.riskSvg)?.querySelector('svg');if(!svg)return;
+  const xml=new XMLSerializer().serializeToString(svg),blob=new Blob([xml],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob);
+  const img=new Image();img.onload=()=>{try{
+   const canvas=document.createElement('canvas');canvas.width=1800;canvas.height=Math.round(1800*svg.viewBox.baseVal.height/900);
+   const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+   const a=document.createElement('a');a.download=(btn.dataset.riskFile||'barrio-riesgo').normalize('NFD').replace(/[^a-zA-Z0-9_-]+/g,'_')+'.jpg';a.href=canvas.toDataURL('image/jpeg',.94);a.click();
+  }finally{URL.revokeObjectURL(url)}};img.onerror=()=>{URL.revokeObjectURL(url);alert('No se pudo exportar el mapa JPG.')};img.src=url;
+ }));
+}
+let barrioRiskSeq=0;
+const barrioRiskGeoCache=new Map();
+async function updateBarrioRiskPanel(){
+ const host=DOM('barrio-risk-intersections'),sel=state.selected;if(!host||!sel)return;
+ const key=state.riskTopic||'amenaza',code=String(sel.properties.codigo),token=++barrioRiskSeq,cache=code+'|'+key;
+ host.innerHTML='<p class="caption">Calculando intersecciones geográficas y porcentajes por barrio…</p>';
+ try{
+  const result=barrioRiskGeoCache.has(cache)?barrioRiskGeoCache.get(cache):await barrioRiskIntersect(sel,key);
+  barrioRiskGeoCache.set(cache,result);
+  if(token!==barrioRiskSeq||!host.isConnected||String(state.selected?.properties.codigo)!==code||(state.riskTopic||'amenaza')!==key)return;
+  host.innerHTML=renderBarrioRiskResult(key,result,sel,code);
+  bindBarrioRiskDownloads(host);
+  if(key==='amenaza')loadBarrioMicroMap(sel,code);
+ }catch(e){if(token!==barrioRiskSeq||!host.isConnected)return;host.innerHTML='<p class="barrio-risk-warning">No fue posible calcular el cruce con la cartografía disponible. No se interpreta como ausencia de amenaza. Comprueba que se hayan cargado las capas y el motor SIG.</p>';console.error('Cruce barrio',e)}
+}
+
 function renderRiesgo(){
  const root=DOM('riesgo-content');if(!root)return;
  destroyRiskPanelMaps();destroyMicroMap();
  const actual=state.riskTopic||'amenaza';const chosen=RISK_TOPICS.find(x=>x.key===actual)||RISK_TOPICS[0];
  const info=barrioInfo(),selected=state.selected,code=String(selected?.properties?.codigo||'');
- const zones=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
- const options=entries(info,chosen.data).length?entries(info,chosen.data):entries(info,chosen.key);
- const summaryAvailable=['condicion_riesgo'].includes(chosen.key);
+
  const counts=[
   ['Amenazas propuestas',state.leyendas?.amenaza?.count,'polígonos', 'amenaza'],
   ['Condiciones de riesgo',state.leyendas?.condicion_riesgo?.count,'polígonos', 'condicion_riesgo'],
   ['Asentamientos cartografiados',state.leyendas?.asentamientos?.count,'polígonos', 'asentamientos']
  ].filter(x=>Number.isFinite(Number(x[1])));
  const facts=counts.map(x=>'<article class="surface-card"><small class="eyebrow">'+htmlEscape(x[0])+'</small><h3>'+fmt(x[1])+'</h3><p class="caption">'+x[2]+' en la cartografía de la propuesta 2026. No son habitantes, viviendas ni hectáreas.</p><button class="small-btn" data-risk-layer="'+x[3]+'">Ver capa en el mapa</button></article>').join('');
- const items=options.slice().sort((a,b)=>(Number(b.hectareas)||0)-(Number(a.hectareas)||0));
- const dataRows=items.map(x=>{const pct=Number(x.porcentaje_barrio)||0;return '<div class="v7-row"><div class="v7-row-label"><b>'+htmlEscape(x.nombre)+'</b><span>'+fmt(x.hectareas,2)+' ha · '+fmt(pct,2)+' % del barrio</span></div><div class="v7-bar-bg"><i style="width:'+Math.max(0,Math.min(100,pct))+'%;background:#7e9e91"></i></div></div>'}).join('');
- const local=selected?'<div class="surface-card"><span class="eyebrow">CONSULTA TERRITORIAL</span><h3>'+htmlEscape(chosen.label)+' en '+htmlEscape(selected.properties.barrio)+'</h3><p>'+htmlEscape(chosen.sub)+'</p>'+(summaryAvailable?(items.length?'<div class="v7-bars">'+dataRows+'</div><p class="caption">Cada porcentaje se refiere a la superficie del barrio que intersecta esa categoría. Las categorías pueden superponerse y no tienen por qué sumar 100 %.</p>':'<p>No se registra intersección en la cartografía cruzada para este barrio. Esto no significa ausencia de amenaza ni restricciones.</p>'):'<p>Consulta esta capa directamente en el mapa territorial. La ficha no presenta superficies porque no se dispone de un cruce por barrio verificado para esta temática.</p>')+'</div>':'<div class="surface-card"><h3>Selecciona un barrio</h3><p>Busca el barrio en la barra superior. Aquí aparecerán las categorías, hectáreas y porcentajes que se registran en su territorio.</p></div>';
+ const local=selected?'<div class="surface-card"><span class="eyebrow">CONSULTA TERRITORIAL</span><h3>'+htmlEscape(chosen.label)+' en '+htmlEscape(selected.properties.barrio)+'</h3><p>'+htmlEscape(chosen.sub)+'</p><div id="barrio-risk-intersections" aria-live="polite"></div></div>':'<div class="surface-card"><h3>Selecciona un barrio</h3><p>Busca el barrio en la barra superior; se mostrarán los cruces con amenazas y microzonificación, con superficies y porcentajes.</p></div>';
  root.innerHTML='<div class="opening-card risk-concepts-intro"><span class="eyebrow">MARCO CONCEPTUAL Y NORMATIVO DE LA GESTIÓN DEL RIESGO</span><h3>¿Qué representan los mapas de amenaza y de condiciones de amenaza y riesgo?</h3><p>La propuesta POT 2026 distingue tres tipos de delimitaciones que <b>no son equivalentes</b>. Su interpretación depende de las definiciones nacionales y de los estudios que sustentan cada capa.</p><div class="risk-legal-grid"><article><h4>1. Amenaza</h4><p>Es el peligro latente asociado a un evento físico que puede presentarse con intensidad suficiente para causar daños y pérdidas. Su cartografía permite delimitar y categorizar la amenaza de cada fenómeno, pero <b>no equivale a una evaluación del riesgo de las construcciones o personas expuestas</b>.</p><small>Fuente: Ley 1523 de 2012, art. 4, definición de amenaza; Decreto 1077 de 2015, art. 2.2.2.1.3.1.3.</small></article><article><h4>2. Área con condición de amenaza</h4><p>Corresponde a un área de <b>amenaza alta o media</b> donde el POT contempla clasificar suelo urbano, de expansión urbana, rural suburbano o centros poblados rurales para permitir su desarrollo. Deben identificarse las condiciones y estudios detallados requeridos antes de desarrollar el ámbito.</p><small>Fuente: Decreto 1077 de 2015, art. 2.2.2.1.3.1.3, parágrafo 1; compilación del Decreto 1807 de 2014, art. 3.</small></article><article><h4>3. Área con condición de riesgo</h4><p>Corresponde a un área clasificada con <b>amenaza alta</b> que ya está urbanizada, ocupada o edificada, o en la que existen vías, equipamientos o infraestructura de servicios públicos. Los estudios detallados deben precisar el riesgo y las medidas pertinentes.</p><small>Fuente: Decreto 1077 de 2015, art. 2.2.2.1.3.1.3, parágrafo 1; compilación del Decreto 1807 de 2014, art. 3.</small></article></div><div class="v7-note"><b>Distinción esencial:</b> estar delimitado como área con condición de riesgo <b>no significa automáticamente riesgo alto no mitigable</b>. La categoría señala un ámbito que requiere análisis detallado para establecer su nivel de riesgo, viabilidad de mitigación y medidas de ordenamiento. Tampoco debe confundirse la microzonificación sísmica —que caracteriza respuesta local del suelo— con una zonificación de riesgo sísmico.</div><p class="risk-legal-sources"><b>Normas consultadas:</b> <a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=59488" target="_blank" rel="noopener noreferrer">Decreto 1807 de 2014, art. 3</a> · <a href="https://normograma.sena.edu.co/compilacion/docs/decreto_1077_2015_pr021.htm" target="_blank" rel="noopener noreferrer">Decreto 1077 de 2015, art. 2.2.2.1.3.1.3</a> · <a href="https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/ley_1523_2012.htm" target="_blank" rel="noopener noreferrer">Ley 1523 de 2012, art. 4</a>.</p></div>'+
  '<section class="section-card risk-panorama"><span class="eyebrow">Amenaza y riesgo EN CALI</span>'+renderRiskDistrictDashboard()+'</section>'+
  renderMicrozoneSection()+'<section class="section-card"><span class="eyebrow">HÁBITAT Y VIVIENDA</span><h3>¿Qué alternativas de intervención identifica el POT?</h3><p>En los polígonos de asentamientos aparecen categorías de regularización, estudios detallados, obras de mitigación, reubicación y otras condiciones de manejo. Sus superficies se pueden comparar en el gráfico de arriba seleccionando «Hábitat y asentamientos».</p><button class="small-btn" data-risk-layer="asentamientos">Explorar asentamientos en el mapa territorial</button></section>'+
@@ -513,6 +647,7 @@ function renderRiesgo(){
  root.querySelectorAll('[data-risk-topic]').forEach(b=>b.addEventListener('click',()=>{state.riskTopic=b.dataset.riskTopic;renderRiesgo()}));
  bindRiskPeriodControls(root);
  bindMicrozoneSection(root);
+ if(selected)updateBarrioRiskPanel();
 }
 async function loadData(){const keys=[['barrios','barrios.geojson'],['resumen','resumen_barrios.json'],['normas','normativa_gestion.json'],['indicadores','indicadores2026.json'],['sueloComparacion','comparacion_suelo_2014_2026.json'],['leyendas','leyendas.json'],['transformacion','indicadores_transformacion_exploratorios.json'],['transicionesV7','transiciones_actividad_v7.json'],['usosNormaV7','lectura_normativa_usos_v7.json'],['microzonasBarrio','microzonas_por_barrio_APROXIMADAS.json'],['microzonaTratamientos','microzonas_tratamientos_2026_EXPLORATORIO.json'],['crucesRiesgoMicro2026','cruces_riesgo_microzonas_tratamientos_2026_EXPLORATORIO.json'],['tratamientosNormaV7','lectura_tratamientos_v7.json']];await Promise.all(keys.map(async ([key,file])=>{try{const r=await fetch('data/'+file+(key==='leyendas'?'?v=10.2':''));if(!r.ok)throw Error(file);const d=await r.json();if(key==='barrios'){state.barrios=d.features||[];DOM('search-info').textContent=`${state.barrios.length} barrios y sectores consultables`;}else state[key]=d;}catch(e){console.error('Error cargando',file,e);if(key==='indicadores')DOM('home-stats').innerHTML=`<p class="loading-msg">No se pudieron cargar los indicadores (${file}).</p>`;}}));if(state.leafReady)populateLegends();renderInicio();renderNorma();renderGestion();renderRiesgo();renderExtrasPortadaV7();renderNormaTopicExtras();renderExtrasGestionV7();renderExtrasRiesgoV7();if(state.leafReady)drawBarrios();}
 
