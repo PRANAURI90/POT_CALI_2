@@ -61,3 +61,28 @@ jobs:
             }finally{await browser.close();}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
+      - name: Verificar píxeles del mapa de amenaza en PDF
+        run: |
+          pip install pymupdf pillow
+          python - <<'PY'
+          import fitz
+          from PIL import Image
+          from io import BytesIO
+          pdf=fitz.open('/tmp/ficha_descargada_1722.pdf')
+          assert len(pdf)==4, f'Número de páginas inesperado: {len(pdf)}'
+          page=pdf[2]
+          txt=page.get_text()
+          assert 'INUNDACIÓN' in txt and 'Alta' in txt, 'No se imprimieron los indicadores de inundación'
+          pix=page.get_pixmap(matrix=fitz.Matrix(2,2),alpha=False)
+          im=Image.open(BytesIO(pix.tobytes('png'))).convert('RGB')
+          # El mapa de la primera columna ocupa aproximadamente 14-71 mm x 85-128 mm.
+          # El borde del mapa es azul; el rojo debe venir de polígonos de amenaza ALTA.
+          pts=0
+          for yy in range(int(85/297*im.height),int(128/297*im.height)):
+            for xx in range(int(15/210*im.width),int(71/210*im.width)):
+              R,G,B=im.getpixel((xx,yy))
+              if R>140 and R>G*1.25 and R>B*1.2 and G<155 and B<155:
+                pts+=1
+          print('Píxeles rojos de amenaza alta en mapa PDF:',pts)
+          assert pts>250, 'El mapa de inundación continúa sin polígonos coloreados'
+          PY
