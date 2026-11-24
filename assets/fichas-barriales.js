@@ -95,8 +95,8 @@ function treatmentMeaning(from,to){
 function verifiedTransitionDetail(from,to){
  const a=pdfText(from).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
  const b=pdfText(to).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
- if((/REACTIVACION|\bR2\b/.test(a))&&(/REDENSIFICACION MEDIA|\bR2\b/.test(b)))return {
-  meaning:'Hay un cambio normativo concreto: en el POT 2014 R2 no admitía plan parcial de renovación, pero sí proyecto de renovación de mínimo dos manzanas. La propuesta 2026 contempla actuación individual para predios o agrupaciones menores de 3.000 m², plan de manzana desde 3.000 m² hasta una manzana y plan parcial para ámbitos de mínimo dos manzanas. Fuente: arts. 317 y 319 del POT 2014; arts. 387, 615 y 619-620 del proyecto.',
+ if((/REACTIVACION|\bR2\b/.test(a))&&(/(?:REDENSIFICACION|DENSIFICACION) MEDIA|\bR2\b/.test(b)))return {
+  meaning:'Hay un cambio normativo concreto: en el POT 2014 R2 no admitía plan parcial de renovación, pero sí proyecto de renovación de mínimo dos manzanas. La propuesta 2026, que denomina esta modalidad densificación media (art. 370), contempla actuación individual para predios o agrupaciones menores de 3.000 m², plan de manzana desde 3.000 m² hasta una manzana y plan parcial para ámbitos de mínimo dos manzanas. Fuente: arts. 317 y 319 del POT 2014; arts. 387, 615 y 619-620 del proyecto.',
   limits:'El cambio permite identificar nuevas modalidades de gestión; no determina por sí mismo el número de pisos, el índice aplicable o la viabilidad de un predio. Las cesiones específicas del art. 388 de la propuesta corresponden a planes parciales y planes de manzana, no automáticamente a toda actuación individual.',
   checks:'Falta localizar cada predio frente a las delimitaciones de instrumentos y al Corredor Verde, conocer el tamaño de la agrupación y contrastar índices, capacidad de servicios, restricciones ambientales y condiciones de riesgo. Estas son verificaciones territoriales, no artículos por identificar.'
  };
