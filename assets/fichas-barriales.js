@@ -579,8 +579,10 @@ async function downloadBarrio(){
   line(pdf,14,268,'ICA significa Índice de Construcción Adicional, no el impuesto ICA.',7.8,COLORS.muted);
   line(pdf,14,275,'La ficha no cuantifica plusvalía ni certifica beneficios tributarios.',7.8,COLORS.muted);
   pdf.addPage();
+  // Si el cálculo terminó sin errores ni intersecciones, evitar tres mapas vacíos.
+  const noHazardIntersection=!!threat&&threat.rows.length===0&&Number(threat.errors||0)===0;
   // PÁGINA 6: cartografía de amenazas.
-  if(!threat || threat.rows.length){
+  if(!noHazardIntersection){
   base(pdf,8,'08 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
   if(threat){
    const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
@@ -625,20 +627,20 @@ async function downloadBarrio(){
   }
   // PÁGINA 4
   base(pdf,9,'09 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
-  if(!threat||threat.rows.length>0)line(pdf,14,75,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA ORIENTATIVA',10,COLORS.purple,true);
+  if(!noHazardIntersection)line(pdf,14,75,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA ORIENTATIVA',10,COLORS.purple,true);
   const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
-  if(threat&&threat.rows.length===0){
+  if(noHazardIntersection){
     fillColor(pdf,'#EDF3F4');pdf.roundedRect(14,84,182,43,3,3,'F');
     line(pdf,19,96,'AMENAZAS · SIN INTERSECCIONES DETECTABLES',9,COLORS.navy,true,170);
     line(pdf,19,106,'Inundación, movimientos en masa y avenidas torrenciales:',8.2,COLORS.navy,false,169);
     line(pdf,19,115,'sin cruces a partir de 0,01 ha en el GeoJSON consultado.',8.2,COLORS.muted,false,169);
     line(pdf,14,139,'No certifica ausencia de peligro ni reemplaza estudios de riesgo.',8,COLORS.muted,false,180);
   }
-  let my=threat&&threat.rows.length===0?157:87;
+  let my=noHazardIntersection?157:87;
   if(micro.length){
-   if(threat&&threat.rows.length===0)line(pdf,14,150,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA APROXIMADA',9,COLORS.purple,true);
+   if(noHazardIntersection)line(pdf,14,150,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA APROXIMADA',9,COLORS.purple,true);
    const mx=Math.max(1,...micro.map(z=>Number(z.hectareas||0)));
-   for(const z of micro.slice(0,threat&&threat.rows.length===0?1:4)){
+   for(const z of micro.slice(0,noHazardIntersection?1:4)){
     my=bar(pdf,18,my,'Zona '+z.zona+' · '+pct(z.porcentaje_barrio),Number(z.hectareas),mx,COLORS.purple,174)+2;
    }
   } else my=line(pdf,18,my,'Sin intersecciones disponibles en la digitalización consultada.',9,COLORS.muted);
