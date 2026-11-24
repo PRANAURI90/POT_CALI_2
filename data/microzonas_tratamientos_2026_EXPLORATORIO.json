@@ -1,0 +1,337 @@
+{
+  "metodo": "Muestreo de centroides en malla regular de 100 m x 100 m sobre GeoJSON simplificados. Cada celda incluida equivale a 1 ha. Aproximación exploratoria, no intersección poligonal exacta. Por límites simplificados, geometrías estrechas y solapamientos, los totales por tratamiento pueden diferir del área cubierta. La digitalización sísmica tampoco es oficial.",
+  "fuente_sismica": "data/microzonas_aproximadas.geojson",
+  "fuente_tratamientos": "data/tratamientos.geojson",
+  "crs_calculo": "Proyección equirectangular local aproximada; malla 100 m",
+  "resolucion_m": 100,
+  "resultado": [
+    {
+      "zona": "1",
+      "area_muestreada_ha": 1144,
+      "area_con_tratamiento_ha": 358,
+      "area_sin_tratamiento_ha": 786,
+      "tratamientos": [
+        {
+          "codigo": "9",
+          "ha_estimadas": 174
+        },
+        {
+          "codigo": "5",
+          "ha_estimadas": 109
+        },
+        {
+          "codigo": "7",
+          "ha_estimadas": 43
+        },
+        {
+          "codigo": "2",
+          "ha_estimadas": 20
+        },
+        {
+          "codigo": "4",
+          "ha_estimadas": 11
+        },
+        {
+          "codigo": "8",
+          "ha_estimadas": 1
+        }
+      ]
+    },
+    {
+      "zona": "2",
+      "area_muestreada_ha": 1803,
+      "area_con_tratamiento_ha": 955,
+      "area_sin_tratamiento_ha": 848,
+      "tratamientos": [
+        {
+          "codigo": "9",
+          "ha_estimadas": 226
+        },
+        {
+          "codigo": "3",
+          "ha_estimadas": 187
+        },
+        {
+          "codigo": "5",
+          "ha_estimadas": 184
+        },
+        {
+          "codigo": "4",
+          "ha_estimadas": 169
+        },
+        {
+          "codigo": "1",
+          "ha_estimadas": 84
+        },
+        {
+          "codigo": "2",
+          "ha_estimadas": 51
+        },
+        {
+          "codigo": "10",
+          "ha_estimadas": 33
+        },
+        {
+          "codigo": "8",
+          "ha_estimadas": 19
+        },
+        {
+          "codigo": "11",
+          "ha_estimadas": 2
+        }
+      ]
+    },
+    {
+      "zona": "3",
+      "area_muestreada_ha": 414,
+      "area_con_tratamiento_ha": 403,
+      "area_sin_tratamiento_ha": 11,
+      "tratamientos": [
+        {
+          "codigo": "5",
+          "ha_estimadas": 247
+        },
+        {
+          "codigo": "11",
+          "ha_estimadas": 43
+        },
+        {
+          "codigo": "4",
+          "ha_estimadas": 42
+        },
+        {
+          "codigo": "8",
+          "ha_estimadas": 20
+        },
+        {
+          "codigo": "2",
+          "ha_estimadas": 16
+        },
+        {
+          "codigo": "9",
+          "ha_estimadas": 15
+        },
+        {
+          "codigo": "10",
+          "ha_estimadas": 13
+        },
+        {
+          "codigo": "1",
+          "ha_estimadas": 7
+        }
+      ]
+    },
+    {
+      "zona": "4A",
+      "area_muestreada_ha": 556,
+      "area_con_tratamiento_ha": 556,
+      "area_sin_tratamiento_ha": 0,
+      "tratamientos": [
+        {
+          "codigo": "10",
+          "ha_estimadas": 425
+        },
+        {
+          "codigo": "11",
+          "ha_estimadas": 116
+        },
+        {
+          "codigo": "5",
+          "ha_estimadas": 15
+        }
+      ]
+    },
+    {
+      "zona": "4B",
+      "area_muestreada_ha": 1582,
+      "area_con_tratamiento_ha": 1570,
+      "area_sin_tratamiento_ha": 12,
+      "tratamientos": [
+        {
+          "codigo": "10",
+          "ha_estimadas": 710
+        },
+        {
+          "codigo": "5",
+          "ha_estimadas": 464
+        },
+        {
+          "codigo": "4",
+          "ha_estimadas": 196
+        },
+        {
+          "codigo": "11",
+          "ha_estimadas": 193
+        },
+        {
+          "codigo": "9",
+          "ha_estimadas": 7
+        }
+      ]
+    },
+    {
+      "zona": "4C",
+      "area_muestreada_ha": 752,
+      "area_con_tratamiento_ha": 752,
+      "area_sin_tratamiento_ha": 0,
+      "tratamientos": [
+        {
+          "codigo": "11",
+          "ha_estimadas": 436
+        },
+        {
+          "codigo": "5",
+          "ha_estimadas": 297
+        },
+        {
+          "codigo": "2",
+          "ha_estimadas": 13
+        },
+        {
+          "codigo": "1",
+          "ha_estimadas": 6
+        }
+      ]
+    },
+    {
+      "zona": "4D",
+      "area_muestreada_ha": 1350,
+      "area_con_tratamiento_ha": 1350,
+      "area_sin_tratamiento_ha": 0,
+      "tratamientos": [
+        {
+          "codigo": "5",
+          "ha_estimadas": 762
+        },
+        {
+          "codigo": "10",
+          "ha_estimadas": 354
+        },
+        {
+          "codigo": "7",
+          "ha_estimadas": 55
+        },
+        {
+          "codigo": "3",
+          "ha_estimadas": 53
+        },
+        {
+          "codigo": "4",
+          "ha_estimadas": 52
+        },
+        {
+          "codigo": "2",
+          "ha_estimadas": 29
+        },
+        {
+          "codigo": "8",
+          "ha_estimadas": 26
+        },
+        {
+          "codigo": "6",
+          "ha_estimadas": 19
+        }
+      ]
+    },
+    {
+      "zona": "4E",
+      "area_muestreada_ha": 2208,
+      "area_con_tratamiento_ha": 2006,
+      "area_sin_tratamiento_ha": 202,
+      "tratamientos": [
+        {
+          "codigo": "7",
+          "ha_estimadas": 1379
+        },
+        {
+          "codigo": "3",
+          "ha_estimadas": 357
+        },
+        {
+          "codigo": "6",
+          "ha_estimadas": 231
+        },
+        {
+          "codigo": "8",
+          "ha_estimadas": 22
+        },
+        {
+          "codigo": "1",
+          "ha_estimadas": 17
+        }
+      ]
+    },
+    {
+      "zona": "5",
+      "area_muestreada_ha": 804,
+      "area_con_tratamiento_ha": 804,
+      "area_sin_tratamiento_ha": 0,
+      "tratamientos": [
+        {
+          "codigo": "11",
+          "ha_estimadas": 216
+        },
+        {
+          "codigo": "10",
+          "ha_estimadas": 159
+        },
+        {
+          "codigo": "4",
+          "ha_estimadas": 154
+        },
+        {
+          "codigo": "5",
+          "ha_estimadas": 146
+        },
+        {
+          "codigo": "7",
+          "ha_estimadas": 102
+        },
+        {
+          "codigo": "8",
+          "ha_estimadas": 28
+        }
+      ]
+    },
+    {
+      "zona": "6",
+      "area_muestreada_ha": 4045,
+      "area_con_tratamiento_ha": 3249,
+      "area_sin_tratamiento_ha": 796,
+      "tratamientos": [
+        {
+          "codigo": "4",
+          "ha_estimadas": 2049
+        },
+        {
+          "codigo": "11",
+          "ha_estimadas": 496
+        },
+        {
+          "codigo": "7",
+          "ha_estimadas": 347
+        },
+        {
+          "codigo": "9",
+          "ha_estimadas": 155
+        },
+        {
+          "codigo": "10",
+          "ha_estimadas": 126
+        },
+        {
+          "codigo": "12",
+          "ha_estimadas": 45
+        },
+        {
+          "codigo": "8",
+          "ha_estimadas": 24
+        },
+        {
+          "codigo": "5",
+          "ha_estimadas": 7
+        }
+      ]
+    }
+  ]
+}

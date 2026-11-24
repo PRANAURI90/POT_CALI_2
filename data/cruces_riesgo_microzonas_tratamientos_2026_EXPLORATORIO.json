@@ -1,0 +1,332 @@
+{
+  "tipo": "CRUCE EXPLORATORIO",
+  "metodo": "Muestreo de centros de malla de 50 x 50 metros (0.25 ha/celda) en geometrías GeoJSON simplificadas WGS84 reproyectadas con aproximación equirectangular local. Se deduplican las celdas por cada capa; categorías superpuestas pueden contarse por fenómeno y tratamiento. No es overlay vectorial ni cartografía oficial certificada.",
+  "fuentes": [
+    "data/microzonas_aproximadas.geojson",
+    "data/tratamientos.geojson",
+    "data/condicion_riesgo.geojson",
+    "data/condicion_amenaza.geojson"
+  ],
+  "fenomenos": {
+    "1": "Movimientos en masa",
+    "2": "Avenidas torrenciales",
+    "3": "Inundación"
+  },
+  "resolucion_m": 50,
+  "analisis": [
+    {
+      "layer": "condicion_riesgo",
+      "cell_count": 4002,
+      "cell_area_ha": 0.25,
+      "estimated_union_area_ha": 1000.5,
+      "outside_microzones_ha": 601,
+      "by_phenomenon": [
+        {
+          "code": "1",
+          "ha": 886
+        },
+        {
+          "code": "2",
+          "ha": 93.5
+        },
+        {
+          "code": "3",
+          "ha": 22.75
+        }
+      ],
+      "by_microzone_phenomenon": [
+        {
+          "zona": "1",
+          "fenomeno": "1",
+          "ha": 254.25
+        },
+        {
+          "zona": "3",
+          "fenomeno": "1",
+          "ha": 20.5
+        },
+        {
+          "zona": "2",
+          "fenomeno": "1",
+          "ha": 120.75
+        },
+        {
+          "zona": "4A",
+          "fenomeno": "1",
+          "ha": 0.75
+        },
+        {
+          "zona": "4D",
+          "fenomeno": "1",
+          "ha": 3.75
+        }
+      ],
+      "by_treatment_phenomenon": [
+        {
+          "tratamiento": "5",
+          "fenomeno": "1",
+          "ha": 301.75
+        },
+        {
+          "tratamiento": "8",
+          "fenomeno": "1",
+          "ha": 11.75
+        },
+        {
+          "tratamiento": "9",
+          "fenomeno": "1",
+          "ha": 156.25
+        },
+        {
+          "tratamiento": "4",
+          "fenomeno": "1",
+          "ha": 23.75
+        },
+        {
+          "tratamiento": "1",
+          "fenomeno": "1",
+          "ha": 7.75
+        },
+        {
+          "tratamiento": "10",
+          "fenomeno": "1",
+          "ha": 0.5
+        },
+        {
+          "tratamiento": "2",
+          "fenomeno": "1",
+          "ha": 16.5
+        },
+        {
+          "tratamiento": "7",
+          "fenomeno": "1",
+          "ha": 17
+        },
+        {
+          "tratamiento": "3",
+          "fenomeno": "2",
+          "ha": 15.75
+        },
+        {
+          "tratamiento": "5",
+          "fenomeno": "2",
+          "ha": 0.25
+        }
+      ],
+      "by_zone_treatment_phenomenon": [
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "9",
+          "ha": 99.75
+        },
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "5",
+          "ha": 73.25
+        },
+        {
+          "zone": "2",
+          "phenomenon": "1",
+          "treatment": "5",
+          "ha": 47
+        },
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "7",
+          "ha": 15.75
+        },
+        {
+          "zone": "2",
+          "phenomenon": "1",
+          "treatment": "9",
+          "ha": 15.5
+        },
+        {
+          "zone": "3",
+          "phenomenon": "1",
+          "treatment": "5",
+          "ha": 14.5
+        },
+        {
+          "zone": "2",
+          "phenomenon": "1",
+          "treatment": "4",
+          "ha": 9.5
+        },
+        {
+          "zone": "2",
+          "phenomenon": "1",
+          "treatment": "8",
+          "ha": 8.75
+        },
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "2",
+          "ha": 7.25
+        },
+        {
+          "zone": "2",
+          "phenomenon": "1",
+          "treatment": "1",
+          "ha": 6.5
+        },
+        {
+          "zone": "2",
+          "phenomenon": "1",
+          "treatment": "2",
+          "ha": 6
+        },
+        {
+          "zone": "3",
+          "phenomenon": "1",
+          "treatment": "9",
+          "ha": 4.25
+        },
+        {
+          "zone": "4D",
+          "phenomenon": "1",
+          "treatment": "5",
+          "ha": 3
+        },
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "4",
+          "ha": 2.75
+        },
+        {
+          "zone": "3",
+          "phenomenon": "1",
+          "treatment": "4",
+          "ha": 1.25
+        },
+        {
+          "zone": "4A",
+          "phenomenon": "1",
+          "treatment": "5",
+          "ha": 0.75
+        },
+        {
+          "zone": "4D",
+          "phenomenon": "1",
+          "treatment": "4",
+          "ha": 0.75
+        },
+        {
+          "zone": "2",
+          "phenomenon": "1",
+          "treatment": "10",
+          "ha": 0.5
+        },
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "8",
+          "ha": 0.5
+        },
+        {
+          "zone": "3",
+          "phenomenon": "1",
+          "treatment": "1",
+          "ha": 0.25
+        },
+        {
+          "zone": "3",
+          "phenomenon": "1",
+          "treatment": "8",
+          "ha": 0.25
+        }
+      ]
+    },
+    {
+      "layer": "condicion_amenaza",
+      "cell_count": 1132,
+      "cell_area_ha": 0.25,
+      "estimated_union_area_ha": 283,
+      "outside_microzones_ha": 250.75,
+      "by_phenomenon": [
+        {
+          "code": "1",
+          "ha": 272.25
+        },
+        {
+          "code": "2",
+          "ha": 9.75
+        },
+        {
+          "code": "3",
+          "ha": 1
+        }
+      ],
+      "by_microzone_phenomenon": [
+        {
+          "zona": "1",
+          "fenomeno": "1",
+          "ha": 8.75
+        },
+        {
+          "zona": "2",
+          "fenomeno": "1",
+          "ha": 19.5
+        },
+        {
+          "zona": "4E",
+          "fenomeno": "2",
+          "ha": 3
+        },
+        {
+          "zona": "2",
+          "fenomeno": "2",
+          "ha": 1
+        }
+      ],
+      "by_treatment_phenomenon": [
+        {
+          "tratamiento": "5",
+          "fenomeno": "1",
+          "ha": 4.5
+        },
+        {
+          "tratamiento": "8",
+          "fenomeno": "1",
+          "ha": 2.25
+        },
+        {
+          "tratamiento": "7",
+          "fenomeno": "1",
+          "ha": 7
+        }
+      ],
+      "by_zone_treatment_phenomenon": [
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "7",
+          "ha": 6.75
+        },
+        {
+          "zone": "2",
+          "phenomenon": "1",
+          "treatment": "8",
+          "ha": 1.5
+        },
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "5",
+          "ha": 0.75
+        },
+        {
+          "zone": "1",
+          "phenomenon": "1",
+          "treatment": "8",
+          "ha": 0.5
+        }
+      ]
+    }
+  ]
+}
