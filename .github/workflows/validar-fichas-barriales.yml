@@ -107,7 +107,7 @@ jobs:
           assert 'TU BARRIO EN POCAS PALABRAS' in pdf[0].get_text(), 'Falta resumen ciudadano inicial'
           assert '¿A QUÉ HAY QUE ESTAR ATENTOS?' in pdf[0].get_text() or '¿QUÉ REVISAR?' in pdf[0].get_text(), 'Falta pregunta ciudadana clave'
           assert 'construcción adicional' in all_text, 'Falta definición de ICA/ICP'
-          assert 'Ordena un ámbito' in gestion.get_text(), 'Falta explicación del plan parcial'
+          assert 'REGLAS ASOCIADAS A LOS TRATAMIENTOS' in gestion.get_text(), 'Falta gestión filtrada por barrio'
           _,riesgo=locate('09 / RIESGO Y GESTIÓN')
           assert 'CONDICIÓN DE RIESGO' in riesgo.get_text(), 'Falta resumen independiente de condición de riesgo'
           _,interpretacion=locate('03 / LECTURA DEL CAMBIO')
