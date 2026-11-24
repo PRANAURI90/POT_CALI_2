@@ -228,3 +228,14 @@
 .micro-cross-summary b{font-size:18px;color:#4a4170}
 .micro-cross-summary small{font-size:11px;color:#726c85}
 @media(max-width:600px){.micro-cross-summary{grid-template-columns:1fr}}
+
+/* Marco conceptual normativo del módulo Riesgo, Ley 1523/2012 y Decreto 1077/2015 */
+.risk-concepts-intro{margin-bottom:18px}
+.risk-legal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:16px 0}
+.risk-legal-grid article{background:rgba(255,255,255,.75);border:1px solid #e2dfed;border-radius:12px;padding:16px;min-width:0}
+.risk-legal-grid h4{margin:0 0 9px;font-size:15px}
+.risk-legal-grid p{font-size:13px;line-height:1.6;margin:0 0 10px}
+.risk-legal-grid small{font-size:10px;line-height:1.55;color:#6b647d}
+.risk-legal-sources{font-size:11px;line-height:1.6;margin-top:14px}
+.risk-legal-sources a{color:#4b4388;text-decoration:underline}
+@media(max-width:900px){.risk-legal-grid{grid-template-columns:1fr}}
