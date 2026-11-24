@@ -341,55 +341,65 @@ async function downloadBarrio(){
   pdf.addPage();
   // PÁGINA 6: reglas e instrumentos concretos asociados al tratamiento cartografiado.
   base(pdf,6,'06 / INSTRUMENTOS CONCRETOS','¿Qué procedimiento podría aplicar?','Las opciones dependen del tratamiento y de las condiciones específicas del ámbito.',p);
+  // Matriz normativa con soporte territorial: misma clasificación que usa el visor.
+  const t2026=info?.capas?.tratamientos2026?.categorias||[];
+  const t2014=info?.capas?.tratamientos2014?.categorias||[];
+  const codeFor=(r,yr)=>{
+    if(typeof asCode==='function')return asCode(r,yr);
+    const v=String(r?.codigo_original??r?.codigo??'').trim();
+    if(yr===2026)return ({'1':'CO','2':'CO','3':'C1','4':'C2','5':'C3','6':'C4','7':'D1','8':'D2','9':'MI','10':'R1','11':'R2'})[v]||v;
+    return v;
+  };
+  function byTreatment(rows,year){
+    const map=new Map();
+    for(const row of rows){
+      const code=codeFor(row,year),ha=Number(row.hectareas);
+      if(!code||!Number.isFinite(ha)||ha<.03)continue;
+      map.set(code,(map.get(code)||0)+ha);
+    }
+    return map;
+  }
+  const areas26=byTreatment(t2026,2026),areas14=byTreatment(t2014,2014);
+  const norms=state.normas?.reglas||[];
   const regimes=[];
-  if(treatmentCodes.has('R1'))regimes.push({
-   title:'RENOVACIÓN CON REDENSIFICACIÓN ALTA · R1',
-   rule:'Propuesta: actuación individual en predios o agrupaciones menores de 3.000 m²; plan de manzana desde 3.000 m²; plan parcial a partir de dos manzanas, con condiciones y excepciones.',
-   impact:'Esto abre distintas vías de intervención. No significa que cada predio pueda construir más sin cumplir cargas o estudios.',
-   ref:'Proyecto de Acuerdo 2026: arts. 387, 615 y 619.'
+  // Regla 2026 con cruce real de su tratamiento, pero NO implica que
+  // el ámbito de un plan parcial/plan manzana haya sido delimitado aquí.
+  for(const rule of norms.filter(r=>r.anio==='2026')){
+    const match=(rule.codigos||[]).filter(code=>areas26.has(code));
+    if(!match.length)continue;
+    const evidence=match.map(code=>code+': '+ha(areas26.get(code))).join(' · ');
+    regimes.push({
+      title:rule.titulo+' · PROPUESTA 2026',
+      rule:rule.condicion,
+      impact:'COINCIDENCIA DE TRATAMIENTO: '+evidence+'. Es superficie por categoría; el instrumento requiere verificar su ámbito y supuestos.',
+      ref:'Proyecto de Acuerdo 2026 · arts. '+rule.articulos+' · p. '+(rule.pagina_documento||'sin dato')+' de la matriz documental.',
+      weight:match.reduce((v,k)=>v+areas26.get(k),0),
+      code:rule.id
+    });
+  }
+  // Conservación CO/CSU/CTL está descrita en homologación, pero la
+  // matriz no contiene una regla 2026 aplicable: no inventar instrumento.
+  const conservationArea=[...areas26].filter(([k])=>['CO','CSU','CTL'].includes(k)).reduce((a,[,v])=>a+v,0);
+  if(conservationArea>0)regimes.push({
+    title:'CONSERVACIÓN · PROPUESTA 2026',
+    rule:'La propuesta diferencia conservación de sectores urbanos de interés cultural y conservación contextual. Es necesario comprobar la modalidad, delimitación y norma patrimonial.',
+    impact:'COINCIDENCIA DE TRATAMIENTO: '+ha(conservationArea)+'. La matriz no permite atribuir aquí un incentivo patrimonial específico.',
+    ref:'Proyecto de Acuerdo 2026, arts. 370 y 377-378. Homologación preliminar.',
+    weight:conservationArea,
+    code:'conservacion-homologacion'
   });
-  if(treatmentCodes.has('R2'))regimes.push({
-   title:'RENOVACIÓN CON REDENSIFICACIÓN MEDIA · R2',
-   rule:'La propuesta contempla actuación individual, plan de manzana y plan parcial según ámbito. En 2014, R2 era reactivación: no admitía plan parcial de renovación, pero sí proyecto de renovación bajo condiciones, entre ellas un ámbito mínimo de dos manzanas.',
-   impact:'Lo relevante es el cambio de modalidad y de procedimiento, no la repetición del código R2.',
-   ref:'POT 2014: arts. 317, 319 y 321; propuesta: 387 y 615.'
-  });
-  if(treatmentCodes.has('D2'))regimes.push({
-   title:'DESARROLLO URBANO · D2',
-   rule:'La propuesta admite proyecto urbanístico general o licencia. Requiere plan parcial cuando exista gestión asociada por unidades de actuación o cuando se superen 10 ha netas urbanizables y se involucren al menos dos predios.',
-   impact:'No equivale a eliminar el plan parcial para cualquier terreno: hay que revisar tamaño, propiedad, afectaciones y cargas.',
-   ref:'Proyecto de Acuerdo 2026: arts. 383 y 615.'
-  });
-  if(treatmentCodes.has('D1'))regimes.push({
-   title:'DESARROLLO · D1',
-   rule:'El plan parcial es obligatorio en suelo de expansión y en ámbitos urbanos delimitados. Se contemplan otras vías en suelo urbano sin delimitación, conforme a la propuesta.',
-   impact:'La ruta de trámite depende de la clasificación del suelo y de la delimitación vigente.',
-   ref:'Proyecto de Acuerdo 2026: arts. 381, 382 y 615.'
-  });
-  if([...treatmentCodes].some(x=>/^C[1-4]$/.test(x)))regimes.push({
-   title:'CONSOLIDACIÓN · C1 A C4',
-   rule:'Los planes parciales en consolidación solo se contemplan bajo la excepción de delimitación mediante Proyecto Urbanístico Integral (PUI). Se proponen reglas particulares para otros ámbitos.',
-   impact:'Tener consolidación no activa por sí mismo un plan parcial ni una mayor edificabilidad.',
-   ref:'Proyecto de Acuerdo 2026: art. 379.'
-  });
-  if(treatmentCodes.has('MI'))regimes.push({
-   title:'MEJORAMIENTO INTEGRAL',
-   rule:'Se plantean Planes de Gestión del Hábitat (PGHAB) para coordinar intervenciones de mejoramiento y soportes urbanos.',
-   impact:'Un PGHAB no equivale automáticamente a un plan parcial de renovación.',
-   ref:'Proyecto de Acuerdo 2026: art. 380.'
-  });
-  if(conservation)regimes.push({
-   title:'CONSERVACIÓN CULTURAL Y CONTEXTUAL',
-   rule:'Se proponen modalidades de protección de sectores y contextos urbanos. Las actuaciones deben respetar su régimen y delimitación.',
-   impact:'No toda intervención se prohíbe, pero tampoco se presume un incentivo o compensación.',
-   ref:'POT 2014: arts. 301-307; propuesta: arts. 377-378.'
-  });
+  // Evitar repetir reglas generales antes de las específicas: ordenar
+  // por superficie del tratamiento coincidente, luego instrumento.
+  regimes.sort((a,b)=>b.weight-a.weight||a.title.localeCompare(b.title,'es'));
   if(!regimes.length)regimes.push({
-   title:'CONSULTA SEGÚN TRATAMIENTO DEL BARRIO',
-   rule:'La información disponible no identifica una modalidad especial de gestión en esta ficha. Debe consultarse el tratamiento preciso y el instrumento delimitado.',
-   impact:'La ausencia de una modalidad aquí no equivale a ausencia de obligaciones urbanísticas.',
-   ref:'Consultar matriz normativa y geodatabase del POT.'
+    title:'SIN REGLA PARTICULAR VINCULABLE',
+    rule:'El resumen cartográfico no identifica un tratamiento con superficie de al menos 0,03 ha que coincida con una regla de la matriz normativa cargada.',
+    impact:'Esto NO implica ausencia de instrumentos, ni de obligaciones; se debe revisar la cartografía y la norma.',
+    ref:'Matriz normativa del Observatorio · data/normativa_gestion.json.',
+    weight:0,code:'no-rule'
   });
+  // Contexto 2014: referencias jurídicas para contraste de procedimientos.
+  const priorRules=norms.filter(rule=>rule.anio==='2014'&&(rule.codigos||[]).some(c=>areas14.has(c)));
   // Tarjetas de altura calculada según contenido para evitar desbordes.
   // En caso de más de dos familias aplicables, se añade una segunda página
   // de reglas territoriales con continuación y trazabilidad normativa.
@@ -409,6 +419,7 @@ async function downloadBarrio(){
     line(pdf,19,yy,rg.ref,7.0,COLORS.purple,false,170);
     return y+height+5;
   }
+  line(pdf,14,72,'Reglas activadas por tratamiento: la superficie NO delimita el instrumento.',7.3,COLORS.muted);
   let rY=79, printed=0;
   for(const rg of regimes){
     const ruleLines=pdf.splitTextToSize(pdfText(rg.rule),170).length;
@@ -422,7 +433,7 @@ async function downloadBarrio(){
     }
     rY=drawRegimeCard(rg,rY);printed++;
   }
-  line(pdf,14,268,'Categorías relacionadas con el barrio; verificar delimitación y artículo.',7.4,COLORS.muted);
+  line(pdf,14,268,'Fuente: matriz normativa y cruces de tratamientos del Observatorio.',7.4,COLORS.muted);
   line(pdf,14,275,'No acredita permisos, exenciones ni derechos específicos por predio.',7.4,COLORS.muted);
   pdf.addPage();
   // CAPÍTULO 07: cargas, beneficios y garantías con explicación para ciudadanía.
