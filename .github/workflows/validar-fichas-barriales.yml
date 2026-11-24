@@ -68,14 +68,14 @@ jobs:
                   console.log('FALLA',t.codigo,t.nombre,JSON.stringify(info));
                 }else{
                   console.log('OK',t.codigo,t.nombre,info.bytes,info.filename);
-                  if(t.codigo==='1722'){
+                  if(t.codigo==='1722'||t.codigo==='1113'){
                     const data=await page.evaluate(async ()=>{
                       const buf=await (await fetch(document.getElementById('download-barrio-ready').href)).arrayBuffer();
                       const bytes=new Uint8Array(buf);let str='';
                       for(let i=0;i<bytes.length;i+=8192)str+=String.fromCharCode(...bytes.slice(i,i+8192));
                       return btoa(str);
                     });
-                    require('fs').writeFileSync('/tmp/ficha_1722.pdf',Buffer.from(data,'base64'));
+                    require('fs').writeFileSync('/tmp/ficha_'+t.codigo+'.pdf',Buffer.from(data,'base64'));
                   }
                 }
               }
@@ -101,6 +101,11 @@ jobs:
           assert 'Capacidad edificatoria adicional' in pdf[4].get_text(), 'Falta definición pedagógica del incentivo'
           assert 'Ordena un ámbito' in pdf[3].get_text(), 'Falta definición pedagógica del plan parcial'
           assert 'LA TRANSICIÓN DE MAYOR SUPERFICIE' in transition or 'Sin transiciones' in transition, 'Falta jerarquía gráfica de transiciones'
+          barrio1113=fitz.open('/tmp/ficha_1113.pdf')
+          t1113=barrio1113[1].get_text()
+          assert '32,75 ha' in t1113 and '0,17 ha' in t1113, 'No se ven las hectáreas de las dos transiciones del barrio 1113'
+          assert '98,9' in t1113, 'No se muestra el porcentaje del barrio en la transición dominante'
+          assert 'reactivación' in t1113.lower() and 'redensificación' in t1113.lower(), 'No se explica la redefinición de R2'
           transition=pdf[1].get_text()
           assert ('Antes' in transition and 'Propuesta' in transition) or 'Sin transiciones' in transition, 'No se identifica origen y destino de transición'
           assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transiciones'
