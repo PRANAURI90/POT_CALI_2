@@ -79,6 +79,10 @@ function treatmentFamily(value){
 }
 function treatmentMeaning(from,to){
  const f=treatmentFamily(from), t=treatmentFamily(to);
+ const previous=pdfText(from).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ const proposed=pdfText(to).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ if((/REACTIVACION|^R2$/.test(previous))&&(/REDENSIFICACION MEDIA|^R2$/.test(proposed)))return 'En 2014, R2 significaba renovación por reactivación: el plan parcial de renovación no estaba permitido, aunque existían proyectos de renovación con condiciones. En la propuesta 2026, R2 pasa a redensificación media y contempla otras vías de actuación, entre ellas plan manzana o plan parcial según los supuestos establecidos. No significa una licencia automática.';
+ if((/REDESARROLLO|^R1$/.test(previous))&&(/REDENSIFICACION ALTA|^R1$/.test(proposed)))return 'En 2014, la renovación por redesarrollo R1 requería plan parcial conforme a sus condiciones. La propuesta redefine R1 como redensificación alta y contempla actuación individual, plan de manzana o plan parcial según tamaño y delimitación. Deben revisarse las cargas y las garantías territoriales.';
  if(f==='renovacion'&&t==='renovacion')return 'El barrio sigue en una familia de renovación, pero cambian su modalidad y las formas de intervención que plantea la norma. El mismo código no conserva necesariamente las mismas reglas.';
  if(f==='consolidacion'&&t==='renovacion')return 'La propuesta cambia esta superficie de un tratamiento de consolidación del tejido urbano a uno de renovación. Deben examinarse densidad, instrumentos, cargas y protección a residentes.';
  if(f==='consolidacion'&&t==='desarrollo')return 'Parte del barrio pasa de consolidación a desarrollo. Conviene aclarar qué suelo se considera urbanizable y con qué obras, cesiones y procedimientos podría intervenirse.';
