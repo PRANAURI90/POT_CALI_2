@@ -345,7 +345,7 @@ async function downloadBarrio(){
   });
   if(treatmentCodes.has('R2'))regimes.push({
    title:'RENOVACIÓN CON REDENSIFICACIÓN MEDIA · R2',
-   rule:'La propuesta contempla actuación individual, plan de manzana y plan parcial según ámbito. Bajo el POT 2014, R2 era reactivación y el cuadro del art. 319 no permitía plan parcial de renovación.',
+   rule:'La propuesta contempla actuación individual, plan de manzana y plan parcial según ámbito. En 2014, R2 era reactivación: no admitía plan parcial de renovación, pero sí proyecto de renovación bajo condiciones, entre ellas un ámbito mínimo de dos manzanas.',
    impact:'Lo relevante es el cambio de modalidad y de procedimiento, no la repetición del código R2.',
    ref:'POT 2014: arts. 317, 319 y 321; propuesta: 387 y 615.'
   });
