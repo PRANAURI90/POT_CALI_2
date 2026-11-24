@@ -34,31 +34,45 @@ jobs:
         run: |
           npm install --no-save playwright
           npx playwright install chromium
-      - name: Probar descarga real de PDF para barrio 1722
+      - name: Probar varios barrios y registrar errores
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/pot-server.log 2>&1 &
           node - <<'JS'
           const {chromium}=require('playwright');
           (async()=>{
             const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+            const page=await browser.newPage({acceptDownloads:true});
+            page.setDefaultTimeout(45000);
+            page.on('pageerror',e=>console.log('PAGEERROR',e.message));
             try{
-              const page=await browser.newPage({acceptDownloads:true});
-              page.setDefaultTimeout(45000);
-              page.on('console', msg=>{if(msg.type()==='error')console.log('NAVEGADOR:',msg.text())});
               await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
-              const button=page.locator('#download-barrio-pdf');
-              if(!(await button.isDisabled()))throw Error('El botón debe empezar desactivado');
-              await page.locator('#search').fill('Prados del Limonar');
-              await page.locator('#search-results button').first().click();
-              await button.waitFor({state:'visible'});
-              await page.waitForFunction(()=>!document.querySelector('#download-barrio-pdf').disabled);
-              const [file]=await Promise.all([page.waitForEvent('download',{timeout:150000}),button.click()]);
-              if(!file.suggestedFilename().includes('1722')||!file.suggestedFilename().endsWith('.pdf'))throw Error('Archivo PDF incorrecto: '+file.suggestedFilename());
-              await file.saveAs('/tmp/ficha_descargada_1722.pdf');
-              const fs=require('fs');const data=fs.readFileSync('/tmp/ficha_descargada_1722.pdf');
-              if(data.length<10000||data.subarray(0,4).toString()!=='%PDF')throw Error('PDF incompleto');
-              console.log('Descarga funcional OK:',file.suggestedFilename(),'bytes:',data.length);
-            }finally{await browser.close();}
+              await page.waitForFunction(()=>typeof state!=='undefined'&&state.barrios.length>300&&!!state.resumen,{timeout:60000});
+              const cases=await page.evaluate(()=>{
+                const arr=state.barrios;const sorted=[...arr].sort((a,b)=>String(a.properties.codigo).localeCompare(String(b.properties.codigo)));
+                const picks=[sorted[0],sorted[20],sorted[70],sorted[130],sorted[200],sorted[270],sorted[340],arr.find(f=>String(f.properties.codigo)==='1722')];
+                return picks.filter(Boolean).map(f=>({codigo:String(f.properties.codigo),nombre:f.properties.barrio}));
+              });
+              console.log('BARRIOS A PROBAR',JSON.stringify(cases));
+              const errors=[];
+              for(const t of cases){
+                await page.evaluate(code=>{const f=state.barrios.find(b=>String(b.properties.codigo)===code);setSelected(f,null,false)},t.codigo);
+                const btn=page.locator('#download-barrio-pdf');
+                const dl=page.waitForEvent('download',{timeout:90000}).then(x=>x).catch(e=>null);
+                await btn.click();
+                const file=await dl;
+                const status=await page.locator('#download-barrio-status').innerText();
+                if(file){
+                  const fs=require('fs');const filePath='/tmp/ficha_'+t.codigo+'.pdf';
+                  await file.saveAs(filePath);const buf=fs.readFileSync(filePath);
+                  console.log('OK',t.codigo,t.nombre,buf.length,status);
+                  if(!buf.subarray(0,4).equals(Buffer.from('%PDF')))errors.push(t.codigo+' PDF no válido');
+                }else{
+                  errors.push(t.codigo+': '+status);
+                  console.log('FALLA',t.codigo,t.nombre,status);
+                }
+              }
+              if(errors.length)throw Error('Barrios con falla: '+JSON.stringify(errors));
+            }finally{await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
       - name: Verificar píxeles del mapa de amenaza en PDF
@@ -68,7 +82,7 @@ jobs:
           import fitz
           from PIL import Image
           from io import BytesIO
-          pdf=fitz.open('/tmp/ficha_descargada_1722.pdf')
+          pdf=fitz.open('/tmp/ficha_1722.pdf')
           assert len(pdf)==4, f'Número de páginas inesperado: {len(pdf)}'
           page=pdf[2]
           txt=page.get_text()
