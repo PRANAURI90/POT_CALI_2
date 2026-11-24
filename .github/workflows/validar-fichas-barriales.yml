@@ -28,6 +28,7 @@ jobs:
           assert "entriesFor(info,'actividad2026')" in js
           assert "entriesFor(info,'tratamientos2026')" in js
           assert 'ficha-download-btn' in css
+          assert 'download-barrio-ready' in h
           print('Integración estática y sintaxis: correcta')
           PY
       - name: Instalar navegador de prueba
@@ -53,18 +54,28 @@ jobs:
               for(const t of cases){
                 await page.evaluate(code=>{const f=state.barrios.find(b=>String(b.properties.codigo)===code);setSelected(f,null,false);pageTo('mapa',false)},t.codigo);
                 const btn=page.locator('#download-barrio-pdf');
-                const dl=page.waitForEvent('download',{timeout:12000}).then(x=>x).catch(e=>null);
                 await btn.click({timeout:12000});
-                const file=await dl;
-                const status=await page.locator('#download-barrio-status').innerText();
-                if(file){
-                  const fs=require('fs');const filePath='/tmp/ficha_'+t.codigo+'.pdf';
-                  await file.saveAs(filePath);const buf=fs.readFileSync(filePath);
-                  console.log('OK',t.codigo,t.nombre,buf.length,status);
-                  if(!buf.subarray(0,4).equals(Buffer.from('%PDF')))errors.push(t.codigo+' PDF no válido');
+                const info=await page.evaluate(async ()=>{
+                  const a=document.getElementById('download-barrio-ready');
+                  if(!a||a.hidden||!a.href.startsWith('blob:'))return {error:'Enlace al PDF no disponible'};
+                  const blob=await (await fetch(a.href)).blob();
+                  const h=new TextDecoder().decode(await blob.slice(0,4).arrayBuffer());
+                  return {bytes:blob.size,header:h,filename:a.download};
+                });
+                if(info.error||info.header!=='%PDF'||!info.filename.includes(t.codigo)||info.bytes<5000){
+                  errors.push(t.codigo+': '+JSON.stringify(info));
+                  console.log('FALLA',t.codigo,t.nombre,JSON.stringify(info));
                 }else{
-                  errors.push(t.codigo+': '+status);
-                  console.log('FALLA',t.codigo,t.nombre,status);
+                  console.log('OK',t.codigo,t.nombre,info.bytes,info.filename);
+                  if(t.codigo==='1722'){
+                    const data=await page.evaluate(async ()=>{
+                      const buf=await (await fetch(document.getElementById('download-barrio-ready').href)).arrayBuffer();
+                      const bytes=new Uint8Array(buf);let str='';
+                      for(let i=0;i<bytes.length;i+=8192)str+=String.fromCharCode(...bytes.slice(i,i+8192));
+                      return btoa(str);
+                    });
+                    require('fs').writeFileSync('/tmp/ficha_1722.pdf',Buffer.from(data,'base64'));
+                  }
                 }
               }
               console.log('TOTAL',cases.length,'FALLAS',errors.length);if(errors.length)throw Error('Barrios con falla: '+JSON.stringify(errors));
