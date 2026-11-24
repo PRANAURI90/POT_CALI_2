@@ -347,11 +347,36 @@ const RISK_AREA_STATS={
  asentamientos:{title:'Asentamientos y condiciones de intervención · propuesta 2026',total:1155.782,rows:[['Condicionado a estudio de detalle',313.831],['No aplica',273.214],['Reubicación',171.872],['Regularización condicionada',126.298],['Condicionado a régimen normativo de PNN',123.112],['Condicionado a diseño y ejecución de obras de mitigación',69.177],['Regularización integral',63.497],['Hábitat y Vivienda Diferencial',10.859],['Riesgo no mitigable',4.319]],note:'Las categorías describen polígonos de asentamientos, no cifras de hogares o decisiones individuales.'}
 };
 
+/* Fichas AHDI de la propuesta POT 2026. Síntesis de arts. 357–358 y 541–542.
+   No son transcripción literal ni decisiones administrativas individuales. */
+const AHDI_DEFINITIONS={
+ 'Condicionado a estudio de detalle':{ambito:'AHDI urbanos y de expansión · áreas condicionadas por amenazas y riesgos',fuente:'Proyecto POT 2026, artículos 357 literal B y 358',significado:'La información disponible no permite precisar la magnitud del riesgo ni determinar si es mitigable.',implicacion:'Se requieren estudios detallados geotécnicos, hidrológicos o hidráulicos, según el fenómeno, para definir la viabilidad de permanencia y las intervenciones pertinentes.'},
+ 'Reubicación':{ambito:'AHDI urbanos y rurales · según el régimen aplicable',fuente:'Proyecto POT 2026, artículos 357 literal A, 358 y 541 literal A y 542',significado:'Intervención de traslado o reasentamiento cuando la permanencia no resulta viable por riesgo no mitigable u otras restricciones críticas. En el componente rural la categoría normativa es reubicación prioritaria.',implicacion:'Requiere programas y procedimientos específicos, identificación de hogares y alternativas de ubicación, junto con medidas de acompañamiento social. La etiqueta cartográfica no constituye por sí sola una decisión individual de traslado.'},
+ 'Regularización condicionada':{ambito:'AHDI rurales',fuente:'Proyecto POT 2026, artículos 541 literal B y 542',significado:'Asentamientos con afectaciones parciales que pueden corregirse mediante intervenciones ambientales, de infraestructura o de mitigación.',implicacion:'La regularización depende de estudios técnicos y del cumplimiento de las medidas necesarias. Pueden coexistir áreas susceptibles de regularización y predios que requieran reasentamiento.'},
+ 'Condicionado a régimen normativo de PNN':{ambito:'AHDI rurales en ámbito de Parque Nacional Natural',fuente:'Proyecto POT 2026, artículos 541 literal D y 542',significado:'La intervención se encuentra sometida al régimen especial del Parque Nacional Natural y a la competencia de la autoridad ambiental.',implicacion:'La autoridad competente define, conforme a sus instrumentos, acuerdos comunitarios, posibilidades de permanencia o necesidades de reubicación. El POT no equivale a una autorización automática de permanencia.'},
+ 'Condicionado a diseño y ejecución de obras de mitigación':{ambito:'AHDI urbanos y de expansión · áreas con riesgo mitigable',fuente:'Proyecto POT 2026, artículos 357 literal C y 358',significado:'La permanencia puede ser viable si se diseñan y ejecutan las obras necesarias para reducir las condiciones de amenaza y vulnerabilidad.',implicacion:'Durante el proceso se restringen nuevas actuaciones que aumenten la exposición. La autoridad debe verificar técnicamente la reducción del riesgo antes de avanzar en regularización o consolidación.'},
+ 'Regularización integral':{ambito:'AHDI urbanos y rurales · con condiciones favorables',fuente:'Proyecto POT 2026, artículo 357 parágrafo 1 y artículo 541 literal C',significado:'Intervención en asentamientos sin las restricciones críticas señaladas, con posibilidad de articularse a redes de servicios e infraestructura.',implicacion:'Permite orientar procesos de regularización urbanística y mejoramiento integral del hábitat conforme a los instrumentos y requisitos correspondientes.'},
+ 'Hábitat y Vivienda Diferencial':{ambito:'AHDI rurales',fuente:'Proyecto POT 2026, artículo 541 literal E',significado:'Categoría para asentamientos con particularidades territoriales y prácticas productivas que requieren reconversión y adaptación al cambio climático.',implicacion:'El Plan de Gestión del Hábitat debe precisar sus condiciones, las reglas específicas y las posibilidades de permanencia con respeto a las exigencias ambientales.'},
+ 'Riesgo no mitigable':{ambito:'AHDI urbanos y de expansión · áreas en riesgo no mitigable',fuente:'Proyecto POT 2026, artículos 357 literal A y 358',significado:'La permanencia no es viable porque no resulta técnicamente posible implementar medidas de reducción del riesgo suficientes.',implicacion:'La acción prioritaria es reasentamiento o reubicación mediante planes y procedimientos específicos. La identificación cartográfica no reemplaza la individualización de personas y viviendas ni los procedimientos exigibles.'}
+};
+function ahdiDefinitionName(name){
+ if(!AHDI_DEFINITIONS[name])return htmlEscape(name);
+ return '<button type="button" class="ahdi-definition-term" data-ahdi-definition="'+htmlEscape(name)+'" title="Consultar significado y fundamento normativo" aria-label="Leer definición de '+htmlEscape(name)+'">'+htmlEscape(name)+'</button>';
+}
+function openAhdiDefinition(name){
+ const data=AHDI_DEFINITIONS[name],modal=DOM('ahdi-definition-dialog');
+ if(!data||!modal)return;
+ const dest=modal.querySelector('.ahdi-definition-body');
+ if(!dest)return;
+ dest.innerHTML='<span class="eyebrow">PROPUESTA POT 2026 · NO ADOPTADA</span><h3>'+htmlEscape(name)+'</h3><p><b>Ámbito:</b> '+htmlEscape(data.ambito)+'</p><h4>¿Qué significa?</h4><p>'+htmlEscape(data.significado)+'</p><h4>¿Qué implica?</h4><p>'+htmlEscape(data.implicacion)+'</p><p class="caption"><b>Fuente normativa:</b> '+htmlEscape(data.fuente)+'. Síntesis explicativa; la decisión sobre un asentamiento requiere los estudios, instrumentos y procedimientos pertinentes.</p>';
+ if(typeof modal.showModal==='function')modal.showModal();else modal.setAttribute('open','');
+}
+
 const RISK_MAP_PERIODS={'2026':[{key:'amenaza',title:'Zonificación de amenazas 2026'},{key:'condicion_amenaza',title:'Condición de amenaza 2026'},{key:'condicion_riesgo',title:'Condición de riesgo 2026'},{key:'asentamientos',title:'Asentamientos e intervenciones 2026'}]};
 const RISK_PERIOD_DEFAULT={'2026':'amenaza'};
 function riskMapKey(year){return state['riskPeriod'+year]||RISK_PERIOD_DEFAULT[year]}
 function riskCategories(key){
- return (state.leyendas?.[key]?.categorias||[]).map((x,i)=>({cat:String(x.cat),label:x.label||catLabel(key,x.cat),color:x.color||PALETTE[i%PALETTE.length]}));
+ return (state.leyendas?.[key]?.categorias||[]).filter(x=>key!=='asentamientos'||String(x.cat).trim().toLowerCase()!=='no aplica').map((x,i)=>({cat:String(x.cat),label:x.label||catLabel(key,x.cat),color:x.color||PALETTE[i%PALETTE.length]}));
 }
 function riskCatSelection(year,key){
  const cats=riskCategories(key);
@@ -367,21 +392,23 @@ function renderRiskBarPanel(year){
  const max=Math.max(1,...d.rows.map(x=>x[1]));
  const cats=riskCategories(key),active=riskCatSelection(year,key);
  const clean=x=>String(x||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(' (')[0].trim();
- const rows=d.rows.map((r,i)=>{
+ const visibleRows=key==='asentamientos'?d.rows.filter(r=>String(r[0]).trim().toLowerCase()!=='no aplica'):d.rows;
+ const rows=visibleRows.map((r,i)=>{
   const matched=key==='amenaza'?cats.find(x=>{const m=String(r[0]).match(/^(Movimientos en masa|Avenidas torrenciales|Inundación) · categoría (\d)/);if(!m)return false;return String(x.cat)===({'Movimientos en masa':'1','Avenidas torrenciales':'2','Inundación':'3'}[m[1]]+'|'+m[2])}):cats.find(x=>clean(x.label)===clean(r[0])||clean(x.label).startsWith(clean(r[0])));
   const selected=matched?.cat===active;
   const color=matched?.color||['#397b73','#629da0','#c58f67','#6e91b2','#9a8bb9'][i%5];
+  if(key==='asentamientos')return '<div class="risk-bar-row ahdi-bar-row"><div class="risk-bar-label">'+ahdiDefinitionName(r[0])+'<b>'+fmt(r[1],1)+' ha</b></div><button type="button" class="risk-bar-track ahdi-bar-select '+(selected?'selected':'')+'" '+(matched?'data-risk-pick="'+year+'" data-risk-cat-value="'+htmlEscape(matched.cat)+'" aria-label="Mostrar '+htmlEscape(r[0])+' en el mapa"':'disabled')+'><i style="width:'+Math.max(.2,100*r[1]/max)+'%;background:'+color+'"></i></button></div>';
   return '<button type="button" class="risk-bar-row risk-bar-button '+(selected?'selected':'')+'" '+(matched?'data-risk-pick="'+year+'" data-risk-cat-value="'+htmlEscape(matched.cat)+'"':'disabled')+'><div class="risk-bar-label"><span>'+htmlEscape(r[0])+'</span><b>'+fmt(r[1],1)+' ha</b></div><div class="risk-bar-track"><i style="width:'+Math.max(.2,100*r[1]/max)+'%;background:'+color+'"></i></div></button>';
  }).join('');
- return '<div class="risk-bar-panel"><div class="risk-kpis"><div><small>Superficie única de la capa</small><strong>'+fmt(d.total,1)+' ha</strong></div></div><h4>Extensión por categoría</h4><div class="risk-district-bars">'+rows+'</div><p class="caption">'+htmlEscape(d.note)+'</p><p class="caption">Superficies en hectáreas calculadas sobre la cartografía. Los solapamientos pueden hacer que la suma de barras supere la superficie única.</p></div>';
+ return '<div class="risk-bar-panel"><div class="risk-kpis"><div><small>Superficie única de la capa</small><strong>'+fmt(d.total,1)+' ha</strong></div></div><h4>Extensión por categoría</h4><div class="risk-district-bars">'+rows+'</div><p class="caption">'+htmlEscape(d.note)+'</p><p class="caption">Superficies en hectáreas calculadas sobre la cartografía. Los solapamientos pueden hacer que la suma de barras supere la superficie única.</p>'+(key==='asentamientos'?'<p class="caption">Se excluye «No aplica» del selector y de las barras por no describir una intervención específica. Sus registros permanecen en la superficie total de la capa; esta no es la suma de las categorías visibles. Haz clic en cada nombre para consultar su definición.</p>':'')+'</div>';
 }
 function renderRiskPeriodPanel(year){
  const key=riskMapKey(year),cats=riskCategories(key),current=riskCatSelection(year,key);
  const selectLayers=RISK_MAP_PERIODS[year].map(x=>'<option value="'+x.key+'" '+(key===x.key?'selected':'')+'>'+htmlEscape(x.title)+'</option>').join('');
  const selectCategories=cats.map(x=>'<option value="'+htmlEscape(x.cat)+'" '+(current===x.cat?'selected':'')+'>'+htmlEscape(x.label)+'</option>').join('');
- return '<article class="risk-period-panel risk-period-'+year+'"><div class="risk-period-heading"><span class="eyebrow">'+'PROPUESTA POT · NO ADOPTADA'+'</span><h3>'+year+'</h3></div><label class="risk-control-label">Tema cartográfico<select class="risk-period-select" data-risk-period="'+year+'">'+selectLayers+'</select></label><label class="risk-control-label">Categoría a mostrar<select class="risk-category-select" data-risk-category="'+year+'">'+selectCategories+'</select></label><div class="risk-legend-selection"><i style="background:'+(cats.find(x=>x.cat===current)?.color||'#9f8271')+'"></i><span>'+htmlEscape(cats.find(x=>x.cat===current)?.label||'Cargando categorías…')+'</span></div><div class="risk-period-map" id="risk-map-'+year+'" role="img" aria-label="Vista cartográfica fija del POT '+year+'"></div><p class="caption" id="risk-map-status-'+year+'">Cargando superficie cartográfica…</p>'+renderRiskBarPanel(year)+'</article>';
+ return '<article class="risk-period-panel risk-period-'+year+'"><div class="risk-period-heading"><span class="eyebrow">'+'PROPUESTA POT · NO ADOPTADA'+'</span><h3>'+year+'</h3></div><label class="risk-control-label">Tema cartográfico<select class="risk-period-select" data-risk-period="'+year+'">'+selectLayers+'</select></label><label class="risk-control-label">Categoría a mostrar<select class="risk-category-select" data-risk-category="'+year+'">'+selectCategories+'</select></label><div class="risk-legend-selection"><i style="background:'+(cats.find(x=>x.cat===current)?.color||'#9f8271')+'"></i><span>'+(key==='asentamientos'?ahdiDefinitionName(cats.find(x=>x.cat===current)?.label||''):htmlEscape(cats.find(x=>x.cat===current)?.label||'Cargando categorías…'))+'</span></div><div class="risk-period-map" id="risk-map-'+year+'" role="img" aria-label="Vista cartográfica fija del POT '+year+'"></div><p class="caption" id="risk-map-status-'+year+'">Cargando superficie cartográfica…</p>'+renderRiskBarPanel(year)+'</article>';
 }
-function renderRiskDistrictDashboard(){return '<div class="risk-dash"><div class="risk-dash-header"><span class="eyebrow">PROPUESTA POT 2026</span><h3>Amenazas, condiciones de riesgo y asentamientos</h3><p>Los mapas y estadísticas de esta sección corresponden únicamente a la cartografía del proyecto 2026. Las categorías requieren el estudio de cada fenómeno.</p></div><div class="risk-period-grid risk-period-grid-single">'+renderRiskPeriodPanel('2026')+'</div></div>';}
+function renderRiskDistrictDashboard(){return '<div class="risk-dash"><div class="risk-dash-header"><span class="eyebrow">PROPUESTA POT 2026</span><h3>Amenazas, condiciones de riesgo y asentamientos</h3><p>Los mapas y estadísticas de esta sección corresponden únicamente a la cartografía del proyecto 2026. Las categorías requieren el estudio de cada fenómeno.</p></div><div class="risk-period-grid risk-period-grid-single">'+renderRiskPeriodPanel('2026')+'</div><dialog id="ahdi-definition-dialog" class="ahdi-definition-dialog" aria-label="Definición de intervención en AHDI"><div class="ahdi-definition-head"><strong>Asentamientos e intervenciones 2026</strong><button type="button" data-ahdi-close aria-label="Cerrar definición">×</button></div><div class="ahdi-definition-body"></div></dialog></div>';}
 const riskPanelMaps={'2026':null},riskPanelSeq={'2026':0};
 function destroyRiskPanelMaps(){
  for(const year of ['2026']){riskPanelSeq[year]++;if(riskPanelMaps[year]){riskPanelMaps[year].remove();riskPanelMaps[year]=null;}}
@@ -415,6 +442,8 @@ function bindRiskPeriodControls(root){
  root.querySelectorAll('[data-risk-pick]').forEach(btn=>btn.addEventListener('click',()=>{
   state['riskCat'+btn.dataset.riskPick]=btn.dataset.riskCatValue;renderRiesgo();
  }));
+ root.querySelectorAll('[data-ahdi-definition]').forEach(btn=>btn.addEventListener('click',()=>openAhdiDefinition(btn.dataset.ahdiDefinition)));
+ root.querySelector('[data-ahdi-close]')?.addEventListener('click',()=>root.querySelector('#ahdi-definition-dialog')?.close());
  if(state.page==='riesgo'){renderRiskPanelMap('2026');}
 }
 
