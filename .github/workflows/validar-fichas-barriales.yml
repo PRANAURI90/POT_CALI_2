@@ -100,7 +100,6 @@ jobs:
           assert 'EXTENSIÓN DEL BARRIO' in pdf[0].get_text(), 'Falta extensión cartográfica en cabecera'
           assert 'Capacidad edificatoria adicional' in pdf[6].get_text(), 'Falta definición pedagógica del incentivo'
           assert 'Ordena un ámbito' in pdf[4].get_text(), 'Falta definición pedagógica del plan parcial'
-          assert 'LA TRANSICIÓN DE MAYOR SUPERFICIE' in transition or 'Sin transiciones' in transition, 'Falta jerarquía gráfica de transiciones'
           barrio1113=fitz.open('/tmp/ficha_1113.pdf')
           t1113=barrio1113[1].get_text()
           assert '32,75 ha' in t1113 and '0,17 ha' in t1113, 'No se ven las hectáreas de las dos transiciones del barrio 1113'
@@ -109,6 +108,7 @@ jobs:
           assert 'QUÉ QUIERE DECIR' in pdf[2].get_text(), 'Falta explicación del cambio territorial'
           assert 'procedimiento' in pdf[5].get_text().lower(), 'Falta lectura de instrumentos específicos'
           transition=pdf[1].get_text()
+          assert 'LA TRANSICIÓN DE MAYOR SUPERFICIE' in transition or 'Sin transiciones' in transition, 'Falta jerarquía gráfica de transiciones'
           assert ('Antes' in transition and 'Propuesta' in transition) or 'Sin transiciones' in transition, 'No se identifica origen y destino de transición'
           assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transiciones'
           from collections import Counter
