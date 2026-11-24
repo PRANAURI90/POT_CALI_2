@@ -265,3 +265,23 @@
 .micro-legend-swatch{width:13px;height:13px;flex:0 0 13px;border:1px solid rgba(0,0,0,.12);border-radius:3px;display:inline-block}
 .micro-legend .caption{margin:12px 0 0}
 @media(max-width:550px){.micro-legend-grid{grid-template-columns:1fr}}
+
+/* AHDI 2026: categorías clicables con ficha, barras conservan navegación del mapa */
+.ahdi-bar-row{padding:6px 0 8px}
+.ahdi-bar-row .risk-bar-label{margin-bottom:7px}
+.ahdi-definition-term{border:0;border-bottom:1px dotted currentColor;background:transparent;color:#3c3a70;font:inherit;font-weight:650;line-height:1.45;text-align:left;cursor:pointer;padding:0;max-width:76%;white-space:normal}
+.ahdi-definition-term:hover{border-bottom-style:solid;color:#272257}
+.ahdi-definition-term:focus-visible{outline:2px solid #7668b1;outline-offset:3px;border-radius:2px}
+.ahdi-bar-select{display:block;width:100%;padding:0;cursor:pointer;border:0;text-align:left}
+.ahdi-bar-select:hover{outline:2px solid #8f8ba8;outline-offset:2px}
+.ahdi-bar-select:focus-visible{outline:2px solid #65559d;outline-offset:3px}
+.ahdi-bar-select.selected{outline:1px solid #65559d;outline-offset:1px}
+.ahdi-definition-dialog{width:min(92vw,650px);max-height:84vh;overflow:auto;border:1px solid #d8d1e4;border-radius:15px;box-shadow:0 25px 75px #25203b55;padding:0;background:#fff;color:#34303e}
+.ahdi-definition-dialog::backdrop{background:#1e173c99}
+.ahdi-definition-head{position:sticky;top:0;background:#f4f1f8;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#4b3b68}
+.ahdi-definition-head button{border:0;background:transparent;color:#4b3b68;font-size:24px;cursor:pointer;line-height:1;padding:2px 8px}
+.ahdi-definition-body{padding:20px 22px}
+.ahdi-definition-body h3{font-size:20px;margin:8px 0 15px}
+.ahdi-definition-body h4{font-size:13px;margin:16px 0 6px;color:#493b6a}
+.ahdi-definition-body p{font-size:13px;line-height:1.7;margin:8px 0}
+.ahdi-definition-body .caption{border-top:1px solid #e8e3ee;padding-top:12px;margin-top:18px}
