@@ -533,8 +533,27 @@ async function downloadBarrio(){
      source:'Revisión pendiente de disposiciones y programas complementarios.'
     }
   ];
+  // No mostrar incentivos que no están vinculados al tratamiento.
+  // La plusvalía se menciona como posible hecho generador sólo si hay
+  // transformación normativa y un tratamiento de urbanización/renovación.
+  const activityChange=trans.some(t=>Number.isFinite(t.ha)&&t.ha>=.03&&pdfText(t.from)!==pdfText(t.to));
+  const benefitAllowed=(item)=>{
+    if(item.title.startsWith('Edificabilidad'))return urbanRenew||development;
+    if(item.title.startsWith('Participación'))return (urbanRenew||development)&&activityChange;
+    if(item.title.startsWith('Cesiones'))return urbanRenew||development;
+    if(item.title.startsWith('Conservación'))return conservation;
+    if(item.title.startsWith('Moradores'))return urbanRenew;
+    return false;
+  };
+  const relevantBenefits=benefits.filter(benefitAllowed);
   let benefitY=77;
-  for(const benefit of benefits){
+  if(!relevantBenefits.length){
+    fillColor(pdf,'#F2F5F7');pdf.roundedRect(14,78,182,56,3,3,'F');
+    line(pdf,20,91,'Sin incentivos específicos asociados a los tratamientos',9.1,COLORS.navy,true,170);
+    line(pdf,20,99,'identificados en la matriz normativa para este barrio.',9.1,COLORS.navy,true,170);
+    line(pdf,20,116,'No equivale a inexistencia de cargas u obligaciones generales.',8,COLORS.muted,false,170);
+  }
+  for(const benefit of relevantBenefits){
     const fields=[
      [benefit.title,8.8,COLORS.purple,true],
      [benefit.concept,8.2,COLORS.navy,false],
@@ -561,16 +580,23 @@ async function downloadBarrio(){
   line(pdf,14,275,'La ficha no cuantifica plusvalía ni certifica beneficios tributarios.',7.8,COLORS.muted);
   pdf.addPage();
   // PÁGINA 6: cartografía de amenazas.
+  if(!threat || threat.rows.length){
   base(pdf,8,'08 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
   if(threat){
    const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
    for(let i=0;i<3;i++){
     const [fen,title]=titles[i],xx=14+i*62;
     line(pdf,xx,75,title,8.2,COLORS.navy,true,60);
-    const canvas=buildMapCanvas(barrio,threat.rows,fen,540,390);
-    pdf.addImage(canvas.toDataURL('image/jpeg',0.88),'JPEG',xx,85,57,43);
     const subset=threat.rows.filter(r=>r.fen===fen);
-    if(!subset.length){line(pdf,xx,135,'Sin intersección',7.5,COLORS.muted,true,57);line(pdf,xx,140,'detectable >=0,01 ha',7,COLORS.muted,false,57);}
+    if(!subset.length){
+      fillColor(pdf,'#F3F6F7');pdf.roundedRect(xx,88,57,40,3,3,'F');
+      line(pdf,xx+3,105,'Sin intersección',7.8,COLORS.muted,true,51);
+      line(pdf,xx+3,115,'detectable (0,01 ha)',7,COLORS.muted,false,51);
+    }else{
+      const canvas=buildMapCanvas(barrio,threat.rows,fen,540,390);
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.88),'JPEG',xx,85,57,43);
+    }
+    if(subset.length){
     else{
      let ry=135;
      for(const level of ['1','2','3','0']){
@@ -597,14 +623,23 @@ async function downloadBarrio(){
   }
   line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
   pdf.addPage();
+  }
   // PÁGINA 4
   base(pdf,9,'09 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
-  line(pdf,14,75,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA ORIENTATIVA',10,COLORS.purple,true);
+  if(!threat||threat.rows.length>0)line(pdf,14,75,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA ORIENTATIVA',10,COLORS.purple,true);
   const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
-  let my=87;
+  if(threat&&threat.rows.length===0){
+    fillColor(pdf,'#EDF3F4');pdf.roundedRect(14,84,182,43,3,3,'F');
+    line(pdf,19,96,'AMENAZAS · SIN INTERSECCIONES DETECTABLES',9,COLORS.navy,true,170);
+    line(pdf,19,106,'Inundación, movimientos en masa y avenidas torrenciales:',8.2,COLORS.navy,false,169);
+    line(pdf,19,115,'sin cruces a partir de 0,01 ha en el GeoJSON consultado.',8.2,COLORS.muted,false,169);
+    line(pdf,14,139,'No certifica ausencia de peligro ni reemplaza estudios de riesgo.',8,COLORS.muted,false,180);
+  }
+  let my=threat&&threat.rows.length===0?157:87;
   if(micro.length){
+   if(threat&&threat.rows.length===0)line(pdf,14,150,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA APROXIMADA',9,COLORS.purple,true);
    const mx=Math.max(1,...micro.map(z=>Number(z.hectareas||0)));
-   for(const z of micro.slice(0,4)){
+   for(const z of micro.slice(0,threat&&threat.rows.length===0?1:4)){
     my=bar(pdf,18,my,'Zona '+z.zona+' · '+pct(z.porcentaje_barrio),Number(z.hectareas),mx,COLORS.purple,174)+2;
    }
   } else my=line(pdf,18,my,'Sin intersecciones disponibles en la digitalización consultada.',9,COLORS.muted);
