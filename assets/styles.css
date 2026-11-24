@@ -306,3 +306,11 @@
 .barrio-risk-micro-preview{max-width:570px;margin:13px 0}
 @media(max-width:800px){.barrio-risk-layout{grid-template-columns:1fr}.barrio-risk-card{padding:12px}}
 @media(max-width:480px){.barrio-risk-summary-row>div:first-child{flex-direction:column;gap:2px}.barrio-risk-summary-row span{white-space:normal}}
+
+/* Descarga de fichas barriales: control en el inspector del mapa */
+.ficha-download-panel{padding:13px 15px 18px;border-top:1px solid #e3e3ec;display:grid;gap:8px}
+.ficha-download-btn{display:block;width:100%;padding:12px 14px;border:1px solid #51438e;border-radius:9px;background:#51438e;color:#fff;font-weight:800;line-height:1.45;text-align:center;white-space:normal;box-shadow:0 4px 10px rgba(47,41,75,.1)}
+.ficha-download-btn:hover:not(:disabled){background:#392f6c;color:white}
+.ficha-download-btn:disabled{background:#e7e4ef;color:#6b6480;border-color:#dad7e6;cursor:not-allowed;box-shadow:none}
+.ficha-download-status{margin:0;font-size:11px;line-height:1.5;color:#68637f;overflow-wrap:anywhere}
+@media(max-width:700px){.ficha-download-panel{padding:13px 12px}.ficha-download-btn{min-height:46px}}
