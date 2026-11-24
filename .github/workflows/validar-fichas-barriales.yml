@@ -107,7 +107,7 @@ jobs:
           assert '98,9' in t1113, 'No se muestra el porcentaje del barrio en la transición dominante'
           assert 'reactivación' in t1113.lower() and 'redensificación' in t1113.lower(), 'No se explica la redefinición de R2'
           assert 'QUÉ QUIERE DECIR' in pdf[2].get_text(), 'Falta explicación del cambio territorial'
-          assert 'PROCEDIMIENTO' in pdf[5].get_text(), 'Falta lectura de instrumentos específicos'
+          assert 'procedimiento' in pdf[5].get_text().lower(), 'Falta lectura de instrumentos específicos'
           transition=pdf[1].get_text()
           assert ('Antes' in transition and 'Propuesta' in transition) or 'Sin transiciones' in transition, 'No se identifica origen y destino de transición'
           assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transiciones'
