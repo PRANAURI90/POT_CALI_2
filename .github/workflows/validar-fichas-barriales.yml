@@ -22,7 +22,7 @@ jobs:
           js=Path('assets/fichas-barriales.js').read_text()
           css=Path('assets/styles.css').read_text()
           assert h.count('id="download-barrio-pdf"')==1
-          assert 'src="assets/fichas-barriales.js?v=1.0"' in h
+          assert 'src="assets/fichas-barriales.js?v=2.0-editorial"' in h
           assert 'jspdf.umd.min.js' in h
           assert 'barrioRiskIntersect' in js
           assert "entriesFor(info,'actividad2026')" in js
@@ -91,10 +91,24 @@ jobs:
           from PIL import Image
           from io import BytesIO
           pdf=fitz.open('/tmp/ficha_1722.pdf')
-          assert len(pdf)==4, f'Número de páginas inesperado: {len(pdf)}'
-          page=pdf[2]
+          assert len(pdf)==5, f'Número de páginas inesperado: {len(pdf)}'
+          page=pdf[3]
           txt=page.get_text()
           assert 'INUNDACIÓN' in txt and 'Alta' in txt, 'No se imprimieron los indicadores de inundación'
+          transition=pdf[1].get_text()
+          assert 'POT 2014:' in transition and 'Propuesta 2026:' in transition, 'No se identifica origen y destino de transición'
+          assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transiciones'
+          from collections import Counter
+          # Verificar que los textos de la página 2 no se monten verticalmente:
+          blocks=[b for b in pdf[1].get_text('blocks') if b[4].strip()]
+          for i,a in enumerate(blocks):
+            for b in blocks[i+1:]:
+              ax0,ay0,ax1,ay1,*_=a; bx0,by0,bx1,by1,*_=b
+              overlap_x=min(ax1,bx1)-max(ax0,bx0)
+              overlap_y=min(ay1,by1)-max(ay0,by0)
+              if overlap_x>18 and overlap_y>4 and (ay1-ay0)>3 and (by1-by0)>3:
+                # Los bloques de diferentes filas no deben superponerse.
+                assert not (overlap_x>25 and overlap_y>6), f'Solapamiento texto PDF 2: {a[4][:45]} / {b[4][:45]}'
           pix=page.get_pixmap(matrix=fitz.Matrix(2,2),alpha=False)
           im=Image.open(BytesIO(pix.tobytes('png'))).convert('RGB')
           # El mapa de la primera columna ocupa aproximadamente 14-71 mm x 85-128 mm.
