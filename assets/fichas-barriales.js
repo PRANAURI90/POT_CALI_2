@@ -16,19 +16,53 @@ const num=(v,d=2)=>Number(v||0).toLocaleString('es-CO',{minimumFractionDigits:d,
 const ha=v=>num(v)+' ha';
 const pct=v=>num(v,1)+' %';
 const safe=(s)=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
+// Limpieza de codificaciones de capas GIS y tipografía compatible con Helvetica PDF.
+function pdfText(value){
+ let s=String(value??'').replace(/[\u0000-\u001F\u007F]/g,' ').replace(/[\u200B-\u200F\uFEFF]/g,'').normalize('NFC');
+ // Los caracteres no soportados por la codificación base de jsPDF se escriben como ASCII.
+ return s.replace(/[‐‑–—]/g,'-').replace(/[→➜]/g,' a ').replace(/\s+/g,' ').trim();
+}
+function labelTreatment(raw,year){
+ const value=pdfText(raw);
+ const s=value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ const c=s.replace(/[^A-Z0-9]/g,'');
+ const aliases=year===2014?[
+  [/^R1$|RENOVACION.*1.*REDESARROLLO/,'Renovación por redesarrollo (R1)'],
+  [/^R2$|RENOVACION.*2.*REACTIVACION/,'Renovación por reactivación (R2)'],
+  [/^R3$|RENOVACION.*3.*CAMBIO/,'Renovación por cambio de patrón (R3)'],
+  [/^C1$|CONSOLIDACION.*URBANISTICA/,'Consolidación urbanística (C1)'],
+  [/^C2$|CONSOLIDACION.*BASICA/,'Consolidación básica (C2)'],
+  [/^C3$|CONSOLIDACION.*MODERADA/,'Consolidación moderada (C3)'],
+  [/^DE$|^DESARROLLO$/,'Desarrollo'],
+ ]:[
+  [/^R1$|^10$|REDENSIFICACION.*ALTA/,'Renovación con redensificación alta (R1)'],
+  [/^R2$|^11$|REDENSIFICACION.*MEDIA/,'Renovación con redensificación media (R2)'],
+  [/^D1$|^7$/,'Desarrollo en expansión (D1)'],
+  [/^D2$|^8$/,'Desarrollo urbano (D2)'],
+  [/^C1$|^3$/,'Consolidación urbanística (C1)'],
+  [/^C2$|^4$/,'Consolidación básica (C2)'],
+  [/^C3$|^5$/,'Consolidación moderada (C3)'],
+  [/^C4$|^6$/,'Consolidación con cambio de patrón (C4)'],
+  [/^MI$|^9$/,'Mejoramiento integral']
+ ];
+ for(const [re,label] of aliases)if(re.test(s)||re.test(c))return label;
+ return value.toLocaleLowerCase('es').replace(/^\p{L}/u,x=>x.toUpperCase());
+}
 function line(pdf,x,y,text,size=10,color=COLORS.navy,bold=false,maxWidth=178){
  pdf.setFont('helvetica',bold?'bold':'normal');pdf.setFontSize(size);changeColor(pdf,color);
- const lines=pdf.splitTextToSize(String(text),maxWidth);
+ const lines=pdf.splitTextToSize(pdfText(text),maxWidth);
  pdf.text(lines,x,y);
- return y+lines.length*(size*.37+1.7);
+ return y+lines.length*(size*.365+1.7);
 }
 function bar(pdf,x,y,label,value,max,color,w=172){
- line(pdf,x,y,label,9,COLORS.navy,true,w-40);
- pdf.setFont('helvetica','bold');pdf.setFontSize(9);changeColor(pdf,COLORS.navy);
+ pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);changeColor(pdf,COLORS.navy);
+ const lines=pdf.splitTextToSize(pdfText(label),w-42);
+ pdf.text(lines,x,y);
  pdf.text(ha(value),x+w,y,{align:'right'});
- fillColor(pdf,COLORS.line);pdf.roundedRect(x,y+4,w,4,1.5,1.5,'F');
- if(value>0&&max>0){fillColor(pdf,color);pdf.roundedRect(x,y+4,Math.max(1,Math.min(w,w*value/max)),4,1.5,1.5,'F')}
- return y+18;
+ const trackY=y+(lines.length-1)*4.2+5;
+ fillColor(pdf,COLORS.line);pdf.roundedRect(x,trackY,w,4,1.5,1.5,'F');
+ if(value>0&&max>0){fillColor(pdf,color);pdf.roundedRect(x,trackY,Math.max(1,Math.min(w,w*value/max)),4,1.5,1.5,'F')}
+ return trackY+15;
 }
 function base(pdf,n,k,title,sub,selected){
  fillColor(pdf,COLORS.navy);pdf.rect(0,0,210,27,'F');
@@ -36,14 +70,15 @@ function base(pdf,n,k,title,sub,selected){
  line(pdf,14,10,'CALI, ¿QUÉ CAMBIA EN MI TERRITORIO?',11,'#FFFFFF',true);
  line(pdf,14,17,'OBSERVATORIO CIUDADANO DEL ORDENAMIENTO TERRITORIAL',7.5,'#E4E0F5');
  line(pdf,14,39,k,8,COLORS.purple,true);
- line(pdf,14,49,title,18,COLORS.navy,true,182);
- line(pdf,14,60,sub,8.6,COLORS.muted,false,184);
+ const size=pdfText(title).length>49?13:pdfText(title).length>35?15:18;
+ line(pdf,14,49,title,size,COLORS.navy,true,184);
+ line(pdf,14,61,sub,8.1,COLORS.muted,false,184);
  pdf.setDrawColor(...hexRgb(COLORS.line));pdf.line(14,280,196,280);
- line(pdf,14,287,'POT 2014 vigente (GDB actualizada) · propuesta 2026 aún no adoptada',7,COLORS.muted);
- pdf.setFontSize(8);changeColor(pdf,COLORS.navy);pdf.text(n+'/4',195,287,{align:'right'});
+ line(pdf,14,286,'POT 2014 vigente (GDB actualizada) - propuesta 2026 no adoptada',7,COLORS.muted);
+ pdf.setFontSize(8);changeColor(pdf,COLORS.navy);pdf.text(n+'/5',195,286,{align:'right'});
 }
 function entriesFor(info,key){
- return (info?.capas?.[key]?.categorias||[]).map(r=>({name:String(r.nombre||r.codigo||'Sin categoría'),ha:Number(r.hectareas||0),pct:Number(r.porcentaje_barrio||0)})).filter(r=>r.ha>.009).sort((a,b)=>b.ha-a.ha);
+ return (info?.capas?.[key]?.categorias||[]).map(r=>({name:pdfText(r.nombre||r.codigo||'Sin categoría'),ha:Number(r.hectareas||0),pct:Number(r.porcentaje_barrio||0)})).filter(r=>r.ha>.009).sort((a,b)=>b.ha-a.ha);
 }
 function bbox(g){
  const b=window.turf?.bbox(g);return b&&b.every(Number.isFinite)?b:null;
@@ -112,29 +147,53 @@ async function downloadBarrio(){
   const ac14=entriesFor(info,'actividad2014'),ac26=entriesFor(info,'actividad2026');
   const trans=(info?.transiciones_tratamiento||[]).map(x=>({from:String(x.desde),to:String(x.hacia),ha:Number(x.hectareas||0)})).sort((a,b)=>b.ha-a.ha);
   const area=Number(threat?.bArea||info?.area_barrio_ha||0);
-  // PÁGINA 1
-  base(pdf,1,'01 / PERFIL TERRITORIAL','Ficha barrial · '+name,'Comuna '+p.comuna+' · código '+code+' · análisis sobre la cartografía del Observatorio',p);
-  fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,67,182,20,3,3,'F');
-  line(pdf,19,76,'¿QUÉ DICE LA CARTOGRAFÍA SOBRE ESTE TERRITORIO?',10,COLORS.navy,true);
-  line(pdf,14,99,'PRINCIPALES TRATAMIENTOS · POT 2014',11,COLORS.purple,true);
-  let y=108;y=drawCategories(pdf,17,y,tr14,3,176,COLORS.green);
-  if(y>177){y=178}
-  line(pdf,14,184,'PRINCIPALES TRATAMIENTOS · PROPUESTA 2026',11,COLORS.purple,true);
-  y=193;drawCategories(pdf,17,y,tr26,4,176,COLORS.pink);
-  line(pdf,14,274,'Superficies por categoría: no equivalen a derechos prediales ni licencias.',7.2,COLORS.muted);
+  // PÁGINA 1: tratamientos por período, lectura con fuentes y códigos.
+  base(pdf,1,'01 / PERFIL TERRITORIAL','Ficha barrial: '+name,'Comuna '+p.comuna+' - código '+code+' - síntesis cartográfica del Observatorio',p);
+  fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,69,182,24,3,3,'F');
+  line(pdf,19,78,'QUÉ MUESTRAN LOS TRATAMIENTOS',10,COLORS.navy,true);
+  line(pdf,19,86,'Área del barrio intersectada por cada clasificación urbanística.',8,COLORS.muted);
+  line(pdf,14,104,'POT 2014 - VIGENTE',10,COLORS.purple,true,86);
+  line(pdf,111,104,'PROPUESTA POT 2026',10,COLORS.purple,true,85);
+  let leftY=115,rightY=115;
+  const max14=Math.max(1,...tr14.map(x=>x.ha)),max26=Math.max(1,...tr26.map(x=>x.ha));
+  for(const row of tr14.slice(0,4))leftY=bar(pdf,15,leftY,labelTreatment(row.name,2014),row.ha,max14,COLORS.green,83)+5;
+  for(const row of tr26.slice(0,4))rightY=bar(pdf,111,rightY,labelTreatment(row.name,2026),row.ha,max26,COLORS.pink,83)+5;
+  line(pdf,14,255,'Se muestran las cuatro categorías con mayor superficie de cada período.',8,COLORS.muted);
+  line(pdf,14,264,'Cada barra expresa hectáreas de intersección, no predios ni licencias.',8,COLORS.muted);
   pdf.addPage();
-  // PÁGINA 2
-  base(pdf,2,'02 / TRANSICIONES Y USOS','¿Qué cambia en los usos y tratamientos?','Las transiciones muestran coincidencias espaciales, no permisos automáticos.',p);
-  line(pdf,14,74,'PRINCIPALES TRANSICIONES DE TRATAMIENTO',10.5,COLORS.purple,true);
-  let tY=84;const maxT=Math.max(1,...trans.map(r=>r.ha));
-  for(const t of trans.slice(0,5)){tY=bar(pdf,17,tY,t.from+' → '+t.to,t.ha,maxT,COLORS.pink,174)+2;}
-  line(pdf,14,193,'PRINCIPALES ÁREAS DE ACTIVIDAD · PROPUESTA 2026',10.5,COLORS.purple,true);
-  drawCategories(pdf,17,202,ac26,3,174,COLORS.orange);
-  line(pdf,14,266,'Los nombres de área no autorizan automáticamente comercio ni servicios.',8,COLORS.muted);
-  line(pdf,14,273,'Aplican la matriz de actividades, el articulado y las condiciones del predio.',8,COLORS.muted);
+  // PÁGINA 2: transiciones explícitas y SIN cadenas de atributos sin interpretar.
+  base(pdf,2,'02 / TRANSICIONES','¿Dónde cambian los tratamientos?','Intersección espacial del POT 2014 con los tratamientos propuestos para 2026.',p);
+  line(pdf,14,75,'CÓMO LEER LAS TRANSICIONES',10,COLORS.purple,true);
+  line(pdf,14,84,'Desde: tratamiento del POT 2014. Hacia: tratamiento de la propuesta 2026.',8.7,COLORS.navy,false,180);
+  line(pdf,14,92,'Las hectáreas corresponden a la superficie compartida por ambos polígonos.',8.7,COLORS.navy,false,180);
+  let tY=109;
+  for(const t of trans.slice(0,5)){
+    const a=labelTreatment(t.from,2014),b=labelTreatment(t.to,2026);
+    fillColor(pdf,'#F2F3F8');pdf.roundedRect(14,tY-7,182,31,2,2,'F');
+    line(pdf,18,tY,'2014: '+a,8.3,COLORS.navy,true,148);
+    line(pdf,18,tY+10,'2026: '+b,8.3,COLORS.purple,true,148);
+    pdf.setFont('helvetica','bold');pdf.setFontSize(9);changeColor(pdf,COLORS.navy);
+    pdf.text(ha(t.ha),192,tY+9,{align:'right'});
+    tY+=37;
+  }
+  if(!trans.length)line(pdf,18,112,'No se registran transiciones para este territorio.',9,COLORS.muted);
+  line(pdf,14,263,'La comparación cartográfica no acredita aumento de edificabilidad ni licencias.',8,COLORS.muted);
+  line(pdf,14,272,'R1/R2 tienen definiciones diferentes entre POT 2014 y propuesta 2026.',8,COLORS.muted);
+  pdf.addPage();
+  // PÁGINA 3: áreas de actividad, separadas de los tratamientos.
+  base(pdf,3,'03 / ÁREAS DE ACTIVIDAD','¿Cómo se distribuyen los usos?','Áreas de actividad de cada instrumento territorial; no permisos individuales.',p);
+  line(pdf,14,74,'POT 2014 - VIGENTE',10,COLORS.purple,true);
+  let aY=86,acMax14=Math.max(1,...ac14.map(x=>x.ha));
+  for(const row of ac14.slice(0,4))aY=bar(pdf,16,aY,row.name,row.ha,acMax14,COLORS.green,178)+3;
+  const after14=Math.max(172,aY+5);
+  line(pdf,14,after14,'PROPUESTA 2026',10,COLORS.purple,true);
+  let bY=after14+12,acMax26=Math.max(1,...ac26.map(x=>x.ha));
+  for(const row of ac26.slice(0,3))bY=bar(pdf,16,bY,row.name,row.ha,acMax26,COLORS.orange,178)+3;
+  line(pdf,14,262,'Son clasificaciones de uso, no autorizaciones automáticas de actividades.',7.9,COLORS.muted);
+  line(pdf,14,271,'Consultar las matrices de actividades y las condiciones urbanísticas.',7.9,COLORS.muted);
   pdf.addPage();
   // PÁGINA 3
-  base(pdf,3,'03 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
+  base(pdf,4,'04 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
   if(threat){
    const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
    for(let i=0;i<3;i++){
@@ -171,7 +230,7 @@ async function downloadBarrio(){
   line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
   pdf.addPage();
   // PÁGINA 4
-  base(pdf,4,'04 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
+  base(pdf,5,'05 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
   line(pdf,14,75,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA ORIENTATIVA',10,COLORS.purple,true);
   const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
   let my=87;
