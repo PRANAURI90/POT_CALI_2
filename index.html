@@ -7,7 +7,7 @@
   <meta name="description" content="Observatorio ciudadano del POT de Cali. Consulta el territorio, compara cartografía 2014–2026 y estudia instrumentos, riesgos y beneficios con fuentes verificables.">
   <title>Cali: ¿Qué cambia en mi territorio? · Observatorio ciudadano</title>
   <link rel="stylesheet" href="assets/leaflet.css?v=7.2-estable.1">
-  <link rel="stylesheet" href="assets/styles.css?v=11.3-risk-definitions">
+  <link rel="stylesheet" href="assets/styles.css?v=12.0-glosario">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -75,7 +75,7 @@ html[data-lab-font="manrope"] body,html[data-lab-font="manrope"] button,html[dat
 html[data-lab-font="manrope"] h1,html[data-lab-font="manrope"] h2,html[data-lab-font="manrope"] h3,html[data-lab-font="manrope"] h4{font-family:'Manrope',Arial,sans-serif!important}
 
 </style>
-  <link rel="stylesheet" href="assets/glosario.css?v=1.0">
+  <link rel="stylesheet" href="assets/glosario.css?v=2.0-independiente">
 </head>
 <body>
 <a class="skip" href="#main">Saltar al contenido</a>
@@ -120,11 +120,11 @@ html[data-lab-font="manrope"] h1,html[data-lab-font="manrope"] h2,html[data-lab-
         <div class="intro-map-legend" aria-label="Leyenda común"><span><i style="background:#3D8D84"></i> Urbano</span><span><i style="background:#E0B45F"></i> Expansión</span><span><i style="background:#D9E5D8"></i> Rural</span></div>
         <p class="intro-maps-note"><strong>Cómo leerlos:</strong> el amarillo corresponde al suelo de expansión y el azul verdoso al perímetro urbano. Las diferencias son cartográficas y no significan que un terreno ya esté urbanizado o tenga licencia. <strong>*</strong>La GDB del POT 2014 disponible contiene actualizaciones posteriores a su adopción; el suelo rural de esa fecha se representa mediante una diferencia geométrica sobre el perímetro municipal.</p>
       </section>
-      <div class="home-two-col">
+      <div class="home-two-col home-soil-only">
         <section class="surface-card"><div class="card-head"><span class="eyebrow">CLASIFICACIÓN DEL SUELO</span><h3>¿Cuánto suelo propone cada categoría?</h3></div><div id="home-soil-bars" class="soil-bars"></div><p class="caption">Superficies calculadas con las geometrías originales de 2014 y 2026 en un sistema proyectado común. La categoría rural de 2014 se derivó como área municipal menos suelo urbano y de expansión; las delimitaciones municipales difieren entre las fuentes.</p></section>
-        <section class="surface-card"><div class="card-head"><span class="eyebrow">ALCANCE DEL ANÁLISIS</span><h3>Lo que ya sabemos y lo que falta</h3></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Tratamientos y transiciones por barrio</b><p>Intersecciones espaciales de ambas geodatabases, con hectáreas y porcentajes.</p></div></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Reglas generales de gestión</b><p>Lectura de artículos sobre planes parciales, renovación y vías de actuación.</p></div></div><div class="checkline"><span class="checkdot yes">✓</span><div><b>Cambio de perímetros 2014–2026</b><p>Calculado con perímetros urbanos y de expansión de ambas geodatabases. El mapa permite visualizar las diferencias.</p></div></div><div class="checkline"><span class="checkdot wait">·</span><div><b>Edificabilidad propuesta 2026</b><p>La fuente aportada contiene estructura de campos, pero no polígonos.</p></div></div></section>
+        
       </div>
-      <div class="home-risk-panel" id="home-risk-stats"></div><div class="section-heading"><div><span class="eyebrow">LECTURA CRÍTICA DEL MODELO</span><h3>Cuatro preguntas para evaluar el POT</h3></div></div>
+      <div class="section-heading"><div><span class="eyebrow">LECTURA CRÍTICA DEL MODELO</span><h3>Cuatro preguntas para evaluar el POT</h3></div></div>
       <div class="question-grid">
         <article class="question-card"><span>01 / CRECIMIENTO</span><h4>¿La ciudad crece hacia afuera o aprovecha su suelo urbano?</h4><p>Contrastar expansión, consolidación y renovación, sin suponer que más suelo disponible equivale a mejor acceso a vivienda y servicios.</p><button data-goto="mapa">Ver las capas territoriales →</button></article>
         <article class="question-card"><span>02 / DISTRIBUCIÓN</span><h4>¿Quién recibe derechos de construir y quién asume las cargas?</h4><p>Examinar la relación entre aprovechamientos, planes parciales, cesiones, incentivos y obligaciones públicas.</p><button data-goto="gestion">Estudiar gestión e incentivos →</button></article>
@@ -174,7 +174,7 @@ html[data-lab-font="manrope"] h1,html[data-lab-font="manrope"] h2,html[data-lab-
 
 <footer class="site-footer"><span>Observatorio ciudadano · V10.1 · Violeta cívico + Manrope · fuentes y limitaciones documentadas · noviembre de 2026</span><span>Datos: <a href="https://drive.google.com/drive/folders/1SA5nS9Rf-7zp8-j0Vf7KuEQotfKeEqG4" target="_blank" rel="noopener">POT 2014</a> · <a href="https://drive.google.com/drive/folders/1Sydz1ahyHOcWgw5WrFsMjUJkDCQZ85Fr" target="_blank" rel="noopener">propuesta POT 2026</a> · <a href="METODOLOGIA_COMPARACION.md">metodología</a></span></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="assets/app.js?v=11.5-no-redundancia"></script>
-<script src="assets/glosario.js?v=1.2"></script>
+<script src="assets/app.js?v=12.0-glosario"></script>
+<script src="assets/glosario.js?v=2.0-independiente"></script>
 </body>
 </html>
