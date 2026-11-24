@@ -29,7 +29,14 @@ def load(name, column, target):
     frame = gpd.read_file(DATA / INPUTS[name]).to_crs(CRS)
     if column not in frame:
         raise ValueError(f"Falta {column} en {name}")
-    frame = frame[[column, "geometry"]].rename(columns={column: target}).copy()
+    if name == "amenaza":
+        if "zacateg" not in frame:
+            raise ValueError("La capa amenaza no contiene zacateg")
+        # Fenómeno y nivel deben mantenerse como clases separadas.
+        frame[target] = frame[column].astype(str) + "|" + frame["zacateg"].astype(str)
+        frame = frame[[target, "geometry"]].copy()
+    else:
+        frame = frame[[column, "geometry"]].rename(columns={column: target}).copy()
     frame[target] = frame[target].astype(str)
     frame["geometry"] = frame.geometry.make_valid()
     frame = frame[~frame.geometry.is_empty & frame.geometry.notna()].copy()
