@@ -420,26 +420,71 @@ async function downloadBarrio(){
   line(pdf,14,268,'Categorías relacionadas con el barrio; verificar delimitación y artículo.',7.4,COLORS.muted);
   line(pdf,14,275,'No acredita permisos, exenciones ni derechos específicos por predio.',7.4,COLORS.muted);
   pdf.addPage();
-  // PÁGINA 5: financiación, incentivos, obligaciones y distinciones.
-  base(pdf,7,'07 / GESTIÓN E INCENTIVOS','¿Qué beneficios y cargas existen?','Instrumentos generales del POT; la ficha no acredita derechos o exenciones individuales.',p);
-  const tools=[
-    ['Edificabilidad adicional (ICA / ICP)','Índices que regulan mayor capacidad de construcción.','Planes parciales y de manzana pueden acceder bajo reglas y aportes distintos.','Propuesta 2026: arts. 616, 619 y 620.'],
-    ['Participación en plusvalía','La ciudad participa en el mayor valor que genera una decisión pública.','No equivale a un impuesto automático sobre todo predio del barrio.','Exige verificar hecho generador, exigibilidad y actos aplicables.'],
-    ['Cesiones y cargas urbanísticas','Suelo, espacio público y obras que aportan los proyectos.',(treatmentCodes.has('R2')?'R2: cesión del 12% de espacio público y 4% de área privada de vocación pública.':treatmentCodes.has('R1')?'R1: cesión del 10% de espacio público y 6% de área privada de vocación pública.':'Su alcance depende del tratamiento y del instrumento de actuación.'),'Propuesta art. 388: porcentajes sobre área neta urbanizable, según reglas.'],
-    ['Conservación y estímulos','Protección de inmuebles o sectores con valor cultural o contextual.','Los mecanismos de incentivo no se deducen del mapa ni son automáticos.','POT 2014: arts. 301-307; propuesta 2026: arts. 377-378.'],
-    ['Protección de moradores','Salvaguardas frente a impactos de proyectos de transformación.','Verificar condiciones de permanencia, retorno y actividad económica.','Requiere revisar actos, obligaciones y mecanismos concretos.']
+  // CAPÍTULO 07: cargas, beneficios y garantías con explicación para ciudadanía.
+  base(pdf,7,'07 / GESTIÓN E INCENTIVOS','¿Quién obtiene qué y bajo qué reglas?','La propuesta diferencia aprovechamientos, cargas y mecanismos de financiación.',p);
+  const benefits=[
+    {
+     title:'Edificabilidad adicional: ICA e ICP',
+     concept:'Son índices que regulan la construcción adicional a la edificabilidad básica.',
+     mechanism:'Los planes parciales y planes de manzana pueden tener formas distintas de acceso. El ICA y el ICP no implican idénticas contraprestaciones.',
+     check:'Verificar modalidad, índice aplicable, cesiones y aportes antes de concluir que hay mayor beneficio.',
+     source:'Proyecto POT 2026: arts. 616, 619 y 620.'
+    },
+    {
+     title:'Participación en plusvalía',
+     concept:'Instrumento mediante el cual la ciudad participa en incrementos de valor del suelo asociados a acciones urbanísticas.',
+     mechanism:'La modificación de usos o aprovechamientos puede configurar un hecho generador, pero no es equivalente a cobrar automáticamente por todo el barrio.',
+     check:'Debe identificarse hecho generador, efecto, régimen de exigibilidad y actos administrativos.',
+     source:'Requiere contraste con normativa distrital y régimen de plusvalía.'
+    },
+    {
+     title:'Cesiones, cargas y beneficios',
+     concept:'Contribuciones para suelo, vías, espacio público, equipamientos o infraestructuras vinculadas a una actuación.',
+     mechanism:(treatmentCodes.has('R2')?'El artículo 388 propone para R2 cesiones de 12% de espacio público y 4% de área privada de vocación pública, calculadas sobre el área neta urbanizable.':treatmentCodes.has('R1')?'El artículo 388 propone para R1 cesiones de 10% de espacio público y 6% de área privada de vocación pública, calculadas sobre el área neta urbanizable.':'Las obligaciones y bases de cálculo dependen del tratamiento, del instrumento y del ámbito delimitado.'),
+     check:'No sumar porcentajes de modalidades diferentes ni concluir exenciones generales.',
+     source:'Proyecto POT 2026: arts. 371-372, 388 y 616-620.'
+    },
+    {
+     title:'Conservación e incentivos',
+     concept:'La conservación regula intervenciones para proteger patrimonio construido y sectores de valor cultural o contextual.',
+     mechanism:'La posibilidad de incentivos depende de instrumentos y condiciones específicos; no todos los inmuebles reciben compensaciones.',
+     check:'Verificar declaratoria, delimitación, nivel de protección y régimen de intervención.',
+     source:'POT 2014: arts. 301-307; propuesta: arts. 377-378.'
+    },
+    {
+     title:'Moradores y actividades económicas',
+     concept:'Las transformaciones urbanas pueden generar impactos sobre hogares, arrendatarios, comercios y actividades existentes.',
+     mechanism:'Deben examinarse medidas de participación, permanencia, reasentamiento o retorno previstas en el instrumento aplicable.',
+     check:'No se ha acreditado un beneficio o garantía concreta para cada persona o predio.',
+     source:'Revisión pendiente de disposiciones y programas complementarios.'
+    }
   ];
-  let fy=79;
-  for(const [title,definition,meaning,ref] of tools){
-    fillColor(pdf,'#F2F3F8');pdf.roundedRect(14,fy-6,182,35,2,2,'F');
-    line(pdf,18,fy,title,8.9,COLORS.purple,true,174);
-    line(pdf,18,fy+7,definition,7.7,'#8993A1',false,174);
-    line(pdf,18,fy+14,meaning,7.5,COLORS.navy,false,174);
-    line(pdf,18,fy+22,ref,7,COLORS.muted,false,174);
-    fy+=37;
+  let benefitY=77;
+  for(const benefit of benefits){
+    const fields=[
+     [benefit.title,8.8,COLORS.purple,true],
+     [benefit.concept,8.2,COLORS.navy,false],
+     [benefit.mechanism,8.0,COLORS.navy,false],
+     [benefit.check,7.8,COLORS.muted,false],
+     [benefit.source,7.1,COLORS.purple,false]
+    ];
+    const heights=fields.map(([text,size])=>pdf.splitTextToSize(pdfText(text),171).length*(size*.365+1.7)+2);
+    const total=heights.reduce((a,b)=>a+b,0)+15;
+    if(benefitY+total>256){
+      line(pdf,14,274,'Continúa el análisis de cargas e incentivos en la página siguiente.',7.4,COLORS.muted);
+      pdf.addPage();
+      base(pdf,7,'07 / GESTIÓN E INCENTIVOS','Beneficios y cargas: continuación','Instrumentos con condiciones de aplicación, no derechos individuales.',p);
+      benefitY=77;
+    }
+    fillColor(pdf,'#F3F4F8');pdf.roundedRect(14,benefitY,182,total,3,3,'F');
+    let dy=benefitY+9;
+    for(const [value,size,color,bold] of fields){
+      dy=line(pdf,19,dy,value,size,color,bold,171)+2;
+    }
+    benefitY+=total+7;
   }
-  line(pdf,14,267,'ICA = Índice de Construcción Adicional; NO equivale al impuesto ICA.',8,COLORS.danger,true);
-  line(pdf,14,274,'No se calculan beneficios tributarios, avalúos ni plusvalía predial.',7.8,COLORS.muted);
+  line(pdf,14,268,'ICA significa Índice de Construcción Adicional, no el impuesto ICA.',7.8,COLORS.muted);
+  line(pdf,14,275,'La ficha no cuantifica plusvalía ni certifica beneficios tributarios.',7.8,COLORS.muted);
   pdf.addPage();
   // PÁGINA 6: cartografía de amenazas.
   base(pdf,8,'08 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
