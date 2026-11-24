@@ -81,7 +81,7 @@ function treatmentMeaning(from,to){
  const f=treatmentFamily(from), t=treatmentFamily(to);
  if(f==='renovacion'&&t==='renovacion')return 'El barrio sigue en una familia de renovación, pero cambian su modalidad y las formas de intervención que plantea la norma. El mismo código no conserva necesariamente las mismas reglas.';
  if(f==='consolidacion'&&t==='renovacion')return 'La propuesta traslada esta superficie de conservación o transformación gradual del tejido a una lógica de renovación. Deben examinarse densidad, instrumentos, cargas y protección a residentes.';
- if(f==='consolidacion'&&t==='desarrollo')return 'Parte del barrio cambia de consolidación a desarrollo. Conviene aclarar qué suelo se considera urbanizable y con qué obras, cesiones y procedimientos podría intervenirse.';
+ if(f==='consolidacion'&&t==='desarrollo')return 'Parte del barrio pasa de consolidación a desarrollo. Conviene aclarar qué suelo se considera urbanizable y con qué obras, cesiones y procedimientos podría intervenirse.';
  if(t==='conservacion')return 'La propuesta orienta esta superficie a protección patrimonial o contextual. Las intervenciones quedan sujetas a las reglas y delimitaciones específicas de conservación.';
  if(t==='mejoramiento')return 'La propuesta plantea cualificar el hábitat y los soportes urbanos. No se trata, por sí solo, de una autorización de mayor edificabilidad.';
  if(f===t)return 'Aunque conserve una familia o denominación semejante, deben compararse las definiciones y condiciones de ambos POT; la coincidencia cartográfica no prueba equivalencia jurídica.';
@@ -209,7 +209,7 @@ async function downloadBarrio(){
   base(pdf,2,'02 / TRANSFORMACIÓN NORMATIVA','¿Qué propone cambiar el POT?','La misma superficie del barrio, comparada entre la cartografía vigente y la propuesta.',p);
   line(pdf,14,76,'QUÉ ESTAMOS COMPARANDO',9.8,COLORS.purple,true);
   line(pdf,14,85,'Identificamos qué tratamiento tiene cada porción del barrio en 2014 y cuál',8.5,COLORS.navy);
-  line(pdf,14,91,'se le asigna en 2026. Cada cruce se mide en hectáreas de superficie.',8.5,COLORS.navy);
+  line(pdf,14,91,'se propone asignar en 2026. Cada cruce se mide en hectáreas de superficie.',8.5,COLORS.navy);
   const effectiveTrans=trans.filter(t=>Number.isFinite(t.ha)&&t.ha>=0.01);
   if(effectiveTrans.length){
     const lead=effectiveTrans[0],from=labelTreatment(lead.from,2014),to=labelTreatment(lead.to,2026);
@@ -400,11 +400,11 @@ async function downloadBarrio(){
   // PÁGINA 5: financiación, incentivos, obligaciones y distinciones.
   base(pdf,7,'07 / GESTIÓN E INCENTIVOS','¿Qué beneficios y cargas existen?','Instrumentos generales del POT; la ficha no acredita derechos o exenciones individuales.',p);
   const tools=[
-    ['Edificabilidad adicional (ICA / ICP)','Capacidad edificatoria adicional a la básica.','Acceso condicionado a reglas y contraprestaciones.','Propuesta 2026, arts. 371, 388 y 616-620.'],
-    ['Participación en plusvalía','Participación pública en incrementos de valor del suelo.','Exige verificar hecho generador y exigibilidad.','Verificar normativa y actos distritales aplicables.'],
-    ['Cesiones y cargas urbanísticas','Obligaciones para espacio público y soportes urbanos.','Se determinan según instrumento y actuación.','POT 2014 arts. 320-322; propuesta arts. 616-620.'],
-    ['Incentivos por conservación','Medidas para fomentar la protección patrimonial.','No se presume compensación ni beneficio automático.','POT 2014 arts. 301-307; propuesta arts. 377-378.'],
-    ['Protección de moradores','Medidas frente a impactos sobre residentes y actividades.','Verificar permanencia, retorno y garantías específicas.','Requiere revisión de normas e instrumentos aplicables.']
+    ['Edificabilidad adicional (ICA / ICP)','Índices que regulan mayor capacidad de construcción.','Planes parciales y de manzana pueden acceder bajo reglas y aportes distintos.','Propuesta 2026: arts. 616, 619 y 620.'],
+    ['Participación en plusvalía','La ciudad participa en el mayor valor que genera una decisión pública.','No equivale a un impuesto automático sobre todo predio del barrio.','Exige verificar hecho generador, exigibilidad y actos aplicables.'],
+    ['Cesiones y cargas urbanísticas','Suelo, espacio público y obras que aportan los proyectos.',`(treatmentCodes.has('R2')?'En R2: 12% espacio público y 4% área privada de vocación pública.':treatmentCodes.has('R1')?'En R1: 10% espacio público y 6% área privada de vocación pública.':'Su alcance depende del tratamiento y del instrumento de actuación.')`,'Propuesta 2026: arts. 371-372 y 388. Aplican bases y excepciones.'],
+    ['Conservación y estímulos','Protección de inmuebles o sectores con valor cultural o contextual.','Los mecanismos de incentivo no se deducen del mapa ni son automáticos.','POT 2014: arts. 301-307; propuesta 2026: arts. 377-378.'],
+    ['Protección de moradores','Salvaguardas frente a impactos de proyectos de transformación.','Verificar condiciones de permanencia, retorno y actividad económica.','Requiere revisar actos, obligaciones y mecanismos concretos.']
   ];
   let fy=79;
   for(const [title,definition,meaning,ref] of tools){
