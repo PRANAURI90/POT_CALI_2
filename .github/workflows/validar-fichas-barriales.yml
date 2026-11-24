@@ -30,3 +30,34 @@ jobs:
           assert 'ficha-download-btn' in css
           print('Integración estática y sintaxis: correcta')
           PY
+      - name: Instalar navegador de prueba
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Probar descarga real de PDF para barrio 1722
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/pot-server.log 2>&1 &
+          node - <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+            try{
+              const page=await browser.newPage({acceptDownloads:true});
+              page.setDefaultTimeout(45000);
+              page.on('console', msg=>{if(msg.type()==='error')console.log('NAVEGADOR:',msg.text())});
+              await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+              const button=page.locator('#download-barrio-pdf');
+              if(!(await button.isDisabled()))throw Error('El botón debe empezar desactivado');
+              await page.locator('#search').fill('Prados del Limonar');
+              await page.locator('#search-results button').first().click();
+              await button.waitFor({state:'visible'});
+              await page.waitForFunction(()=>!document.querySelector('#download-barrio-pdf').disabled);
+              const [file]=await Promise.all([page.waitForEvent('download',{timeout:150000}),button.click()]);
+              if(!file.suggestedFilename().includes('1722')||!file.suggestedFilename().endsWith('.pdf'))throw Error('Archivo PDF incorrecto: '+file.suggestedFilename());
+              await file.saveAs('/tmp/ficha_descargada_1722.pdf');
+              const fs=require('fs');const data=fs.readFileSync('/tmp/ficha_descargada_1722.pdf');
+              if(data.length<10000||data.subarray(0,4).toString()!=='%PDF')throw Error('PDF incompleto');
+              console.log('Descarga funcional OK:',file.suggestedFilename(),'bytes:',data.length);
+            }finally{await browser.close();}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
