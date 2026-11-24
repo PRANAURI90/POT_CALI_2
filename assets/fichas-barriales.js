@@ -309,18 +309,11 @@ async function downloadBarrio(){
   const prev26=entriesFor(info,'planes_previos2026').length?entriesFor(info,'planes_previos2026'):entriesFor(info,'planes_previos');
   const instruments26=entriesFor(info,'instrumentos2026').length?entriesFor(info,'instrumentos2026'):entriesFor(info,'instrumentos');
   const treat26Raw=info?.capas?.tratamientos2026?.categorias||[];
-  const treatmentCodes=new Set(treat26Raw.map(v=>{
-    const orig=String(v.codigo_original??v.codigo??v.atributos?.CODIGO??'').trim();
-    return ({'1':'CSU','2':'CTL','3':'C1','4':'C2','5':'C3','6':'C4','7':'D1','8':'D2','9':'MI','10':'R1','11':'R2'})[orig]||orig;
-  }));
-  for(const t of tr26){
-    if(/renovaci[oó]n|redensificaci[oó]n/i.test(t.name)){
-      if(/alta|R1/i.test(t.name))treatmentCodes.add('R1');
-      if(/media|R2/i.test(t.name))treatmentCodes.add('R2');
-    }
-    if(/desarrollo urbano|D2/i.test(t.name))treatmentCodes.add('D2');
-    if(/conservaci[oó]n/i.test(t.name))treatmentCodes.add('CON');
-  }
+  // Usar la misma homologación que el visor y descartar coincidencias residuales.
+  // No activar reglas por texto ni por una categoría con área cero.
+  const treatmentCodes=new Set(treat26Raw.filter(v=>Number(v.hectareas)>=.03).map(v=>
+    typeof asCode==='function'?asCode(v,2026):String(v.codigo_original??v.codigo??'')
+  ).filter(Boolean));
   const urbanRenew=treatmentCodes.has('R1')||treatmentCodes.has('R2');
   const development=treatmentCodes.has('D1')||treatmentCodes.has('D2');
   const conservation=treatmentCodes.has('CSU')||treatmentCodes.has('CTL')||treatmentCodes.has('CON');
@@ -332,29 +325,48 @@ async function downloadBarrio(){
     ['Planes parciales propuesta 2026',plans26],
     ['Instrumentos preexistentes 2026',prev26],
     ['Otros instrumentos delimitados 2026',instruments26]
-  ];
-  for(const [name,rows] of planLayers){
-    line(pdf,16,gy,name,8.6,COLORS.navy,true,138);
-    pdf.setFont('helvetica','bold');pdf.setFontSize(8.4);changeColor(pdf,COLORS.purple);
-    pdf.text(rows.length?ha(rows.reduce((v,r)=>v+r.ha,0)):'Sin cruce registrado',194,gy,{align:'right'});
-    gy+=18;
+  ].filter(([,rows])=>rows.length>0);
+  if(planLayers.length){
+    for(const [label,rows] of planLayers){
+      line(pdf,16,gy,label,8.7,COLORS.navy,true,139);
+      pdf.setFont('helvetica','bold');pdf.setFontSize(8.4);changeColor(pdf,COLORS.purple);
+      pdf.text(ha(rows.reduce((v,r)=>v+r.ha,0)),194,gy,{align:'right'});
+      gy+=20;
+    }
+    line(pdf,14,gy+2,'Superficies por categoría: pueden solaparse y no son área única.',7.6,COLORS.muted);
+  }else{
+    fillColor(pdf,'#F2F5F7');pdf.roundedRect(14,85,182,42,3,3,'F');
+    line(pdf,19,96,'Sin intersecciones registradas con instrumentos delimitados.',9.1,COLORS.navy,true,173);
+    line(pdf,19,108,'Esto no elimina reglas de gestión asociadas al tratamiento.',8,COLORS.muted,false,173);
   }
-  line(pdf,14,163,'Las superficies se suman por categoría y pueden solaparse; no son área única.',7.4,COLORS.muted);
-  line(pdf,14,170,'PROCEDIMIENTOS QUE PODRÍAN SER PERTINENTES',9.7,COLORS.purple,true);
-  let iy=181;
-  const candidates=[
-    ['Plan parcial','Ordena un ámbito de urbanización o renovación.','Debe verificarse su exigencia, delimitación y vigencia.'],
-    ['Plan de manzana','Instrumento para intervenir una manzana o agrupación.','Su procedencia depende del tratamiento y del área.'],
-    ['Actuación individual','Intervención tramitada sobre predio o agrupación.','Exige cumplir aprovechamientos y cargas aplicables.'],
-    ['Conservación','Régimen de protección del patrimonio o del contexto.','Aplicación según declaratoria, delimitación y normas.']
-  ];
-  for(const [title,definition,detail] of candidates){
-    line(pdf,16,iy,title,8.5,COLORS.navy,true,175);
-    line(pdf,16,iy+5,definition,7.1,'#8993A1',false,175);
-    line(pdf,16,iy+11,detail,7.2,COLORS.muted,false,175);
-    iy+=21;
+  const candidates=[];
+  if(urbanRenew||development){
+    candidates.push(['Plan parcial','Organiza actuaciones urbanísticas en ámbitos definidos.','Procedencia: ver las condiciones del tratamiento y la delimitación.']);
   }
-  line(pdf,14,268,'Refs.: Acuerdo 0373/2014 arts. 313-325; propuesta 2026 arts. 379-388 y 615.',7.2,COLORS.muted);
+  if(urbanRenew){
+    candidates.push(['Plan de manzana','Organiza intervenciones de renovación en una manzana.','Requiere dimensión y condiciones normativas específicas.']);
+  }
+  if(urbanRenew||development){
+    candidates.push(['Actuación individual o licencia','Vía de intervención para ciertos predios o agrupaciones.','Su posibilidad depende de la modalidad de tratamiento y sus cargas.']);
+  }
+  if(treatmentCodes.has('MI'))candidates.push(['Plan de Gestión del Hábitat','Coordina actuaciones públicas de mejoramiento integral.','No es equivalente a un plan parcial de renovación.']);
+  if(conservation)candidates.push(['Conservación','Protección patrimonial y contextual.','Debe identificarse modalidad de conservación y régimen especial.']);
+  let iy=Math.max(gy+23,146);
+  line(pdf,14,iy,'REGLAS ASOCIADAS A LOS TRATAMIENTOS PRESENTES',9.4,COLORS.purple,true);
+  iy+=13;
+  if(candidates.length){
+    for(const [title,definition,detail] of candidates){
+      if(iy>241)break;
+      line(pdf,16,iy,title,8.5,COLORS.navy,true,174);
+      line(pdf,16,iy+6,definition,7.2,'#8993A1',false,175);
+      line(pdf,16,iy+13,detail,7.3,COLORS.muted,false,175);
+      iy+=25;
+    }
+  }else{
+    line(pdf,16,iy,'Sin modalidad particular identificada en la síntesis.',8.6,COLORS.muted,false,174);
+  }
+  line(pdf,14,267,'Estas son reglas vinculadas a tratamientos, NO planes delimitados aquí.',7.6,COLORS.muted);
+  line(pdf,14,274,'Detalles, superficies y artículos específicos en el capítulo siguiente.',7.5,COLORS.muted);
   pdf.addPage();
   // PÁGINA 6: reglas e instrumentos concretos asociados al tratamiento cartografiado.
   base(pdf,6,'06 / INSTRUMENTOS CONCRETOS','¿Qué procedimiento podría aplicar?','Las opciones dependen del tratamiento y de las condiciones específicas del ámbito.',p);
