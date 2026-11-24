@@ -97,6 +97,9 @@ jobs:
           assert 'INUNDACIÓN' in txt and 'Alta' in txt, 'No se imprimieron los indicadores de inundación'
           assert 'GESTIÓN' in pdf[3].get_text(), 'Falta capítulo de gestión'
           assert 'plusvalía' in pdf[4].get_text().lower(), 'Falta instrumento de plusvalía'
+          assert 'EXTENSIÓN DEL BARRIO' in pdf[0].get_text(), 'Falta extensión cartográfica en cabecera'
+          assert 'Capacidad edificatoria adicional' in pdf[4].get_text(), 'Falta definición pedagógica del incentivo'
+          assert 'Ordena un ámbito' in pdf[3].get_text(), 'Falta definición pedagógica del plan parcial'
           transition=pdf[1].get_text()
           assert 'POT 2014:' in transition and 'Propuesta 2026:' in transition, 'No se identifica origen y destino de transición'
           assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transiciones'
