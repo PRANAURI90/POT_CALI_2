@@ -204,6 +204,11 @@ async function downloadBarrio(){
   // Se calculan amenazas reales del barrio seleccionado; un fallo no se convierte en cero.
   let threat=null,threatError=null;
   try{threat=await getThreat(barrio)}catch(err){threatError=String(err.message||err)}
+  let conditionRisk=null,conditionRiskError=null;
+  try{
+    const cr=await barrioRiskIntersect(barrio,'condicion_riesgo');
+    conditionRisk={rows:cr.rows||[],errors:Number(cr.errors||0)};
+  }catch(err){conditionRiskError=String(err.message||err)}
   const pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
   pdf.setProperties({title:'Ficha barrial '+name+' ('+code+') · Observatorio POT Cali',subject:'Análisis territorial exploratorio y comparación normativa 2014–2026',creator:'Observatorio ciudadano POT Cali'});
   const tr14=entriesFor(info,'tratamientos2014'),tr26=entriesFor(info,'tratamientos2026');
@@ -625,25 +630,39 @@ async function downloadBarrio(){
   line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
   pdf.addPage();
   }
-  // PÁGINA 4
-  base(pdf,9,'09 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
-  if(!noHazardIntersection)line(pdf,14,75,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA ORIENTATIVA',10,COLORS.purple,true);
+  // Síntesis de condición de riesgo, distinta de zonificación de amenaza.
+  base(pdf,9,'09 / RIESGO Y GESTIÓN','Condición de riesgo y microzonificación','Lecturas cartográficas diferenciadas; no son diagnóstico predial.',p);
   const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
-  if(noHazardIntersection){
-    fillColor(pdf,'#EDF3F4');pdf.roundedRect(14,84,182,43,3,3,'F');
-    line(pdf,19,96,'AMENAZAS · SIN INTERSECCIONES DETECTABLES',9,COLORS.navy,true,170);
-    line(pdf,19,106,'Inundación, movimientos en masa y avenidas torrenciales:',8.2,COLORS.navy,false,169);
-    line(pdf,19,115,'sin cruces a partir de 0,01 ha en el GeoJSON consultado.',8.2,COLORS.muted,false,169);
-    line(pdf,14,139,'No certifica ausencia de peligro ni reemplaza estudios de riesgo.',8,COLORS.muted,false,180);
+  const riskRows=conditionRisk?.rows||[];
+  fillColor(pdf,'#EEF3F5');pdf.roundedRect(14,75,182,67,3,3,'F');
+  line(pdf,19,86,'CONDICIÓN DE RIESGO · PROPUESTA 2026',9.2,COLORS.purple,true,171);
+  if(conditionRisk&&conditionRisk.errors===0&&riskRows.length===0){
+    line(pdf,19,98,'Sin intersecciones detectables con la capa consultada.',8.5,COLORS.navy,false,170);
+  }else if(conditionRisk&&riskRows.length){
+    line(pdf,19,98,'Se identificaron '+riskRows.length+' categorías con intersección.',8.4,COLORS.navy,false,170);
+    const top=riskRows.slice().sort((a,b)=>b.ha-a.ha)[0];
+    line(pdf,19,110,'Mayor categoría: '+pdfText(top.label||top.cat||'Sin etiqueta')+'.',8,COLORS.navy,false,170);
+    line(pdf,19,120,ha(top.ha)+' ('+pct(top.pct)+' del barrio).',8,COLORS.navy,true,170);
+  }else{
+    line(pdf,19,98,'Cruce no verificable con la información disponible.',8.5,COLORS.danger,false,170);
   }
-  let my=noHazardIntersection?157:87;
-  if(micro.length){
-   if(noHazardIntersection)line(pdf,14,150,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA APROXIMADA',9,COLORS.purple,true);
-   const mx=Math.max(1,...micro.map(z=>Number(z.hectareas||0)));
-   for(const z of micro.slice(0,noHazardIntersection?1:4)){
-    my=bar(pdf,18,my,'Zona '+z.zona+' · '+pct(z.porcentaje_barrio),Number(z.hectareas),mx,COLORS.purple,174)+2;
-   }
-  } else my=line(pdf,18,my,'Sin intersecciones disponibles en la digitalización consultada.',9,COLORS.muted);
+  if(conditionRisk?.errors)line(pdf,19,130,'Advertencia: '+conditionRisk.errors+' geometrías no procesadas.',7.3,COLORS.danger,false,170);
+  else line(pdf,19,132,'Una no intersección no equivale a ausencia de riesgo.',7.4,COLORS.muted,false,170);
+  if(noHazardIntersection){
+    line(pdf,14,156,'AMENAZAS · SIN INTERSECCIONES DETECTABLES',9,COLORS.purple,true,180);
+    line(pdf,14,166,'Inundación, masa y avenidas torrenciales: sin cruce >= 0,01 ha.',8,COLORS.navy,false,180);
+    line(pdf,14,175,'Resultado exploratorio; no certifica ausencia de peligro.',7.6,COLORS.muted,false,180);
+  }
+  if(micro.length&&!noHazardIntersection){
+    line(pdf,14,152,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA APROXIMADA',9,COLORS.purple,true);
+    const mx=Math.max(1,...micro.map(z=>Number(z.hectareas||0)));
+    let my=162;
+    for(const z of micro.slice(0,1))my=bar(pdf,18,my,'Zona '+z.zona+' · '+pct(z.porcentaje_barrio),Number(z.hectareas),mx,COLORS.purple,174)+2;
+  }else if(micro.length){
+    line(pdf,14,187,'Microzonificación: disponible como referencia aproximada.',7.4,COLORS.muted,false,180);
+  }else if(!noHazardIntersection){
+    line(pdf,14,162,'Microzonificación sísmica sin dato barrial verificable.',8,COLORS.muted,false,180);
+  }
   line(pdf,14,197,'PREGUNTAS DE SEGUIMIENTO TERRITORIAL',10.5,COLORS.purple,true);
   let qY=208;for(const q of [
    '¿Qué actuaciones admite cada tratamiento propuesto?',
