@@ -18,7 +18,7 @@ const pct=v=>num(v,1)+' %';
 const safe=(s)=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
 // Limpieza de codificaciones de capas GIS y tipografía compatible con Helvetica PDF.
 function pdfText(value){
- let s=String(value??'').replace(/[\u0000-\u001F\u007F]/g,' ').replace(/[\u200B-\u200F\uFEFF]/g,'').normalize('NFC');
+ let s=String(value??'').replace(/\u0000/g,'').replace(/[\u0001-\u001F\u007F]/g,' ').replace(/[\u200B-\u200F\uFEFF]/g,'').normalize('NFC');
  // Los caracteres no soportados por la codificación base de jsPDF se escriben como ASCII.
  return s.replace(/[‐‑–—]/g,'-').replace(/[→➜]/g,' a ').replace(/\s+/g,' ').trim();
 }
@@ -233,8 +233,8 @@ async function downloadBarrio(){
   // PÁGINA 4: instrumentos de gestión. Diferenciar coincidencia cartográfica de reglas generales.
   const plans14=entriesFor(info,'planes2014');
   const plans26=entriesFor(info,'planes2026');
-  const prev26=entriesFor(info,'planes_previos2026');
-  const instruments26=entriesFor(info,'instrumentos2026');
+  const prev26=entriesFor(info,'planes_previos2026').length?entriesFor(info,'planes_previos2026'):entriesFor(info,'planes_previos');
+  const instruments26=entriesFor(info,'instrumentos2026').length?entriesFor(info,'instrumentos2026'):entriesFor(info,'instrumentos');
   const treat26Raw=info?.capas?.tratamientos2026?.categorias||[];
   const treatmentCodes=new Set(treat26Raw.map(v=>{
     const orig=String(v.codigo_original??v.codigo??v.atributos?.CODIGO??'').trim();
