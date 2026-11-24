@@ -112,10 +112,10 @@ async function downloadBarrio(){
   base(pdf,1,'01 / PERFIL TERRITORIAL','Ficha barrial · '+name,'Comuna '+p.comuna+' · código '+code+' · análisis sobre la cartografía del Observatorio',p);
   fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,67,182,20,3,3,'F');
   line(pdf,19,76,'¿QUÉ DICE LA CARTOGRAFÍA SOBRE ESTE TERRITORIO?',10,COLORS.navy,true);
-  line(pdf,14,99,'TRATAMIENTOS · POT 2014',11,COLORS.purple,true);
+  line(pdf,14,99,'PRINCIPALES TRATAMIENTOS · POT 2014',11,COLORS.purple,true);
   let y=108;y=drawCategories(pdf,17,y,tr14,3,176,COLORS.green);
   if(y>177){y=178}
-  line(pdf,14,184,'TRATAMIENTOS · PROPUESTA 2026',11,COLORS.purple,true);
+  line(pdf,14,184,'PRINCIPALES TRATAMIENTOS · PROPUESTA 2026',11,COLORS.purple,true);
   y=193;drawCategories(pdf,17,y,tr26,4,176,COLORS.pink);
   line(pdf,14,274,'Superficies por categoría: no equivalen a derechos prediales ni licencias.',7.2,COLORS.muted);
   pdf.addPage();
@@ -124,7 +124,7 @@ async function downloadBarrio(){
   line(pdf,14,74,'PRINCIPALES TRANSICIONES DE TRATAMIENTO',10.5,COLORS.purple,true);
   let tY=84;const maxT=Math.max(1,...trans.map(r=>r.ha));
   for(const t of trans.slice(0,5)){tY=bar(pdf,17,tY,t.from+' → '+t.to,t.ha,maxT,COLORS.pink,174)+2;}
-  line(pdf,14,193,'ÁREAS DE ACTIVIDAD · PROPUESTA 2026',10.5,COLORS.purple,true);
+  line(pdf,14,193,'PRINCIPALES ÁREAS DE ACTIVIDAD · PROPUESTA 2026',10.5,COLORS.purple,true);
   drawCategories(pdf,17,202,ac26,3,174,COLORS.orange);
   line(pdf,14,266,'Los nombres de área no autorizan automáticamente comercio ni servicios.',8,COLORS.muted);
   line(pdf,14,273,'Aplican la matriz de actividades, el articulado y las condiciones del predio.',8,COLORS.muted);
@@ -179,15 +179,15 @@ async function downloadBarrio(){
   } else my=line(pdf,18,my,'Sin intersecciones disponibles en la digitalización consultada.',9,COLORS.muted);
   line(pdf,14,197,'PREGUNTAS DE SEGUIMIENTO TERRITORIAL',10.5,COLORS.purple,true);
   let qY=208;for(const q of [
-   '¿Qué actuaciones urbanísticas admite cada tratamiento propuesto?',
-   '¿Qué instrumentos, cargas y protección a moradores corresponden?',
-   '¿Qué estudios y obras se requieren para gestionar las amenazas?']){
-    qY=line(pdf,18,qY,'• '+q,9,COLORS.navy,false,174)+8;
+   '¿Qué actuaciones admite cada tratamiento propuesto?',
+   '¿Qué cargas e instrumentos protegen a moradores?',
+   '¿Qué estudios y obras se requieren ante las amenazas?']){
+    qY=line(pdf,18,qY,'- '+q,9,COLORS.navy,false,174)+8;
   }
-  line(pdf,14,248,'ALCANCE Y FUENTES',9.5,COLORS.purple,true);
-  line(pdf,14,257,'Acuerdo 0373 de 2014 · Proyecto de Acuerdo POT 2026',8,COLORS.navy,false,180);
-  line(pdf,14,265,'Datos: resumen_barrios.json, transiciones y GeoJSON de la plataforma.',8,COLORS.navy,false,180);
-  line(pdf,14,273,'Microzonas digitalizadas aproximadas; no certifican riesgo ni diseño sísmico.',7.6,COLORS.muted,false,184);
+  line(pdf,14,253,'ALCANCE Y FUENTES',9.5,COLORS.purple,true);
+  line(pdf,14,261,'Acuerdo 0373 de 2014 · Proyecto de Acuerdo POT 2026',8,COLORS.navy,false,180);
+  line(pdf,14,268,'Datos: resumen_barrios.json, transiciones y GeoJSON de la plataforma.',8,COLORS.navy,false,180);
+  line(pdf,14,275,'Microzonas digitalizadas aproximadas; no certifican riesgo ni diseño sísmico.',7.6,COLORS.muted,false,184);
   pdf.save('Ficha_barrial_'+safe(name)+'_'+safe(code)+'_POT_Cali.pdf');
   if(message)message.textContent='Ficha PDF generada para '+name+'.';
  }catch(e){
