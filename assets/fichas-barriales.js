@@ -69,6 +69,7 @@ function base(pdf,n,k,title,sub,selected){
  fillColor(pdf,COLORS.purple);pdf.rect(0,0,4,27,'F');
  line(pdf,14,10,'CALI, ¿QUÉ CAMBIA EN MI TERRITORIO?',11,'#FFFFFF',true);
  line(pdf,14,17,'OBSERVATORIO CIUDADANO DEL ORDENAMIENTO TERRITORIAL',7.5,'#E4E0F5');
+ if(Number.isFinite(selected?.fichaAreaHa)&&selected.fichaAreaHa>0)line(pdf,14,24,'BARRIO '+pdfText(selected.barrio)+'  |  COMUNA '+pdfText(selected.comuna)+'  |  EXTENSIÓN CARTOGRÁFICA '+ha(selected.fichaAreaHa),7,'#DCD7F1',false,185);
  line(pdf,14,39,k,8,COLORS.purple,true);
  const size=pdfText(title).length>49?13:pdfText(title).length>35?15:18;
  line(pdf,14,49,title,size,COLORS.navy,true,184);
@@ -146,7 +147,8 @@ async function downloadBarrio(){
   const tr14=entriesFor(info,'tratamientos2014'),tr26=entriesFor(info,'tratamientos2026');
   const ac14=entriesFor(info,'actividad2014'),ac26=entriesFor(info,'actividad2026');
   const trans=(info?.transiciones_tratamiento||[]).map(x=>({from:String(x.desde),to:String(x.hacia),ha:Number(x.hectareas||0)})).sort((a,b)=>b.ha-a.ha);
-  const area=Number(threat?.bArea||info?.area_barrio_ha||0);
+  const area=window.turf?.area?window.turf.area(barrio)/10000:Number(threat?.bArea||info?.area_barrio_ha||0);
+  p.fichaAreaHa=area;
   // PÁGINA 1: tratamientos por período, lectura con fuentes y códigos.
   base(pdf,1,'01 / PERFIL TERRITORIAL','Ficha territorial - '+name,'Comuna '+p.comuna+' - código '+code+' - cartografía del Observatorio',p);
   fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,69,182,24,3,3,'F');
@@ -232,38 +234,35 @@ async function downloadBarrio(){
   line(pdf,14,170,'PROCEDIMIENTOS QUE PODRÍAN SER PERTINENTES',9.7,COLORS.purple,true);
   let iy=181;
   const candidates=[
-    ['Plan parcial',urbanRenew||development?'Examinar obligación o modalidad, según ámbito y suelo.':'Requiere delimitación y supuesto normativo específico.'],
-    ['Plan de manzana',urbanRenew?'Propuesto para determinadas actuaciones de renovación.':'No inferir aplicación al barrio sin ámbito y condiciones.'],
-    ['Actuación individual / agrupación','La posibilidad depende del tratamiento, área y cargas aplicables.'],
-    ['Conservación',conservation?'Se intersecta tratamiento de conservación: revisar protección.':'No hay tratamiento de conservación identificado en esta síntesis.']
+    ['Plan parcial','Ordena un ámbito de urbanización o renovación.','Debe verificarse su exigencia, delimitación y vigencia.'],
+    ['Plan de manzana','Instrumento para intervenir una manzana o agrupación.','Su procedencia depende del tratamiento y del área.'],
+    ['Actuación individual','Intervención tramitada sobre predio o agrupación.','Exige cumplir aprovechamientos y cargas aplicables.'],
+    ['Conservación','Régimen de protección del patrimonio o del contexto.','Aplicación según declaratoria, delimitación y normas.']
   ];
-  for(const [title,detail] of candidates){
-    line(pdf,16,iy,title,8.9,COLORS.navy,true,177);
-    const bottom=line(pdf,16,iy+6,detail,7.6,COLORS.muted,false,177);
-    iy=Math.max(iy+19,bottom+5);
+  for(const [title,definition,detail] of candidates){
+    line(pdf,16,iy,title,8.5,COLORS.navy,true,175);
+    line(pdf,16,iy+5,definition,7.1,'#8993A1',false,175);
+    line(pdf,16,iy+11,detail,7.2,COLORS.muted,false,175);
+    iy+=21;
   }
   line(pdf,14,268,'Refs.: Acuerdo 0373/2014 arts. 313-325; propuesta 2026 arts. 379-388 y 615.',7.2,COLORS.muted);
   pdf.addPage();
   // PÁGINA 5: financiación, incentivos, obligaciones y distinciones.
   base(pdf,5,'05 / GESTIÓN E INCENTIVOS','¿Qué beneficios y cargas existen?','Instrumentos generales del POT; la ficha no acredita derechos o exenciones individuales.',p);
   const tools=[
-    ['Edificabilidad adicional (ICA / ICP)','Puede depender de tratamiento, modalidad y cumplimiento de cargas.',
-      'Propuesta 2026: arts. 371, 388 y 616-620.'],
-    ['Participación en plusvalía','Se examinan hechos generadores y exigibilidad; no se presume cobro ni exención.',
-      'Contrastar régimen de plusvalía y decisiones distritales.'],
-    ['Cesiones y cargas urbanísticas','Espacio público, servicios e infraestructura según actuación e instrumento.',
-      'POT 2014 arts. 320-322; propuesta 2026 arts. 616-620.'],
-    ['Incentivos por conservación','Verificar mecanismos de preservación y compensación según ámbito patrimonial.',
-      'POT 2014 arts. 301-307; propuesta 2026 arts. 377-378.'],
-    ['Moradores y actividad económica','Verificar medidas de permanencia, participación, retorno y mitigación social.',
-      'Condiciones concretas y reglamentación pendientes de contrastar.']
+    ['Edificabilidad adicional (ICA / ICP)','Capacidad edificatoria adicional a la básica.','Acceso condicionado a reglas y contraprestaciones.','Propuesta 2026, arts. 371, 388 y 616-620.'],
+    ['Participación en plusvalía','Participación pública en incrementos de valor del suelo.','Exige verificar hecho generador y exigibilidad.','Verificar normativa y actos distritales aplicables.'],
+    ['Cesiones y cargas urbanísticas','Obligaciones para espacio público y soportes urbanos.','Se determinan según instrumento y actuación.','POT 2014 arts. 320-322; propuesta arts. 616-620.'],
+    ['Incentivos por conservación','Medidas para fomentar la protección patrimonial.','No se presume compensación ni beneficio automático.','POT 2014 arts. 301-307; propuesta arts. 377-378.'],
+    ['Protección de moradores','Medidas frente a impactos sobre residentes y actividades.','Verificar permanencia, retorno y garantías específicas.','Requiere revisión de normas e instrumentos aplicables.']
   ];
   let fy=79;
-  for(const [title,meaning,ref] of tools){
-    fillColor(pdf,'#F2F3F8');pdf.roundedRect(14,fy-6,182,32,2,2,'F');
-    line(pdf,18,fy,title,9.1,COLORS.purple,true,173);
-    line(pdf,18,fy+8,meaning,8,COLORS.navy,false,173);
-    line(pdf,18,fy+19,ref,7,COLORS.muted,false,173);
+  for(const [title,definition,meaning,ref] of tools){
+    fillColor(pdf,'#F2F3F8');pdf.roundedRect(14,fy-6,182,35,2,2,'F');
+    line(pdf,18,fy,title,8.9,COLORS.purple,true,174);
+    line(pdf,18,fy+7,definition,7.7,'#8993A1',false,174);
+    line(pdf,18,fy+14,meaning,7.5,COLORS.navy,false,174);
+    line(pdf,18,fy+22,ref,7,COLORS.muted,false,174);
     fy+=37;
   }
   line(pdf,14,267,'ICA = Índice de Construcción Adicional; NO equivale al impuesto ICA.',8,COLORS.danger,true);
