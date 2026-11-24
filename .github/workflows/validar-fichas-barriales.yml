@@ -98,7 +98,7 @@ jobs:
           assert 'GESTIÓN' in pdf[4].get_text(), 'Falta capítulo de gestión'
           assert 'plusvalía' in pdf[6].get_text().lower(), 'Falta instrumento de plusvalía'
           assert 'EXTENSIÓN DEL BARRIO' in pdf[0].get_text(), 'Falta extensión cartográfica en cabecera'
-          assert 'Capacidad edificatoria adicional' in pdf[6].get_text(), 'Falta definición pedagógica del incentivo'
+          assert 'mayor capacidad de construcción' in pdf[6].get_text(), 'Falta definición pedagógica del incentivo'
           assert 'Ordena un ámbito' in pdf[4].get_text(), 'Falta definición pedagógica del plan parcial'
           barrio1113=fitz.open('/tmp/ficha_1113.pdf')
           t1113=barrio1113[1].get_text()
