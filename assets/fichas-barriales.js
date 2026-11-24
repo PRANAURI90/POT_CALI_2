@@ -536,10 +536,10 @@ async function downloadBarrio(){
   // No mostrar incentivos que no están vinculados al tratamiento.
   // La plusvalía se menciona como posible hecho generador sólo si hay
   // transformación normativa y un tratamiento de urbanización/renovación.
-  const activityChange=trans.some(t=>Number.isFinite(t.ha)&&t.ha>=.03&&pdfText(t.from)!==pdfText(t.to));
+  // Cambiar tratamiento no demuestra por sí solo un hecho generador de plusvalía.
   const benefitAllowed=(item)=>{
     if(item.title.startsWith('Edificabilidad'))return urbanRenew||development;
-    if(item.title.startsWith('Participación'))return (urbanRenew||development)&&activityChange;
+    if(item.title.startsWith('Participación'))return entriesFor(info,'plusvalia2026').length>0; // Sin delimitación o hecho generador sustentado, no atribuir plusvalía.
     if(item.title.startsWith('Cesiones'))return urbanRenew||development;
     if(item.title.startsWith('Conservación'))return conservation;
     if(item.title.startsWith('Moradores'))return urbanRenew;
@@ -576,8 +576,8 @@ async function downloadBarrio(){
     }
     benefitY+=total+7;
   }
-  line(pdf,14,268,'ICA significa Índice de Construcción Adicional, no el impuesto ICA.',7.8,COLORS.muted);
-  line(pdf,14,275,'La ficha no cuantifica plusvalía ni certifica beneficios tributarios.',7.8,COLORS.muted);
+  line(pdf,14,268,'Plusvalía: no se atribuye sin evidencia de hecho generador y exigibilidad.',7.5,COLORS.muted);
+  line(pdf,14,275,'ICA = Índice de Construcción Adicional; no es el impuesto ICA.',7.8,COLORS.muted);
   pdf.addPage();
   // Si el cálculo terminó sin errores ni intersecciones, evitar tres mapas vacíos.
   const noHazardIntersection=!!threat&&threat.rows.length===0&&Number(threat.errors||0)===0;
