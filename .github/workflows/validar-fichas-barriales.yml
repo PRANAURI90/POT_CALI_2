@@ -55,7 +55,7 @@ jobs:
               console.log('BARRIOS A PROBAR',JSON.stringify(cases));
               const errors=[];
               for(const t of cases){
-                await page.evaluate(code=>{const f=state.barrios.find(b=>String(b.properties.codigo)===code);setSelected(f,null,false)},t.codigo);
+                await page.evaluate(code=>{const f=state.barrios.find(b=>String(b.properties.codigo)===code);setSelected(f,null,false);pageTo('mapa',false)},t.codigo);
                 const btn=page.locator('#download-barrio-pdf');
                 const dl=page.waitForEvent('download',{timeout:90000}).then(x=>x).catch(e=>null);
                 await btn.click();
