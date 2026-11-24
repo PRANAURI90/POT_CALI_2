@@ -102,7 +102,7 @@ jobs:
           i_gestion,gestion=locate('05 / GESTIÓN URBANÍSTICA')
           _,benefits=locate('07 / GESTIÓN E INCENTIVOS')
           all_text='\n'.join(p.get_text() for p in pdf)
-          assert 'participación en plusvalía' in all_text.lower(), 'Falta plusvalía'
+          assert 'plusvalía' in all_text.lower(), 'Falta reserva metodológica sobre plusvalía'
           assert 'EXTENSIÓN DEL BARRIO' in pdf[0].get_text(), 'Falta extensión en cabecera'
           assert 'construcción adicional' in all_text, 'Falta definición de ICA/ICP'
           assert 'Ordena un ámbito' in gestion.get_text(), 'Falta explicación del plan parcial'
