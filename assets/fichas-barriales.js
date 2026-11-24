@@ -80,7 +80,7 @@ function treatmentFamily(value){
 function treatmentMeaning(from,to){
  const f=treatmentFamily(from), t=treatmentFamily(to);
  if(f==='renovacion'&&t==='renovacion')return 'El barrio sigue en una familia de renovación, pero cambian su modalidad y las formas de intervención que plantea la norma. El mismo código no conserva necesariamente las mismas reglas.';
- if(f==='consolidacion'&&t==='renovacion')return 'La propuesta traslada esta superficie de conservación o transformación gradual del tejido a una lógica de renovación. Deben examinarse densidad, instrumentos, cargas y protección a residentes.';
+ if(f==='consolidacion'&&t==='renovacion')return 'La propuesta cambia esta superficie de un tratamiento de consolidación del tejido urbano a uno de renovación. Deben examinarse densidad, instrumentos, cargas y protección a residentes.';
  if(f==='consolidacion'&&t==='desarrollo')return 'Parte del barrio pasa de consolidación a desarrollo. Conviene aclarar qué suelo se considera urbanizable y con qué obras, cesiones y procedimientos podría intervenirse.';
  if(t==='conservacion')return 'La propuesta orienta esta superficie a protección patrimonial o contextual. Las intervenciones quedan sujetas a las reglas y delimitaciones específicas de conservación.';
  if(t==='mejoramiento')return 'La propuesta plantea cualificar el hábitat y los soportes urbanos. No se trata, por sí solo, de una autorización de mayor edificabilidad.';
