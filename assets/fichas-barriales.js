@@ -148,7 +148,7 @@ async function downloadBarrio(){
   const trans=(info?.transiciones_tratamiento||[]).map(x=>({from:String(x.desde),to:String(x.hacia),ha:Number(x.hectareas||0)})).sort((a,b)=>b.ha-a.ha);
   const area=Number(threat?.bArea||info?.area_barrio_ha||0);
   // PÁGINA 1: tratamientos por período, lectura con fuentes y códigos.
-  base(pdf,1,'01 / PERFIL TERRITORIAL','Ficha barrial: '+name,'Comuna '+p.comuna+' - código '+code+' - síntesis cartográfica del Observatorio',p);
+  base(pdf,1,'01 / PERFIL TERRITORIAL','Ficha territorial - '+name,'Comuna '+p.comuna+' - código '+code+' - cartografía del Observatorio',p);
   fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,69,182,24,3,3,'F');
   line(pdf,19,78,'QUÉ MUESTRAN LOS TRATAMIENTOS',10,COLORS.navy,true);
   line(pdf,19,86,'Área del barrio intersectada por cada clasificación urbanística.',8,COLORS.muted);
@@ -156,9 +156,9 @@ async function downloadBarrio(){
   line(pdf,111,104,'PROPUESTA POT 2026',10,COLORS.purple,true,85);
   let leftY=115,rightY=115;
   const max14=Math.max(1,...tr14.map(x=>x.ha)),max26=Math.max(1,...tr26.map(x=>x.ha));
-  for(const row of tr14.slice(0,4))leftY=bar(pdf,15,leftY,labelTreatment(row.name,2014),row.ha,max14,COLORS.green,83)+5;
-  for(const row of tr26.slice(0,4))rightY=bar(pdf,111,rightY,labelTreatment(row.name,2026),row.ha,max26,COLORS.pink,83)+5;
-  line(pdf,14,255,'Se muestran las cuatro categorías con mayor superficie de cada período.',8,COLORS.muted);
+  for(const row of tr14.slice(0,3))leftY=bar(pdf,15,leftY,labelTreatment(row.name,2014),row.ha,max14,COLORS.green,83)+5;
+  for(const row of tr26.slice(0,3))rightY=bar(pdf,111,rightY,labelTreatment(row.name,2026),row.ha,max26,COLORS.pink,83)+5;
+  line(pdf,14,255,'Se muestran las tres categorías de mayor superficie por cada período.',8,COLORS.muted);
   line(pdf,14,264,'Cada barra expresa hectáreas de intersección, no predios ni licencias.',8,COLORS.muted);
   pdf.addPage();
   // PÁGINA 2: transiciones explícitas y SIN cadenas de atributos sin interpretar.
@@ -167,30 +167,31 @@ async function downloadBarrio(){
   line(pdf,14,84,'Desde: tratamiento del POT 2014. Hacia: tratamiento de la propuesta 2026.',8.7,COLORS.navy,false,180);
   line(pdf,14,92,'Las hectáreas corresponden a la superficie compartida por ambos polígonos.',8.7,COLORS.navy,false,180);
   let tY=109;
-  for(const t of trans.slice(0,5)){
+  for(const t of trans.slice(0,4)){
     const a=labelTreatment(t.from,2014),b=labelTreatment(t.to,2026);
-    fillColor(pdf,'#F2F3F8');pdf.roundedRect(14,tY-7,182,31,2,2,'F');
-    line(pdf,18,tY,'2014: '+a,8.3,COLORS.navy,true,148);
-    line(pdf,18,tY+10,'2026: '+b,8.3,COLORS.purple,true,148);
+    fillColor(pdf,'#F2F3F8');pdf.roundedRect(14,tY-8,182,35,2,2,'F');
+    const top2014=line(pdf,18,tY,'POT 2014: '+a,8.0,COLORS.navy,true,137);
+    line(pdf,18,Math.max(tY+11,top2014+1),'Propuesta 2026: '+b,8.0,COLORS.purple,true,137);
     pdf.setFont('helvetica','bold');pdf.setFontSize(9);changeColor(pdf,COLORS.navy);
-    pdf.text(ha(t.ha),192,tY+9,{align:'right'});
-    tY+=37;
+    pdf.text(ha(t.ha),192,tY+10,{align:'right'});
+    tY+=39;
   }
   if(!trans.length)line(pdf,18,112,'No se registran transiciones para este territorio.',9,COLORS.muted);
-  line(pdf,14,263,'La comparación cartográfica no acredita aumento de edificabilidad ni licencias.',8,COLORS.muted);
-  line(pdf,14,272,'R1/R2 tienen definiciones diferentes entre POT 2014 y propuesta 2026.',8,COLORS.muted);
+  line(pdf,14,264,'Se muestran hasta cuatro cruces de mayor superficie; los códigos no son equivalentes.',8,COLORS.muted);
+  line(pdf,14,272,'Los cruces no prueban aumento de edificabilidad, licencias o cambios tributarios.',8,COLORS.muted);
   pdf.addPage();
   // PÁGINA 3: áreas de actividad, separadas de los tratamientos.
   base(pdf,3,'03 / ÁREAS DE ACTIVIDAD','¿Cómo se distribuyen los usos?','Áreas de actividad de cada instrumento territorial; no permisos individuales.',p);
-  line(pdf,14,74,'POT 2014 - VIGENTE',10,COLORS.purple,true);
-  let aY=86,acMax14=Math.max(1,...ac14.map(x=>x.ha));
-  for(const row of ac14.slice(0,4))aY=bar(pdf,16,aY,row.name,row.ha,acMax14,COLORS.green,178)+3;
-  const after14=Math.max(172,aY+5);
-  line(pdf,14,after14,'PROPUESTA 2026',10,COLORS.purple,true);
-  let bY=after14+12,acMax26=Math.max(1,...ac26.map(x=>x.ha));
-  for(const row of ac26.slice(0,3))bY=bar(pdf,16,bY,row.name,row.ha,acMax26,COLORS.orange,178)+3;
-  line(pdf,14,262,'Son clasificaciones de uso, no autorizaciones automáticas de actividades.',7.9,COLORS.muted);
-  line(pdf,14,271,'Consultar las matrices de actividades y las condiciones urbanísticas.',7.9,COLORS.muted);
+  line(pdf,14,77,'CÓMO LEER LAS ÁREAS DE ACTIVIDAD',9.8,COLORS.purple,true);
+  line(pdf,14,86,'Muestran la orientación de uso, no actividades autorizadas predio a predio.',8.4,COLORS.navy);
+  line(pdf,14,104,'POT 2014 - VIGENTE',10,COLORS.purple,true);
+  line(pdf,111,104,'PROPUESTA 2026',10,COLORS.purple,true);
+  let y14=115,y26=115;
+  const mx14=Math.max(1,...ac14.map(x=>x.ha)),mx26=Math.max(1,...ac26.map(x=>x.ha));
+  for(const row of ac14.slice(0,4))y14=bar(pdf,15,y14,row.name,row.ha,mx14,COLORS.green,83)+5;
+  for(const row of ac26.slice(0,4))y26=bar(pdf,111,y26,row.name,row.ha,mx26,COLORS.orange,83)+5;
+  line(pdf,14,255,'Se muestran las cuatro áreas de mayor superficie para cada instrumento.',8,COLORS.muted);
+  line(pdf,14,264,'Para conocer usos permitidos o condicionados, consultar matrices y articulado.',8,COLORS.muted);
   pdf.addPage();
   // PÁGINA 3
   base(pdf,4,'04 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
