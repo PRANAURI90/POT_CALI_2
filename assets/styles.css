@@ -285,3 +285,24 @@
 .ahdi-definition-body h4{font-size:13px;margin:16px 0 6px;color:#493b6a}
 .ahdi-definition-body p{font-size:13px;line-height:1.7;margin:8px 0}
 .ahdi-definition-body .caption{border-top:1px solid #e8e3ee;padding-top:12px;margin-top:18px}
+
+/* Informe por barrio: amenazas por fenómeno, microzonas y exportación cartográfica JPG */
+.barrio-risk-report{display:flex;flex-direction:column;gap:16px;margin-top:15px}
+.barrio-risk-card{border:1px solid #e3dfec;background:#fcfbfe;border-radius:12px;padding:17px}
+.barrio-risk-card h4{font-size:16px;color:#342d54;margin:0 0 7px}
+.barrio-risk-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(230px,.8fr);align-items:start;gap:17px;margin:12px 0}
+.barrio-risk-svg{border:1px solid #e5e0ec;border-radius:9px;background:white;min-width:0;overflow:hidden}
+.barrio-risk-svg svg{display:block;width:100%;height:auto}
+.barrio-risk-values{display:flex;flex-direction:column;gap:13px;min-width:0}
+.barrio-risk-summary-row{width:100%}
+.barrio-risk-summary-row>div:first-child{display:flex;justify-content:space-between;gap:9px;align-items:baseline;font-size:12px;padding:0 0 5px}
+.barrio-risk-summary-row strong{font-size:12px;line-height:1.4;min-width:0}
+.barrio-risk-summary-row span{font-size:11px;color:#585268;white-space:nowrap}
+.barrio-risk-track{height:9px;border-radius:10px;background:#e9e7ef;overflow:hidden}
+.barrio-risk-track i{display:block;height:100%;border-radius:10px}
+.barrio-risk-empty{font-size:13px;color:#625c70;margin:12px 0}
+.barrio-risk-warning{border-left:3px solid #b86e38;background:#fff7f2;padding:12px;font-size:13px}
+.barrio-risk-download{margin-top:5px}
+.barrio-risk-micro-preview{max-width:570px;margin:13px 0}
+@media(max-width:800px){.barrio-risk-layout{grid-template-columns:1fr}.barrio-risk-card{padding:12px}}
+@media(max-width:480px){.barrio-risk-summary-row>div:first-child{flex-direction:column;gap:2px}.barrio-risk-summary-row span{white-space:normal}}
