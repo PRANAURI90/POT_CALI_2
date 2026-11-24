@@ -105,7 +105,7 @@ async function downloadBarrio(){
   const pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
   pdf.setProperties({title:'Ficha barrial '+name+' ('+code+') · Observatorio POT Cali',subject:'Análisis territorial exploratorio y comparación normativa 2014–2026',creator:'Observatorio ciudadano POT Cali'});
   const tr14=entriesFor(info,'tratamientos2014'),tr26=entriesFor(info,'tratamientos2026');
-  const ac14=entriesFor(info,'areas_actividad2014'),ac26=entriesFor(info,'areas_actividad2026');
+  const ac14=entriesFor(info,'actividad2014'),ac26=entriesFor(info,'actividad2026');
   const trans=(info?.transiciones_tratamiento||[]).map(x=>({from:String(x.desde),to:String(x.hacia),ha:Number(x.hectareas||0)})).sort((a,b)=>b.ha-a.ha);
   const area=Number(threat?.bArea||info?.area_barrio_ha||0);
   // PÁGINA 1
@@ -113,7 +113,7 @@ async function downloadBarrio(){
   fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,67,182,20,3,3,'F');
   line(pdf,19,76,'¿QUÉ DICE LA CARTOGRAFÍA SOBRE ESTE TERRITORIO?',10,COLORS.navy,true);
   line(pdf,14,99,'TRATAMIENTOS · POT 2014',11,COLORS.purple,true);
-  let y=108;y=drawCategories(pdf,17,y,tr14,6,176,COLORS.green);
+  let y=108;y=drawCategories(pdf,17,y,tr14,3,176,COLORS.green);
   if(y>177){y=178}
   line(pdf,14,184,'TRATAMIENTOS · PROPUESTA 2026',11,COLORS.purple,true);
   y=193;drawCategories(pdf,17,y,tr26,4,176,COLORS.pink);
@@ -173,7 +173,7 @@ async function downloadBarrio(){
   let my=87;
   if(micro.length){
    const mx=Math.max(1,...micro.map(z=>Number(z.hectareas||0)));
-   for(const z of micro.slice(0,7)){
+   for(const z of micro.slice(0,4)){
     my=bar(pdf,18,my,'Zona '+z.zona+' · '+pct(z.porcentaje_barrio),Number(z.hectareas),mx,COLORS.purple,174)+2;
    }
   } else my=line(pdf,18,my,'Sin intersecciones disponibles en la digitalización consultada.',9,COLORS.muted);
