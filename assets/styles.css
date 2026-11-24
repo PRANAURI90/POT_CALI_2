@@ -194,3 +194,26 @@
 .hazard-legend-group .layer-filter{font-size:10.5px}
 .hazard-legend-group .swatch{width:13px;height:13px;flex:0 0 13px}
 .hazard-legend-note{font-size:9.5px;line-height:1.5;color:#61746a;margin:10px 2px 3px}
+
+/* Revisión riesgo 2026: un solo panel cartográfico y subcapítulo de microzonificación */
+.risk-period-grid-single{display:grid;grid-template-columns:minmax(0,1fr);max-width:100%}
+.risk-period-grid-single .risk-period-panel{width:100%;min-width:0}
+.risk-period-grid-single .risk-period-map{width:100%;min-height:380px;overflow:hidden}
+.microzone-section{margin-top:18px}
+.micro-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(270px,1fr);gap:18px;align-items:start;margin:16px 0}
+.micro-map{min-height:430px;height:430px;width:100%;border-radius:12px;overflow:hidden;border:1px solid #ddd9e8;background:#f3f2f7}
+.micro-fallback{display:block;max-width:100%;max-height:260px;object-fit:contain;margin:12px auto;background:#f7f7f7;border:1px solid #e2dfed;border-radius:8px}
+.micro-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0}
+.micro-kpis>div{background:#efedf6;padding:10px;border-radius:8px;display:flex;flex-direction:column;gap:4px}
+.micro-kpis strong{font-size:17px;color:#302d45}
+.micro-kpis small{font-size:10px;color:#635e70;line-height:1.4}
+.micro-treatment-list{margin:10px 0}
+.micro-treatment-row{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid #e9e6f0;padding:9px 0;font-size:12px;align-items:baseline}
+.micro-treatment-row span{flex:1}
+.micro-treatment-row b{white-space:nowrap;color:#4a4170}
+.micro-zone-guide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.micro-zone-guide article{border:1px solid #e2dfed;padding:12px;border-radius:10px}
+.micro-zone-guide b{font-size:12px;color:#302d45}
+.micro-zone-guide p{font-size:12px;margin:7px 0 0;color:#726c85}
+@media(max-width:800px){.micro-layout{grid-template-columns:1fr}.micro-zone-guide{grid-template-columns:1fr}.micro-map{height:340px;min-height:340px}}
+@media(max-width:470px){.micro-kpis{grid-template-columns:1fr}.risk-period-grid-single .risk-period-map{min-height:280px}}
