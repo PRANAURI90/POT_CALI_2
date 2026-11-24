@@ -167,7 +167,7 @@ for i,(num,q) in enumerate(questions):
     rect(36,y-55,W-72,76,'#F2F5F6',r=8)
     txt(51,y-10,num,18,GREEN,True)
     txt(91,y-8,q[:78],9.5,INK,True)
-    para(91,y-28,['Requiere soporte técnico, localización y verificación normativa.'],8,MUTED)
+    para(91,y-28,['Requiere soporte técnico, localización y verificación normativa.'],8,14,MUTED)
 rect(36,93,W-72,72,'#E7F1EF',r=8)
 txt(49,144,'TRAZABILIDAD',9,GREEN,True)
 para(49,127,['Base: Observatorio POT_CALI_2, cruce barrio 1722 vs. amenaza.geojson.','Propuesta POT 2026 no aprobada. Cruce exploratorio, no certificación predial.'],8,14)
