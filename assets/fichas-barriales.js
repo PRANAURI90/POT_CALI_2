@@ -75,7 +75,7 @@ function base(pdf,n,k,title,sub,selected){
  line(pdf,14,61,sub,8.1,COLORS.muted,false,184);
  pdf.setDrawColor(...hexRgb(COLORS.line));pdf.line(14,280,196,280);
  line(pdf,14,286,'POT 2014 vigente (GDB actualizada) - propuesta 2026 no adoptada',7,COLORS.muted);
- pdf.setFontSize(8);changeColor(pdf,COLORS.navy);pdf.text(n+'/5',195,286,{align:'right'});
+ pdf.setFontSize(8);changeColor(pdf,COLORS.navy);pdf.text(n+'/7',195,286,{align:'right'});
 }
 function entriesFor(info,key){
  return (info?.capas?.[key]?.categorias||[]).map(r=>({name:pdfText(r.nombre||r.codigo||'Sin categoría'),ha:Number(r.hectareas||0),pct:Number(r.porcentaje_barrio||0)})).filter(r=>r.ha>.009).sort((a,b)=>b.ha-a.ha);
@@ -194,7 +194,7 @@ async function downloadBarrio(){
   line(pdf,14,264,'Para conocer usos permitidos o condicionados, consultar matrices y articulado.',8,COLORS.muted);
   pdf.addPage();
   // PÁGINA 3
-  base(pdf,4,'04 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
+  base(pdf,6,'06 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
   if(threat){
    const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
    for(let i=0;i<3;i++){
@@ -230,8 +230,84 @@ async function downloadBarrio(){
   }
   line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
   pdf.addPage();
+  // PÁGINA 4: instrumentos de gestión. Diferenciar coincidencia cartográfica de reglas generales.
+  const plans14=entriesFor(info,'planes2014');
+  const plans26=entriesFor(info,'planes2026');
+  const prev26=entriesFor(info,'planes_previos2026');
+  const instruments26=entriesFor(info,'instrumentos2026');
+  const treat26Raw=info?.capas?.tratamientos2026?.categorias||[];
+  const treatmentCodes=new Set(treat26Raw.map(v=>{
+    const orig=String(v.codigo_original??v.codigo??v.atributos?.CODIGO??'').trim();
+    return ({'1':'CSU','2':'CTL','3':'C1','4':'C2','5':'C3','6':'C4','7':'D1','8':'D2','9':'MI','10':'R1','11':'R2'})[orig]||orig;
+  }));
+  for(const t of tr26){
+    if(/renovaci[oó]n|redensificaci[oó]n/i.test(t.name)){
+      if(/alta|R1/i.test(t.name))treatmentCodes.add('R1');
+      if(/media|R2/i.test(t.name))treatmentCodes.add('R2');
+    }
+    if(/desarrollo urbano|D2/i.test(t.name))treatmentCodes.add('D2');
+    if(/conservaci[oó]n/i.test(t.name))treatmentCodes.add('CON');
+  }
+  const urbanRenew=treatmentCodes.has('R1')||treatmentCodes.has('R2');
+  const development=treatmentCodes.has('D1')||treatmentCodes.has('D2');
+  const conservation=treatmentCodes.has('CSU')||treatmentCodes.has('CTL')||treatmentCodes.has('CON');
+  base(pdf,4,'04 / GESTIÓN URBANÍSTICA','¿Con qué instrumentos se transforma?','Ámbitos cartografiados y reglas generales que requieren verificación por predio.',p);
+  line(pdf,14,77,'COINCIDENCIAS CARTOGRÁFICAS EN EL BARRIO',10,COLORS.purple,true);
+  let gy=90;
+  const planLayers=[
+    ['Planes parciales POT 2014',plans14],
+    ['Planes parciales propuesta 2026',plans26],
+    ['Instrumentos preexistentes 2026',prev26],
+    ['Otros instrumentos delimitados 2026',instruments26]
+  ];
+  for(const [name,rows] of planLayers){
+    line(pdf,16,gy,name,8.6,COLORS.navy,true,138);
+    pdf.setFont('helvetica','bold');pdf.setFontSize(8.4);changeColor(pdf,COLORS.purple);
+    pdf.text(rows.length?ha(rows.reduce((v,r)=>v+r.ha,0)):'Sin cruce registrado',194,gy,{align:'right'});
+    gy+=18;
+  }
+  line(pdf,14,170,'PROCEDIMIENTOS QUE PODRÍAN SER PERTINENTES',9.7,COLORS.purple,true);
+  let iy=181;
+  const candidates=[
+    ['Plan parcial',urbanRenew||development?'Examinar obligación o modalidad, según ámbito y suelo.':'Requiere delimitación y supuesto normativo específico.'],
+    ['Plan de manzana',urbanRenew?'Propuesto para determinadas actuaciones de renovación.':'No inferir aplicación al barrio sin ámbito y condiciones.'],
+    ['Actuación individual / agrupación','La posibilidad depende del tratamiento, área y cargas aplicables.'],
+    ['Conservación',conservation?'Se intersecta tratamiento de conservación: revisar protección.':'No hay tratamiento de conservación identificado en esta síntesis.']
+  ];
+  for(const [title,detail] of candidates){
+    line(pdf,16,iy,title,8.9,COLORS.navy,true,177);
+    const bottom=line(pdf,16,iy+6,detail,7.6,COLORS.muted,false,177);
+    iy=Math.max(iy+19,bottom+5);
+  }
+  line(pdf,14,268,'Refs.: Acuerdo 0373/2014 arts. 313-325; propuesta 2026 arts. 379-388 y 615.',7.2,COLORS.muted);
+  pdf.addPage();
+  // PÁGINA 5: financiación, incentivos, obligaciones y distinciones.
+  base(pdf,5,'05 / GESTIÓN E INCENTIVOS','¿Qué beneficios y cargas existen?','Instrumentos generales del POT; la ficha no acredita derechos o exenciones individuales.',p);
+  const tools=[
+    ['Edificabilidad adicional (ICA / ICP)','Puede depender de tratamiento, modalidad y cumplimiento de cargas.',
+      'Propuesta 2026: arts. 371, 388 y 616-620.'],
+    ['Participación en plusvalía','Se examinan hechos generadores y exigibilidad; no se presume cobro ni exención.',
+      'Contrastar régimen de plusvalía y decisiones distritales.'],
+    ['Cesiones y cargas urbanísticas','Espacio público, servicios e infraestructura según actuación e instrumento.',
+      'POT 2014 arts. 320-322; propuesta 2026 arts. 616-620.'],
+    ['Incentivos por conservación','Verificar mecanismos de preservación y compensación según ámbito patrimonial.',
+      'POT 2014 arts. 301-307; propuesta 2026 arts. 377-378.'],
+    ['Moradores y actividad económica','Verificar medidas de permanencia, participación, retorno y mitigación social.',
+      'Condiciones concretas y reglamentación pendientes de contrastar.']
+  ];
+  let fy=79;
+  for(const [title,meaning,ref] of tools){
+    fillColor(pdf,'#F2F3F8');pdf.roundedRect(14,fy-6,182,32,2,2,'F');
+    line(pdf,18,fy,title,9.1,COLORS.purple,true,173);
+    line(pdf,18,fy+8,meaning,8,COLORS.navy,false,173);
+    line(pdf,18,fy+19,ref,7,COLORS.muted,false,173);
+    fy+=37;
+  }
+  line(pdf,14,267,'ICA = Índice de Construcción Adicional; NO equivale al impuesto ICA.',8,COLORS.danger,true);
+  line(pdf,14,274,'No se calculan beneficios tributarios, avalúos ni plusvalía predial.',7.8,COLORS.muted);
+  pdf.addPage();
   // PÁGINA 4
-  base(pdf,5,'05 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
+  base(pdf,7,'07 / RIESGO Y GESTIÓN','Sísmica, instrumentos y cautelas','Lectura territorial con trazabilidad y preguntas para decisiones públicas.',p);
   line(pdf,14,75,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA ORIENTATIVA',10,COLORS.purple,true);
   const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
   let my=87;
