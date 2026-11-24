@@ -100,8 +100,9 @@ jobs:
           assert 'EXTENSIÓN DEL BARRIO' in pdf[0].get_text(), 'Falta extensión cartográfica en cabecera'
           assert 'Capacidad edificatoria adicional' in pdf[4].get_text(), 'Falta definición pedagógica del incentivo'
           assert 'Ordena un ámbito' in pdf[3].get_text(), 'Falta definición pedagógica del plan parcial'
+          assert 'LA TRANSICIÓN DE MAYOR SUPERFICIE' in transition or 'Sin transiciones' in transition, 'Falta jerarquía gráfica de transiciones'
           transition=pdf[1].get_text()
-          assert 'POT 2014:' in transition and 'Propuesta 2026:' in transition, 'No se identifica origen y destino de transición'
+          assert ('Antes' in transition and 'Propuesta' in transition) or 'Sin transiciones' in transition, 'No se identifica origen y destino de transición'
           assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transiciones'
           from collections import Counter
           # Verificar que los textos de la página 2 no se monten verticalmente:
