@@ -597,7 +597,6 @@ async function downloadBarrio(){
       pdf.addImage(canvas.toDataURL('image/jpeg',0.88),'JPEG',xx,85,57,43);
     }
     if(subset.length){
-    else{
      let ry=135;
      for(const level of ['1','2','3','0']){
       const row=subset.find(r=>r.level===level);if(!row)continue;
