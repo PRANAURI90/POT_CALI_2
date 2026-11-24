@@ -385,17 +385,40 @@ async function downloadBarrio(){
    impact:'La ausencia de una modalidad aquí no equivale a ausencia de obligaciones urbanísticas.',
    ref:'Consultar matriz normativa y geodatabase del POT.'
   });
-  let rY=79;
-  for(const rg of regimes.slice(0,3)){
-   fillColor(pdf,'#F3F4F8');pdf.roundedRect(14,rY-6,182,57,3,3,'F');
-   line(pdf,19,rY,rg.title,8.8,COLORS.purple,true,172);
-   let ly=line(pdf,19,rY+10,rg.rule,8.2,COLORS.navy,false,172);
-   ly=line(pdf,19,Math.max(rY+30,ly+2),rg.impact,7.6,COLORS.muted,false,171);
-   line(pdf,19,rY+46,rg.ref,7,COLORS.purple,false,173);
-   rY+=63;
+  // Tarjetas de altura calculada según contenido para evitar desbordes.
+  // En caso de más de dos familias aplicables, se añade una segunda página
+  // de reglas territoriales con continuación y trazabilidad normativa.
+  function drawRegimeCard(rg,y){
+    const titleLines=pdf.splitTextToSize(pdfText(rg.title),170);
+    const ruleLines=pdf.splitTextToSize(pdfText(rg.rule),170);
+    const impactLines=pdf.splitTextToSize(pdfText(rg.impact),170);
+    const refLines=pdf.splitTextToSize(pdfText(rg.ref),170);
+    const titleH=titleLines.length*4.0,ruleH=ruleLines.length*4.15;
+    const impactH=impactLines.length*3.85,refH=refLines.length*3.5;
+    const height=14+titleH+ruleH+impactH+refH+12;
+    fillColor(pdf,'#F3F4F8');pdf.roundedRect(14,y,182,height,3,3,'F');
+    let yy=y+8;
+    yy=line(pdf,19,yy,rg.title,8.6,COLORS.purple,true,170)+1;
+    yy=line(pdf,19,yy,rg.rule,8.15,COLORS.navy,false,170)+2;
+    yy=line(pdf,19,yy,rg.impact,7.7,COLORS.muted,false,170)+2;
+    line(pdf,19,yy,rg.ref,7.0,COLORS.purple,false,170);
+    return y+height+5;
   }
-  if(regimes.length>3)line(pdf,14,261,'Otras modalidades del barrio deben revisarse en el análisis de la plataforma.',7.6,COLORS.muted);
-  line(pdf,14,273,'Las reglas se asocian a categorías del barrio, no a cada predio.',7.6,COLORS.muted);
+  let rY=79, printed=0;
+  for(const rg of regimes){
+    const ruleLines=pdf.splitTextToSize(pdfText(rg.rule),170).length;
+    const impactLines=pdf.splitTextToSize(pdfText(rg.impact),170).length;
+    const approx=46+ruleLines*4.2+impactLines*4;
+    if(rY+approx>257){
+      line(pdf,14,272,'Continúa el análisis de instrumentos del barrio en la página siguiente.',7.4,COLORS.muted);
+      pdf.addPage();
+      base(pdf,6,'06 / INSTRUMENTOS CONCRETOS','Instrumentos: continuación','Tratamientos del barrio y condiciones normativas propuestas.',p);
+      rY=79;
+    }
+    rY=drawRegimeCard(rg,rY);printed++;
+  }
+  line(pdf,14,268,'Categorías relacionadas con el barrio; verificar delimitación y artículo.',7.4,COLORS.muted);
+  line(pdf,14,275,'No acredita permisos, exenciones ni derechos específicos por predio.',7.4,COLORS.muted);
   pdf.addPage();
   // PÁGINA 5: financiación, incentivos, obligaciones y distinciones.
   base(pdf,7,'07 / GESTIÓN E INCENTIVOS','¿Qué beneficios y cargas existen?','Instrumentos generales del POT; la ficha no acredita derechos o exenciones individuales.',p);
