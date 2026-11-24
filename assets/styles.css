@@ -314,3 +314,6 @@
 .ficha-download-btn:disabled{background:#e7e4ef;color:#6b6480;border-color:#dad7e6;cursor:not-allowed;box-shadow:none}
 .ficha-download-status{margin:0;font-size:11px;line-height:1.5;color:#68637f;overflow-wrap:anywhere}
 @media(max-width:700px){.ficha-download-panel{padding:13px 12px}.ficha-download-btn{min-height:46px}}
+
+.ficha-ready-link:not([hidden]){display:block;padding:10px 12px;border-radius:8px;border:1px solid #6858a8;background:#f1eefb;color:#403177;font-weight:750;font-size:12px;text-align:center;text-decoration:underline;overflow-wrap:anywhere}
+.ficha-ready-link:hover{background:#e7e1f8}
