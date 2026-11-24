@@ -1,0 +1,32 @@
+name: Validar botón y generador de fichas barriales
+on:
+  push:
+    branches: [main]
+    paths: ['assets/fichas-barriales.js', 'index.html', 'assets/styles.css', '.github/workflows/validar-fichas-barriales.yml']
+  workflow_dispatch:
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar sintaxis JavaScript
+        run: node --check assets/fichas-barriales.js && node --check assets/app.js
+      - name: Verificar integración del botón y archivos
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          h=Path('index.html').read_text()
+          js=Path('assets/fichas-barriales.js').read_text()
+          css=Path('assets/styles.css').read_text()
+          assert h.count('id="download-barrio-pdf"')==1
+          assert 'src="assets/fichas-barriales.js?v=1.0"' in h
+          assert 'jspdf.umd.min.js' in h
+          assert 'barrioRiskIntersect' in js
+          assert "entriesFor(info,'actividad2026')" in js
+          assert "entriesFor(info,'tratamientos2026')" in js
+          assert 'ficha-download-btn' in css
+          print('Integración estática y sintaxis: correcta')
+          PY
