@@ -34,7 +34,7 @@ jobs:
         run: |
           npm install --no-save playwright
           npx playwright install chromium
-      - name: Probar varios barrios y registrar errores
+      - name: Probar PDF de los 342 barrios y sectores
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/pot-server.log 2>&1 &
           node - <<'JS'
@@ -47,18 +47,14 @@ jobs:
             try{
               await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
               await page.waitForFunction(()=>typeof state!=='undefined'&&state.barrios.length>300&&!!state.resumen,{timeout:60000});
-              const cases=await page.evaluate(()=>{
-                const arr=state.barrios;const sorted=[...arr].sort((a,b)=>String(a.properties.codigo).localeCompare(String(b.properties.codigo)));
-                const picks=[sorted[0],sorted[20],sorted[70],sorted[130],sorted[200],sorted[270],sorted[340],arr.find(f=>String(f.properties.codigo)==='1722')];
-                return picks.filter(Boolean).map(f=>({codigo:String(f.properties.codigo),nombre:f.properties.barrio}));
-              });
-              console.log('BARRIOS A PROBAR',JSON.stringify(cases));
+              const cases=await page.evaluate(()=>state.barrios.map(f=>({codigo:String(f.properties.codigo),nombre:f.properties.barrio})).sort((a,b)=>a.codigo.localeCompare(b.codigo)));
+              console.log('TOTAL DE BARRIOS A PROBAR',cases.length);
               const errors=[];
               for(const t of cases){
                 await page.evaluate(code=>{const f=state.barrios.find(b=>String(b.properties.codigo)===code);setSelected(f,null,false);pageTo('mapa',false)},t.codigo);
                 const btn=page.locator('#download-barrio-pdf');
-                const dl=page.waitForEvent('download',{timeout:90000}).then(x=>x).catch(e=>null);
-                await btn.click();
+                const dl=page.waitForEvent('download',{timeout:12000}).then(x=>x).catch(e=>null);
+                await btn.click({timeout:12000});
                 const file=await dl;
                 const status=await page.locator('#download-barrio-status').innerText();
                 if(file){
@@ -71,7 +67,7 @@ jobs:
                   console.log('FALLA',t.codigo,t.nombre,status);
                 }
               }
-              if(errors.length)throw Error('Barrios con falla: '+JSON.stringify(errors));
+              console.log('TOTAL',cases.length,'FALLAS',errors.length);if(errors.length)throw Error('Barrios con falla: '+JSON.stringify(errors));
             }finally{await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
