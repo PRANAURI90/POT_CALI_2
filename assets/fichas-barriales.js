@@ -107,6 +107,49 @@ function verifiedTransitionDetail(from,to){
  };
  return null;
 }
+function citizenReading(from,to){
+ const norm=v=>pdfText(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ const before=norm(from),after=norm(to);
+ const famBefore=treatmentFamily(from),famAfter=treatmentFamily(to);
+ const renovation=famAfter==='renovacion';
+ const codes=/\bR2\b|DENSIFICACION MEDIA/.test(after)?'R2':/\bR1\b|DENSIFICACION ALTA/.test(after)?'R1':'';
+ if(famBefore==='consolidacion'&&renovation)return {
+  change:'Esta parte del barrio pasa de consolidación a renovación urbana. En vez de seguir únicamente las reglas de consolidación del tejido existente, la propuesta contempla mecanismos para transformar predios y conjuntos de predios.',
+  tools:'En renovación '+(codes||'R1/R2')+' se contemplan actuaciones individuales, planes de manzana y planes parciales según el tamaño y la delimitación. Los planes de manzana y parciales pueden implicar nuevas cesiones y obligaciones.',
+  watch:'Prestar atención a los índices de construcción, las alturas, las cesiones para espacio público, los servicios, las medidas para moradores y las condiciones ambientales y de riesgo.',
+  refs:'Proyecto POT 2026: arts. 379, 387, 388, 615 y 619-620.'
+ };
+ if(renovation&&famBefore==='renovacion')return {
+  change:'El territorio permanece en la familia de renovación, pero cambia la modalidad. Aunque el código se parezca, las reglas de intervención propuestas no son idénticas a las del POT vigente.',
+  tools:'La propuesta contempla actuación individual, plan de manzana y plan parcial para distintos tamaños y condiciones. Esto no significa que un proyecto esté aprobado.',
+  watch:'Revisar cuánto se permite construir, qué cargas y cesiones corresponden a cada modalidad, las garantías a moradores y las restricciones ambientales y de riesgo.',
+  refs:'POT 2014: arts. 315-321. Proyecto POT 2026: arts. 370, 387, 388 y 615-620.'
+ };
+ if(famAfter==='conservacion')return {
+  change:'La propuesta identifica esta superficie para conservación urbana o cultural, priorizando la protección de sus valores y características.',
+  tools:'Las intervenciones deben ajustarse al régimen de conservación correspondiente; la clasificación no crea por sí misma un incentivo económico.',
+  watch:'Revisar la delimitación exacta, las obras permitidas y si existen instrumentos de apoyo o compensación realmente aplicables.',
+  refs:'Proyecto POT 2026: arts. 377-379.'
+ };
+ if(famAfter==='desarrollo')return {
+  change:'La propuesta asigna un tratamiento de desarrollo: las nuevas actuaciones deben resolver su urbanización y los soportes necesarios antes de ejecutarse.',
+  tools:'Según el suelo, la superficie y los predios involucrados, puede requerirse plan parcial o tramitarse mediante proyecto urbanístico y licencia.',
+  watch:'Verificar las redes de servicios, accesos, espacio público, cesiones, restricciones ambientales y condiciones de riesgo.',
+  refs:'Proyecto POT 2026: arts. 381-383 y 615.'
+ };
+ if(famAfter==='consolidacion')return {
+  change:'La propuesta orienta esta superficie a consolidar el tejido construido. La forma en que puede modificarse la edificación depende de la modalidad correspondiente.',
+  tools:'Los planes parciales o planes de manzana en consolidación tienen supuestos específicos de delimitación; no se habilitan de forma general.',
+  watch:'Revisar alturas, capacidad de servicios y si la zona pertenece a un proyecto urbanístico integral o al Corredor Verde.',
+  refs:'Proyecto POT 2026: art. 379.'
+ };
+ return {
+  change:'En esta parte del barrio cambia la clasificación urbanística entre el POT vigente y la propuesta. El efecto concreto depende de los dos tratamientos comparados.',
+  tools:'Solo se detallan los instrumentos asociados a los tratamientos presentes en las páginas de gestión.',
+  watch:'Revisar los usos, la edificabilidad y las obligaciones señaladas para la modalidad identificada.',
+  refs:'POT 2014 vigente y Proyecto POT 2026. Ver capítulo técnico.'
+ };
+}
 function softParagraph(pdf,x,y,text,width=174,size=9){
  return line(pdf,x,y,text,size,COLORS.navy,false,width)+3;
 }
@@ -216,19 +259,39 @@ async function downloadBarrio(){
   const trans=(info?.transiciones_tratamiento||[]).map(x=>({from:String(x.desde),to:String(x.hacia),ha:Number(x.hectareas||0)})).sort((a,b)=>b.ha-a.ha);
   const area=window.turf?.area?window.turf.area(barrio)/10000:Number(threat?.bArea||info?.area_barrio_ha||0);
   p.fichaAreaHa=area;
-  // PÁGINA 1: tratamientos por período, lectura con fuentes y códigos.
-  base(pdf,1,'01 / PERFIL TERRITORIAL','Ficha territorial - '+name,'Comuna '+p.comuna+' - código '+code+' - cartografía del Observatorio',p);
-  fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,69,182,24,3,3,'F');
-  line(pdf,19,78,'QUÉ MUESTRAN LOS TRATAMIENTOS',10,COLORS.navy,true);
-  line(pdf,19,86,'Área del barrio intersectada por cada clasificación urbanística.',8,COLORS.muted);
-  line(pdf,14,104,'POT 2014 - VIGENTE',10,COLORS.purple,true,86);
-  line(pdf,111,104,'PROPUESTA POT 2026',10,COLORS.purple,true,85);
-  let leftY=115,rightY=115;
-  const max14=Math.max(1,...tr14.map(x=>x.ha)),max26=Math.max(1,...tr26.map(x=>x.ha));
-  for(const row of tr14.slice(0,3)){leftY=bar(pdf,15,leftY,labelTreatment(row.name,2014),row.ha,max14,COLORS.green,83);line(pdf,15,leftY-5,hintTreatment(row.name),6.7,'#8993A1',false,79);leftY+=8;}
-  for(const row of tr26.slice(0,3)){rightY=bar(pdf,111,rightY,labelTreatment(row.name,2026),row.ha,max26,COLORS.pink,83);line(pdf,111,rightY-5,hintTreatment(row.name),6.7,'#8993A1',false,79);rightY+=8;}
-  line(pdf,14,255,'Se muestran las tres categorías de mayor superficie por cada período.',8,COLORS.muted);
-  line(pdf,14,264,'Cada barra expresa hectáreas de intersección, no predios ni licencias.',8,COLORS.muted);
+  // Primera página: lectura ciudadana, no catálogo de tratamientos.
+  base(pdf,1,'01 / TU BARRIO EN POCAS PALABRAS','¿Qué cambiaría en '+name+'?','Resumen ciudadano del cambio territorial más extenso.',p);
+  const mainTransition=trans.find(t=>Number.isFinite(t.ha)&&t.ha>=.01);
+  if(mainTransition){
+    const reading=citizenReading(mainTransition.from,mainTransition.to);
+    const share=area>0?100*mainTransition.ha/area:null;
+    fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,69,182,42,3,3,'F');
+    line(pdf,19,80,'EL CAMBIO PRINCIPAL',10,COLORS.purple,true);
+    line(pdf,19,90,ha(mainTransition.ha)+(share!==null?' · '+pct(share)+' del barrio':''),12,COLORS.navy,true);
+    line(pdf,19,99,'De: '+labelTreatment(mainTransition.from,2014),8.1,COLORS.navy,false,172);
+    line(pdf,19,106,'A: '+labelTreatment(mainTransition.to,2026),8.1,COLORS.purple,false,172);
+    const citizenBlocks=[
+      ['¿QUÉ SIGNIFICA PARA TU BARRIO?',reading.change],
+      ['¿QUÉ INSTRUMENTOS CONTEMPLA EL NUEVO POT?',reading.tools],
+      ['¿A QUÉ HAY QUE ESTAR ATENTOS?',reading.watch]
+    ];
+    let cy=123;
+    for(const [label,body] of citizenBlocks){
+      line(pdf,14,cy,label,9.1,COLORS.purple,true,179);
+      cy+=9;
+      cy=line(pdf,16,cy,body,8.6,COLORS.navy,false,175)+12;
+    }
+    line(pdf,14,257,reading.refs,7.1,COLORS.muted,false,184);
+  }else{
+    fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,77,182,56,3,3,'F');
+    line(pdf,19,90,'No se identificaron cambios de tratamiento superiores a 0,01 ha.',9,COLORS.navy,true,172);
+    line(pdf,19,106,'Esto no demuestra que todas las normas de ambos POT sean iguales.',8.3,COLORS.muted,false,170);
+    line(pdf,14,147,'¿QUÉ REVISAR?',9.5,COLORS.purple,true);
+    line(pdf,16,160,'Los usos, las reglas de edificabilidad, los instrumentos y las amenazas',9,COLORS.navy,false,176);
+    line(pdf,16,170,'asociadas a las capas disponibles para este barrio.',9,COLORS.navy,false,176);
+  }
+  line(pdf,14,268,'Esta es una propuesta de POT, no una norma adoptada ni una licencia.',7.5,COLORS.muted);
+  line(pdf,14,275,'Las páginas siguientes muestran cifras, reglas, fuentes y condiciones.',7.5,COLORS.muted);
   pdf.addPage();
   // PÁGINA 2: lectura sustantiva de las transiciones, con una visualización por superficie.
   base(pdf,2,'02 / TRANSFORMACIÓN NORMATIVA','¿Qué propone cambiar el POT?','La misma superficie del barrio, comparada entre la cartografía vigente y la propuesta.',p);
