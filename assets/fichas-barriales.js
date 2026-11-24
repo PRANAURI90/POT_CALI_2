@@ -433,6 +433,35 @@ async function downloadBarrio(){
     }
     rY=drawRegimeCard(rg,rY);printed++;
   }
+  // Contraste POT 2014: normativa vigente y superficie cartografiada.
+  // Se presenta de forma separada porque R1/R2 de 2014 no son equivalentes a 2026.
+  if(priorRules.length){
+    if(rY>219){
+      pdf.addPage();
+      base(pdf,6,'06 / NORMATIVA VIGENTE','Antecedentes del POT 2014','Reglas del POT vigente para tratamientos que intersectan el barrio.',p);
+      rY=79;
+    }else{
+      line(pdf,14,rY+1,'ANTECEDENTES DEL POT 2014 VIGENTE',9.1,COLORS.purple,true);
+      rY+=14;
+    }
+    for(const rule of priorRules){
+      const matches=(rule.codigos||[]).filter(code=>areas14.has(code));
+      const evidence=matches.map(code=>code+': '+ha(areas14.get(code))).join(' · ');
+      const rg={
+        title:rule.titulo+' · POT 2014 VIGENTE',
+        rule:rule.condicion,
+        impact:'COINCIDENCIA DE TRATAMIENTO VIGENTE: '+evidence+'. No implica que un plan parcial esté efectivamente delimitado en esta superficie.',
+        ref:'Acuerdo 0373 de 2014 · arts. '+rule.articulos+' · p. '+(rule.pagina_documento||'sin dato')+' de la matriz documental.'
+      };
+      const approx=55+pdf.splitTextToSize(pdfText(rg.rule),170).length*5+pdf.splitTextToSize(pdfText(rg.impact),170).length*5;
+      if(rY+approx>257){
+        pdf.addPage();
+        base(pdf,6,'06 / NORMATIVA VIGENTE','Antecedentes 2014: continuación','Se identifican reglas por tratamiento vigente y superficie coincidente.',p);
+        rY=79;
+      }
+      rY=drawRegimeCard(rg,rY);
+    }
+  }
   line(pdf,14,268,'Fuente: matriz normativa y cruces de tratamientos del Observatorio.',7.4,COLORS.muted);
   line(pdf,14,275,'No acredita permisos, exenciones ni derechos específicos por predio.',7.4,COLORS.muted);
   pdf.addPage();
