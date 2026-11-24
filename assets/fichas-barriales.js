@@ -183,24 +183,43 @@ async function downloadBarrio(){
   line(pdf,14,255,'Se muestran las tres categorías de mayor superficie por cada período.',8,COLORS.muted);
   line(pdf,14,264,'Cada barra expresa hectáreas de intersección, no predios ni licencias.',8,COLORS.muted);
   pdf.addPage();
-  // PÁGINA 2: transiciones explícitas y SIN cadenas de atributos sin interpretar.
-  base(pdf,2,'02 / TRANSICIONES','¿Dónde cambian los tratamientos?','Intersección espacial del POT 2014 con los tratamientos propuestos para 2026.',p);
-  line(pdf,14,75,'CÓMO LEER LAS TRANSICIONES',10,COLORS.purple,true);
-  line(pdf,14,84,'Desde: tratamiento del POT 2014. Hacia: tratamiento de la propuesta 2026.',8.7,COLORS.navy,false,180);
-  line(pdf,14,92,'Las hectáreas corresponden a la superficie compartida por ambos polígonos.',8.7,COLORS.navy,false,180);
-  let tY=109;
-  for(const t of trans.slice(0,4)){
-    const a=labelTreatment(t.from,2014),b=labelTreatment(t.to,2026);
-    fillColor(pdf,'#F2F3F8');pdf.roundedRect(14,tY-8,182,35,2,2,'F');
-    const top2014=line(pdf,18,tY,'POT 2014: '+a,8.0,COLORS.navy,true,137);
-    line(pdf,18,Math.max(tY+11,top2014+1),'Propuesta 2026: '+b,8.0,COLORS.purple,true,137);
-    pdf.setFont('helvetica','bold');pdf.setFontSize(9);changeColor(pdf,COLORS.navy);
-    pdf.text(ha(t.ha),192,tY+10,{align:'right'});
-    tY+=39;
+  // PÁGINA 2: lectura sustantiva de las transiciones, con una visualización por superficie.
+  base(pdf,2,'02 / TRANSFORMACIÓN NORMATIVA','¿Qué propone cambiar el POT?','La misma superficie del barrio, comparada entre la cartografía vigente y la propuesta.',p);
+  line(pdf,14,76,'QUÉ ESTAMOS COMPARANDO',9.8,COLORS.purple,true);
+  line(pdf,14,85,'Identificamos qué tratamiento tiene cada porción del barrio en 2014 y cuál',8.5,COLORS.navy);
+  line(pdf,14,91,'se le asigna en 2026. Cada cruce se mide en hectáreas de superficie.',8.5,COLORS.navy);
+  const effectiveTrans=trans.filter(t=>Number.isFinite(t.ha)&&t.ha>=0.01);
+  if(effectiveTrans.length){
+    const lead=effectiveTrans[0],from=labelTreatment(lead.from,2014),to=labelTreatment(lead.to,2026);
+    const areaPct=area>0?100*lead.ha/area:null;
+    fillColor(pdf,'#F1F0F7');pdf.roundedRect(14,103,182,90,3,3,'F');
+    line(pdf,19,114,'LA TRANSICIÓN DE MAYOR SUPERFICIE',9.7,COLORS.purple,true,170);
+    line(pdf,19,127,'Antes · POT 2014',8,COLORS.muted,true,130);
+    line(pdf,19,136,from,10,COLORS.navy,true,155);
+    line(pdf,19,148,'Propuesta · POT 2026',8,COLORS.muted,true,130);
+    line(pdf,19,157,to,10,COLORS.purple,true,155);
+    fillColor(pdf,'#E2DFED');pdf.roundedRect(19,167,172,5,2,2,'F');
+    if(areaPct!==null){fillColor(pdf,COLORS.purple);pdf.roundedRect(19,167,172*Math.min(100,Math.max(0,areaPct))/100,5,2,2,'F');}
+    line(pdf,19,183,ha(lead.ha)+' de superficie del barrio'+(areaPct===null?'':' · '+pct(areaPct)),9.3,COLORS.navy,true,172);
+    line(pdf,14,206,'OTRAS TRANSICIONES IDENTIFICADAS',9.5,COLORS.purple,true);
+    let otherY=216;
+    for(const t of effectiveTrans.slice(1,3)){
+      const af=labelTreatment(t.from,2014),bt=labelTreatment(t.to,2026);
+      const percent=area>0?pct(100*t.ha/area):'';
+      line(pdf,17,otherY,af+' (2014)',8,COLORS.navy,true,143);
+      line(pdf,17,otherY+7,'a '+bt+' (2026)',8,COLORS.muted,false,143);
+      pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);changeColor(pdf,COLORS.purple);
+      pdf.text(ha(t.ha),192,otherY+7,{align:'right'});
+      if(percent)line(pdf,17,otherY+14,percent+' del barrio',7.5,COLORS.muted);
+      otherY+=23;
+    }
+    if(effectiveTrans.length>3)line(pdf,14,264,'Se destacan los tres cruces mayores; consultar la plataforma para los restantes.',7.5,COLORS.muted);
+  }else{
+    fillColor(pdf,'#F1F0F7');pdf.roundedRect(14,108,182,48,3,3,'F');
+    line(pdf,19,124,'Sin transiciones con superficie suficiente en el resumen barrial.',9,COLORS.navy,true,166);
+    line(pdf,19,137,'No implica que se mantengan idénticas las reglas de los dos POT.',8,COLORS.muted,false,166);
   }
-  if(!trans.length)line(pdf,18,112,'No se registran transiciones para este territorio.',9,COLORS.muted);
-  line(pdf,14,264,'Se muestran hasta cuatro cruces de mayor superficie; los códigos no son equivalentes.',8,COLORS.muted);
-  line(pdf,14,272,'Los cruces no prueban aumento de edificabilidad, licencias o cambios tributarios.',8,COLORS.muted);
+  line(pdf,14,275,'Mismo código no implica mismo régimen: p. ej., R2 se redefine en la propuesta 2026.',7.1,COLORS.muted);
   pdf.addPage();
   // PÁGINA 3: áreas de actividad, separadas de los tratamientos.
   base(pdf,3,'03 / ÁREAS DE ACTIVIDAD','¿Cómo se distribuyen los usos?','Áreas de actividad de cada instrumento territorial; no permisos individuales.',p);
