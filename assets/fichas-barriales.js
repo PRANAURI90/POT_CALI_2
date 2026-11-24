@@ -322,6 +322,7 @@ async function downloadBarrio(){
     pdf.text(rows.length?ha(rows.reduce((v,r)=>v+r.ha,0)):'Sin cruce registrado',194,gy,{align:'right'});
     gy+=18;
   }
+  line(pdf,14,163,'Las superficies se suman por categoría y pueden solaparse; no son área única.',7.4,COLORS.muted);
   line(pdf,14,170,'PROCEDIMIENTOS QUE PODRÍAN SER PERTINENTES',9.7,COLORS.purple,true);
   let iy=181;
   const candidates=[
