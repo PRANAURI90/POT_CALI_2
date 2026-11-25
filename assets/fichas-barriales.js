@@ -654,36 +654,44 @@ async function downloadBarrio(){
   base(pdf,8,'08 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
   if(threat){
    const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
+   // Los mapas son apoyo espacial; la lectura principal son hectáreas y porcentajes por clase.
+   // Las clases y fuentes pueden solaparse: NO sumar sus áreas como área única.
    for(let i=0;i<3;i++){
     const [fen,title]=titles[i],xx=14+i*62;
-    line(pdf,xx,75,title,8.2,COLORS.navy,true,60);
+    line(pdf,xx,75,title,8.1,COLORS.navy,true,60);
     const subset=threat.rows.filter(r=>r.fen===fen);
     if(!subset.length){
-      fillColor(pdf,'#F3F6F7');pdf.roundedRect(xx,88,57,40,3,3,'F');
-      line(pdf,xx+3,105,'Sin intersección',7.8,COLORS.muted,true,51);
-      line(pdf,xx+3,115,'detectable (0,01 ha)',7,COLORS.muted,false,51);
+     fillColor(pdf,'#F3F6F7');pdf.roundedRect(xx,86,57,34,3,3,'F');
+     line(pdf,xx+3,100,'Sin intersección',8,COLORS.muted,true,51);
+     line(pdf,xx+3,109,'detectable en la capa',7.1,COLORS.muted,false,51);
+     line(pdf,xx+3,136,'0 categorías detectadas',8,COLORS.navy,true,53);
     }else{
-      const canvas=buildMapCanvas(barrio,threat.rows,fen,540,390);
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.88),'JPEG',xx,85,57,43);
-    }
-    if(subset.length){
-     let ry=135;
+     const canvas=buildMapCanvas(barrio,threat.rows,fen,420,300);
+     pdf.addImage(canvas.toDataURL('image/jpeg',0.86),'JPEG',xx+5,86,47,34);
+     const byLevel=new Map();
+     for(const row of subset){
+      const level=String(row.level),prev=byLevel.get(level)||{ha:0,pct:0};
+      prev.ha+=Number(row.ha||0);prev.pct+=Number(row.pct||0);
+      byLevel.set(level,prev);
+     }
+     let ry=136;
      for(const level of ['1','2','3','0']){
-      const row=subset.find(r=>r.level===level);if(!row)continue;
-      fillColor(pdf,RISK_COLORS[level]);pdf.rect(xx,ry-3,2.5,2.5,'F');
-      line(pdf,xx+4,ry,LEVEL[level]+': '+num(row.ha)+' ha',7.8,COLORS.navy,true,52);
-      line(pdf,xx+4,ry+5,pct(row.pct)+' del barrio',7.3,COLORS.muted,false,52);
-      ry+=13;
+      const row=byLevel.get(level);if(!row)continue;
+      fillColor(pdf,RISK_COLORS[level]);pdf.rect(xx,ry-4,3,3,'F');
+      line(pdf,xx+5,ry,LEVEL[level],7.4,COLORS.muted,true,50);
+      line(pdf,xx+5,ry+7,num(row.ha)+' ha',10.3,COLORS.navy,true,51);
+      line(pdf,xx+5,ry+13,pct(row.pct)+' del barrio',9.2,COLORS.purple,true,51);
+      ry+=21;
      }
     }
    }
-   fillColor(pdf,'#F0F3F7');pdf.roundedRect(14,191,182,68,3,3,'F');
-   let ty=202;
-   ty=line(pdf,19,ty,'INTERPRETACIÓN DE LOS CRUCES',10,COLORS.navy,true,174)+2;
-   ty=line(pdf,19,ty,'Superficie barrial calculada: '+ha(threat.bArea)+'.',8.5,COLORS.navy,false,170)+3;
-   ty=line(pdf,19,ty,'Las clases de un mismo fenómeno pueden solaparse; no sumar porcentajes sin disolver categorías.',8.2,COLORS.navy,false,169)+2;
-   if(threat.errors)ty=line(pdf,19,ty,'Precaución: '+threat.errors+' geometrías no procesadas; resultados incompletos.',8.4,COLORS.danger,true,168);
-   else line(pdf,19,ty,'Sin intersección significa ausencia de cruce detectable, no ausencia de peligro.',8.2,COLORS.muted,false,168);
+   fillColor(pdf,'#F0F3F7');pdf.roundedRect(14,222,182,39,3,3,'F');
+   let ty=231;
+   ty=line(pdf,19,ty,'CÓMO LEER ESTOS PORCENTAJES',9.2,COLORS.navy,true,174)+2;
+   ty=line(pdf,19,ty,'Área de referencia: '+ha(threat.bArea)+'. Clases y fuentes pueden solaparse:',8.3,COLORS.navy,false,170)+1;
+   ty=line(pdf,19,ty,'no sumar hectáreas ni porcentajes para obtener área única.',8.3,COLORS.navy,false,170)+1;
+   if(threat.errors)line(pdf,19,ty,'Aviso: '+threat.errors+' geometrías no procesadas; lectura incompleta.',7.8,COLORS.danger,true,169);
+   else line(pdf,19,ty,'Sin cruce detectable no equivale a ausencia física de amenaza.',7.7,COLORS.muted,false,169);
   }else{
    fillColor(pdf,'#FFF0E9');pdf.roundedRect(14,79,182,68,3,3,'F');
    line(pdf,19,91,'NO FUE POSIBLE CALCULAR LOS MAPAS DE AMENAZA',10,COLORS.danger,true,170);

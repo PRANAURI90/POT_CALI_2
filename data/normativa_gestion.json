@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-18",
+  "version": "2026-11-25",
   "etapa": "2 - homologación preliminar y lectura de instrumentos",
   "estado": "Reglas generales verificadas en articulados. No hay certificación normativa predial ni atribución automática de beneficiarios.",
   "documentos": {
@@ -8,41 +8,41 @@
   },
   "homologacion": [
     {
-      "familia": "Conservación",
       "2014": "Conservación integral, arquitectónica y contextual",
       "2026": "Conservación de sectores urbanos de interés cultural (CSU) y conservación contextual (CTL)",
+      "familia": "Conservación",
       "lectura": "Reconfiguración de modalidades. No homologar por coincidencia del término «contextual» sin revisar niveles patrimoniales y polígonos.",
       "arts2014": "301–307",
       "arts2026": "370, 377–378"
     },
     {
-      "familia": "Consolidación",
       "2014": "C1 urbanística; C2 básica; C3 moderada",
       "2026": "C1 urbanística; C2 básica; C3 moderada; C4 cambio de patrón",
+      "familia": "Consolidación",
       "lectura": "Los códigos C1–C3 persisten, pero su significado y régimen pueden variar. Se incorpora C4.",
       "arts2014": "308–313",
       "arts2026": "370, 379"
     },
     {
-      "familia": "Renovación",
       "2014": "R1 redesarrollo; R2 reactivación; R3 cambio de patrón",
       "2026": "R1 redensificación alta; R2 redensificación media",
+      "familia": "Renovación",
       "lectura": "R1 y R2 se redefinen; R3 no permanece como modalidad con ese nombre. Es un cambio de clasificación, no correspondencia uno-a-uno.",
       "arts2014": "314–321",
       "arts2026": "370, 387–388, 615–616"
     },
     {
-      "familia": "Desarrollo",
       "2014": "Tratamiento de desarrollo, sin modalidades D1/D2 en el artículo 301",
       "2026": "D1 expansión / ámbitos delimitados; D2 suelo urbano",
+      "familia": "Desarrollo",
       "lectura": "Nuevo desdoblamiento D1/D2. La necesidad de plan parcial depende de delimitación y supuestos expresos.",
       "arts2014": "323–325",
       "arts2026": "370, 381–383, 615"
     },
     {
-      "familia": "Mejoramiento integral",
       "2014": "Programa de mejoramiento en ciertos sectores C2; no listado como tratamiento autónomo en art. 301",
       "2026": "Tratamiento de mejoramiento integral",
+      "familia": "Mejoramiento integral",
       "lectura": "Se propone como tratamiento propio; la comparación depende de las delimitaciones y de su régimen concreto.",
       "arts2014": "301, 311",
       "arts2026": "370, 380"
@@ -370,6 +370,48 @@
       "tipo": "sustitución condicionada",
       "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
       "nota": "La aplicación a un predio exige verificar delimitación, situación urbanística, instrumentos vigentes y las demás normas pertinentes."
+    },
+    {
+      "id": "2026-d1-cesiones",
+      "anio": "2026",
+      "codigos": [
+        "D1"
+      ],
+      "titulo": "Desarrollo D1: cesiones mínimas",
+      "condicion": "La propuesta establece cesión y adecuación mínima del 22 % del área neta urbanizable para espacio público y del 8 % para suelo de equipamientos, además de otras cargas y adecuaciones según el proyecto. Las cifras no representan superficie ya cedida en el barrio.",
+      "articulos": "385",
+      "pagina_documento": "384-386",
+      "tipo": "obligaciones propuestas",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "Verificar área neta urbanizable, licencias, cargas generales y locales y delimitaciones aplicables."
+    },
+    {
+      "id": "2026-d2-cesiones",
+      "anio": "2026",
+      "codigos": [
+        "D2"
+      ],
+      "titulo": "Desarrollo urbano D2: cesiones mínimas",
+      "condicion": "La propuesta establece cesión y adecuación mínima del 16 % del área neta urbanizable para espacio público y del 8 % para suelo de equipamientos; se suman otras cargas aplicables. No equivalen a 16 % y 8 % del área total del barrio.",
+      "articulos": "385",
+      "pagina_documento": "384-386",
+      "tipo": "obligaciones propuestas",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "Verificar área neta urbanizable y los supuestos del artículo 383 antes de atribuir un plan parcial o una licencia."
+    },
+    {
+      "id": "2026-c3-gestion",
+      "anio": "2026",
+      "codigos": [
+        "C3"
+      ],
+      "titulo": "Consolidación moderada C3: condiciones",
+      "condicion": "En consolidación, los planes parciales solo son admisibles mediante delimitación por Proyecto Urbanístico Integral (PUI). Los planes manzana tienen supuestos delimitados por PUI o áreas priorizadas del Corredor Verde. La edificabilidad, las alturas y obligaciones concretas requieren comprobar las normas del ámbito.",
+      "articulos": "379",
+      "pagina_documento": "381-382",
+      "tipo": "condición propuesta",
+      "fuente": "Proyecto de Acuerdo, revisión del POT radicada en 2026",
+      "nota": "La presencia de C3 no significa autorización automática de más pisos ni de plan parcial."
     }
   ],
   "glosario": {
