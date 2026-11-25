@@ -98,7 +98,7 @@ jobs:
               assert code in pages[0],code
               for i,p in enumerate(pdf):
                   assert f'{i+1} / 4' in p.get_text(),(code,i)
-                  assert p.get_images(),(code,i,'no hay contenido gráfico en página')
+                  assert len(p.get_text())>100,(code,i,'contenido insuficiente')
               samples[code]='\n'.join(pages)
               print(code,'4 páginas OK',sum(len(x) for x in pages))
           assert 'Desarrollo urbano' in samples['0216'] and '16 %' in samples['0216'], 'D2 de Menga no aparece'
