@@ -234,7 +234,25 @@ async function getThreat(barrio){
  if(!result||!Number.isFinite(result.bArea))throw Error('Datos SIG incompletos');
  const rows=result.rows.map(r=>{const [fen,level]=r.cat.split('|');return {fen,level,ha:r.ha,pct:r.pct,geometry:r.geometry?.type==='Feature'?r.geometry.geometry:r.geometry,label:r.label,color:r.color}});
  if(rows.some(r=>r.ha>0&&(!r.geometry||!['Polygon','MultiPolygon'].includes(r.geometry.type))))throw Error('La geometría de amenaza no es un polígono representable');
- return {rows,errors:result.errors,bArea:result.bArea};
+ // Totales por fenómeno: unión geométrica de categorías para evitar doble conteo.
+ // El porcentaje corresponde al área del barrio; el total no es la suma de niveles.
+ const totals={};let errors=Number(result.errors||0);
+ for(const fen of ['3','1','2']){
+  const pieces=rows.filter(r=>r.fen===fen&&r.geometry&&r.ha>=.01);
+  if(!pieces.length){totals[fen]={ha:0,pct:0,levels:0};continue;}
+  try{
+   let united=window.turf.feature(pieces[0].geometry);
+   for(const part of pieces.slice(1)){
+    const joined=window.turf.union(united,window.turf.feature(part.geometry));
+    if(!joined)throw Error('Fallo en disolución entre categorías');
+    united=joined;
+   }
+   const a=window.turf.area(united)/10000;
+   if(!Number.isFinite(a)||a>result.bArea*1.002)throw Error('Área total fuera del barrio');
+   totals[fen]={ha:a,pct:100*a/result.bArea,levels:pieces.length};
+  }catch(e){errors++;totals[fen]={ha:null,pct:null,levels:pieces.length,error:'No fue posible disolver clases solapadas'};}
+ }
+ return {rows,errors,bArea:result.bArea,totals,method:'Cruce exploratorio Turf sobre GeoJSON web simplificados; unión geométrica por categoría y fenómeno'};
 }
 async function downloadBarrio(){
  const button=document.getElementById('download-barrio-pdf');
@@ -647,52 +665,55 @@ async function downloadBarrio(){
   line(pdf,14,268,'Plusvalía: no se atribuye sin evidencia de hecho generador y exigibilidad.',7.5,COLORS.muted);
   line(pdf,14,275,'ICA = Índice de Construcción Adicional; no es el impuesto ICA.',7.8,COLORS.muted);
   pdf.addPage();
-  // Si el cálculo terminó sin errores ni intersecciones, evitar tres mapas vacíos.
+  // PÁGINA DE AMENAZAS: siempre se genera para todos los barrios.
+  // Todos los indicadores se calculan para la geometría seleccionada, nunca se fijan por código.
   const noHazardIntersection=!!threat&&threat.rows.length===0&&Number(threat.errors||0)===0;
-  // PÁGINA 6: cartografía de amenazas.
-  if(!noHazardIntersection){
-  base(pdf,8,'08 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
+  base(pdf,8,'08 / AMENAZAS CUANTIFICADAS','¿Qué amenazas intersectan el barrio?','Propuesta POT 2026 · superficie y porcentaje de cada fenómeno.',p);
   if(threat){
+   line(pdf,14,72,'ÁREA DEL BARRIO: '+ha(threat.bArea),9.7,COLORS.purple,true,181);
    const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
    for(let i=0;i<3;i++){
-    const [fen,title]=titles[i],xx=14+i*62;
-    line(pdf,xx,75,title,8.2,COLORS.navy,true,60);
-    const subset=threat.rows.filter(r=>r.fen===fen);
-    if(!subset.length){
-      fillColor(pdf,'#F3F6F7');pdf.roundedRect(xx,88,57,40,3,3,'F');
-      line(pdf,xx+3,105,'Sin intersección',7.8,COLORS.muted,true,51);
-      line(pdf,xx+3,115,'detectable (0,01 ha)',7,COLORS.muted,false,51);
-    }else{
-      const canvas=buildMapCanvas(barrio,threat.rows,fen,540,390);
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.88),'JPEG',xx,85,57,43);
-    }
+    const [fen,title]=titles[i],xx=14+i*62,subset=threat.rows.filter(r=>r.fen===fen);
+    fillColor(pdf,'#F0EFF7');pdf.roundedRect(xx,78,57,15,2,2,'F');
+    line(pdf,xx+3,84,title,7.8,COLORS.purple,true,52);
+    const tot=threat.totals?.[fen];
+    if(tot&&tot.ha!==null){
+     line(pdf,xx+3,90,ha(tot.ha)+' · '+pct(tot.pct),7.2,COLORS.navy,true,52);
+    }else line(pdf,xx+3,90,'Total no verificable',7.1,COLORS.danger,true,52);
     if(subset.length){
-     let ry=135;
-     for(const level of ['1','2','3','0']){
-      const row=subset.find(r=>r.level===level);if(!row)continue;
-      fillColor(pdf,RISK_COLORS[level]);pdf.rect(xx,ry-3,2.5,2.5,'F');
-      line(pdf,xx+4,ry,LEVEL[level]+': '+num(row.ha)+' ha',7.8,COLORS.navy,true,52);
-      line(pdf,xx+4,ry+5,pct(row.pct)+' del barrio',7.3,COLORS.muted,false,52);
-      ry+=13;
-     }
+     const canvas=buildMapCanvas(barrio,subset,fen,540,390);
+     pdf.addImage(canvas.toDataURL('image/jpeg',0.9),'JPEG',xx,97,57,43);
+    }else{
+     fillColor(pdf,'#F3F6F7');pdf.roundedRect(xx,97,57,43,2,2,'F');
+     line(pdf,xx+3,113,'Sin intersección',7.7,COLORS.muted,true,50);
+     line(pdf,xx+3,123,'detectada (>= 0,01 ha)',6.7,COLORS.muted,false,50);
     }
+    let yy=150;
+    for(const level of ['1','2','3','0']){
+     const r=subset.find(z=>z.level===level);
+     if(!r)continue;
+     fillColor(pdf,RISK_COLORS[level]);pdf.rect(xx,yy-3,3,3,'F');
+     line(pdf,xx+5,yy,LEVEL[level]+' · '+ha(r.ha),7.5,COLORS.navy,true,52);
+     line(pdf,xx+5,yy+6,pct(r.pct)+' del barrio',7.1,COLORS.muted,false,51);
+     yy+=14;
+    }
+    if(!subset.length)line(pdf,xx+2,153,'No equivale a ausencia',7,COLORS.muted,false,53);
    }
-   fillColor(pdf,'#F0F3F7');pdf.roundedRect(14,191,182,68,3,3,'F');
-   let ty=202;
-   ty=line(pdf,19,ty,'INTERPRETACIÓN DE LOS CRUCES',10,COLORS.navy,true,174)+2;
-   ty=line(pdf,19,ty,'Superficie barrial calculada: '+ha(threat.bArea)+'.',8.5,COLORS.navy,false,170)+3;
-   ty=line(pdf,19,ty,'Las clases de un mismo fenómeno pueden solaparse; no sumar porcentajes sin disolver categorías.',8.2,COLORS.navy,false,169)+2;
-   if(threat.errors)ty=line(pdf,19,ty,'Precaución: '+threat.errors+' geometrías no procesadas; resultados incompletos.',8.4,COLORS.danger,true,168);
-   else line(pdf,19,ty,'Sin intersección significa ausencia de cruce detectable, no ausencia de peligro.',8.2,COLORS.muted,false,168);
+   fillColor(pdf,'#F1F3F7');pdf.roundedRect(14,214,182,47,3,3,'F');
+   line(pdf,19,224,'CÓMO INTERPRETAR ESTOS RESULTADOS',9,COLORS.purple,true,170);
+   line(pdf,19,234,'El total de cada fenómeno es la unión de sus categorías, no su suma.',8,COLORS.navy,false,170);
+   line(pdf,19,243,'Categorías y fenómenos pueden superponerse; sus porcentajes no son aditivos.',7.8,COLORS.navy,false,170);
+   if(threat.errors)line(pdf,19,252,'Cruce incompleto: '+threat.errors+' geometrías o uniones con error.',7.8,COLORS.danger,true,170);
+   else line(pdf,19,252,'Sin cruce detectable no significa ausencia de peligro.',7.8,COLORS.muted,false,170);
   }else{
-   fillColor(pdf,'#FFF0E9');pdf.roundedRect(14,79,182,68,3,3,'F');
-   line(pdf,19,91,'NO FUE POSIBLE CALCULAR LOS MAPAS DE AMENAZA',10,COLORS.danger,true,170);
-   line(pdf,19,103,'No se asignan porcentajes ni se interpreta como ausencia de peligro.',9,COLORS.navy,false,170);
-   line(pdf,19,114,'Motivo: '+threatError,8,COLORS.muted,false,170);
+   fillColor(pdf,'#FFF0E9');pdf.roundedRect(14,85,182,71,3,3,'F');
+   line(pdf,19,99,'NO SE PUDO CALCULAR LA AMENAZA',10,COLORS.danger,true,169);
+   line(pdf,19,112,'No se asignan ceros ni porcentajes sin geometrías procesables.',8.6,COLORS.navy,false,170);
+   line(pdf,19,127,'Detalle: '+String(threatError||'Sin información disponible'),7.9,COLORS.muted,false,169);
   }
-  line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
+  line(pdf,14,269,'Fuente: capas GeoJSON simplificadas · cruce exploratorio Turf.',7.5,COLORS.muted,false,183);
+  line(pdf,14,275,'Validación final: GDB original, EPSG:9377, topología y disolución vectorial.',7.2,COLORS.muted,false,184);
   pdf.addPage();
-  }
   // Síntesis de condición de riesgo, distinta de zonificación de amenaza.
   base(pdf,9,'09 / RIESGO Y GESTIÓN','Condición de riesgo y microzonificación','Lecturas cartográficas diferenciadas; no son diagnóstico predial.',p);
   const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
