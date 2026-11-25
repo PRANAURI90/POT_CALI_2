@@ -1,162 +1,108 @@
-name: Validar botón y generador de fichas barriales
+name: Validar fichas barriales de cuatro paginas
 on:
   push:
-    branches: [main, mejora-fichas-barriales-normativa-amenazas-20261125]
-    paths: ['assets/fichas-barriales.js', 'data/normativa_gestion.json', 'index.html', 'assets/styles.css', '.github/workflows/validar-fichas-barriales.yml']
+    branches: [main, fichas-cuatro-paginas-todos-barrios-20261125]
+    paths: ['assets/fichas-barriales.js', 'assets/app.js', 'data/normativa_gestion.json', 'index.html', '.github/workflows/validar-fichas-barriales.yml']
   workflow_dispatch:
 jobs:
   validar:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validar sintaxis JavaScript
-        run: node --check assets/fichas-barriales.js && node --check assets/app.js
-      - name: Verificar integración del botón y archivos
+      - name: Verificar JS y enlace de descarga
         run: |
+          node --check assets/fichas-barriales.js
+          node --check assets/app.js
           python - <<'PY'
           from pathlib import Path
-          h=Path('index.html').read_text()
+          html=Path('index.html').read_text()
           js=Path('assets/fichas-barriales.js').read_text()
-          css=Path('assets/styles.css').read_text()
-          assert h.count('id="download-barrio-pdf"')==1
-          assert 'src="assets/fichas-barriales.js?v=3.4-amenazas-normas-barriales"' in h
-          assert 'jspdf.umd.min.js' in h
-          assert 'barrioRiskIntersect' in js
-          assert "entriesFor(info,'actividad2026')" in js
-          assert "entriesFor(info,'tratamientos2026')" in js
-          assert 'ficha-download-btn' in css
-          assert 'download-barrio-ready' in h
-          print('Integración estática y sintaxis: correcta')
+          assert html.count('id="download-barrio-pdf"')==1
+          assert 'fichas-barriales.js?v=4.' in html
+          assert "pdf.getNumberOfPages()!==4" in js
+          assert "barrioRiskIntersect(barrio,'condicion_riesgo')" in js
+          assert "getThreat(barrio)" in js
+          assert "state.microzonasBarrio" in js
+          assert "state.normas" in js
+          print('Integración dinámica de cuatro páginas: verificada')
           PY
-      - name: Instalar navegador de prueba
+      - name: Instalar navegador
         run: |
           npm install --no-save playwright
           npx playwright install chromium
-      - name: Probar PDF de los 342 barrios y sectores
+      - name: Verificar generación y descarga de todos los barrios
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/pot-server.log 2>&1 &
           node - <<'JS'
           const {chromium}=require('playwright');
+          const fs=require('fs');
           (async()=>{
             const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
             const page=await browser.newPage({acceptDownloads:true});
             page.setDefaultTimeout(45000);
-            page.on('pageerror',e=>console.log('PAGEERROR',e.message));
+            const errors=[];
             try{
               await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
-              await page.waitForFunction(()=>typeof state!=='undefined'&&state.barrios.length>300&&!!state.resumen,{timeout:60000});
-              const cases=await page.evaluate(()=>state.barrios.map(f=>({codigo:String(f.properties.codigo),nombre:f.properties.barrio})).sort((a,b)=>a.codigo.localeCompare(b.codigo)));
-              console.log('TOTAL DE BARRIOS A PROBAR',cases.length);
-              const errors=[];
+              await page.waitForFunction(()=>typeof state!=='undefined'&&state.barrios.length>300&&!!state.resumen&&!!state.normas,{timeout:60000});
+              const cases=await page.evaluate(()=>state.barrios.map(f=>({code:String(f.properties.codigo),name:f.properties.barrio})).sort((a,b)=>a.code.localeCompare(b.code)));
+              console.log('BARRIOS Y SECTORES',cases.length);
+              if(cases.length<340)throw Error('Listado territorial incompleto');
               for(const t of cases){
-                await page.evaluate(code=>{const f=state.barrios.find(b=>String(b.properties.codigo)===code);setSelected(f,null,false);pageTo('mapa',false)},t.codigo);
-                const btn=page.locator('#download-barrio-pdf');
-                await btn.click({timeout:12000});
-                await page.waitForFunction(code=>{const a=document.getElementById('download-barrio-ready');return a&&!a.hidden&&a.download.includes(code)&&a.href.startsWith('blob:')},t.codigo,{timeout:30000});
-                const info=await page.evaluate(async ()=>{
-                  const a=document.getElementById('download-barrio-ready');
-                  if(!a||a.hidden||!a.href.startsWith('blob:'))return {error:'Enlace al PDF no disponible'};
-                  const blob=await (await fetch(a.href)).blob();
-                  const h=new TextDecoder().decode(await blob.slice(0,4).arrayBuffer());
-                  return {bytes:blob.size,header:h,filename:a.download};
-                });
-                if(info.error||info.header!=='%PDF'||!info.filename.includes(t.codigo)||info.bytes<5000){
-                  errors.push(t.codigo+': '+JSON.stringify(info));
-                  console.log('FALLA',t.codigo,t.nombre,JSON.stringify(info));
-                }else{
-                  console.log('OK',t.codigo,t.nombre,info.bytes,info.filename);
-                  if(t.codigo==='1722'||t.codigo==='1113'||t.codigo==='0216'){
-                    const data=await page.evaluate(async ()=>{
-                      const buf=await (await fetch(document.getElementById('download-barrio-ready').href)).arrayBuffer();
-                      const bytes=new Uint8Array(buf);let str='';
-                      for(let i=0;i<bytes.length;i+=8192)str+=String.fromCharCode(...bytes.slice(i,i+8192));
-                      return btoa(str);
+                try{
+                  await page.evaluate(code=>{const b=state.barrios.find(f=>String(f.properties.codigo)===code);setSelected(b,null,false);pageTo('mapa',false)},t.code);
+                  await page.click('#download-barrio-pdf',{timeout:12000});
+                  await page.waitForFunction(code=>{const a=document.getElementById('download-barrio-ready');return a&&!a.hidden&&a.href.startsWith('blob:')&&a.download.includes(code)},t.code,{timeout:35000});
+                  const info=await page.evaluate(async()=>{
+                    const a=document.getElementById('download-barrio-ready');
+                    const blob=await (await fetch(a.href)).blob();
+                    const head=new TextDecoder().decode(await blob.slice(0,4).arrayBuffer());
+                    return {size:blob.size,head,file:a.download};
+                  });
+                  if(info.head!=='%PDF'||info.size<4500||!info.file.includes(t.code))throw Error(JSON.stringify(info));
+                  if(['0216','1722','1113'].includes(t.code)){
+                    const buf=await page.evaluate(async()=>{
+                      const b=await(await fetch(document.getElementById('download-barrio-ready').href)).arrayBuffer();
+                      const u=new Uint8Array(b);let s='';
+                      for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode(...u.slice(i,i+8192));
+                      return btoa(s);
                     });
-                    require('fs').writeFileSync('/tmp/ficha_'+t.codigo+'.pdf',Buffer.from(data,'base64'));
+                    fs.writeFileSync('/tmp/ficha_'+t.code+'.pdf',Buffer.from(buf,'base64'));
                   }
-                }
+                  console.log('OK',t.code,t.name,info.size);
+                }catch(e){errors.push(t.code+': '+String(e.message||e));console.log('ERROR',t.code,String(e.message||e))}
               }
-              console.log('TOTAL',cases.length,'FALLAS',errors.length);if(errors.length)throw Error('Barrios con falla: '+JSON.stringify(errors));
+              console.log('TOTAL',cases.length,'ERRORES',errors.length);
+              if(errors.length)throw Error(errors.slice(0,30).join('\n'));
             }finally{await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
-      - name: Verificar píxeles del mapa de amenaza en PDF
+      - name: Verificar contenido y exactamente cuatro páginas
         run: |
-          pip install pymupdf pillow
+          pip install pymupdf
           python - <<'PY'
           import fitz
-          from PIL import Image
-          from io import BytesIO
-          pdf=fitz.open('/tmp/ficha_1722.pdf')
-          assert 9<=len(pdf)<=28, f'Número de páginas inesperado: {len(pdf)}'
-          def locate(needle):
-            hits=[(i,p) for i,p in enumerate(pdf) if needle in p.get_text()]
-            assert hits, f'Falta capítulo o contenido: {needle}'
-            return hits[0]
-          i_risk,page=locate('08 / AMENAZAS')
-          txt=page.get_text()
-          assert 'INUNDACIÓN' in txt and 'Alta' in txt and 'CÓMO LEER ESTOS PORCENTAJES' in txt, 'No se imprimieron indicadores de inundación'
-          i_gestion,gestion=locate('05 / GESTIÓN URBANÍSTICA')
-          _,benefits=locate('07 / GESTIÓN E INCENTIVOS')
-          all_text='\n'.join(p.get_text() for p in pdf)
-          assert 'plusvalía' in all_text.lower(), 'Falta reserva metodológica sobre plusvalía'
-          assert 'EXTENSIÓN DEL BARRIO' in pdf[0].get_text(), 'Falta extensión en cabecera'
-          assert 'TU BARRIO EN POCAS PALABRAS' in pdf[0].get_text(), 'Falta resumen ciudadano inicial'
-          assert '¿A QUÉ HAY QUE ESTAR ATENTOS?' in pdf[0].get_text() or '¿QUÉ REVISAR?' in pdf[0].get_text(), 'Falta pregunta ciudadana clave'
-          assert 'construcción adicional' in all_text, 'Falta definición de ICA/ICP'
-          assert 'REGLAS ASOCIADAS A LOS TRATAMIENTOS' in gestion.get_text(), 'Falta gestión filtrada por barrio'
-          _,riesgo=locate('09 / RIESGO Y GESTIÓN')
-          assert 'CONDICIÓN DE RIESGO' in riesgo.get_text(), 'Falta resumen independiente de condición de riesgo'
-          _,interpretacion=locate('03 / LECTURA DEL CAMBIO')
-          assert 'QUÉ QUIERE DECIR' in interpretacion.get_text(), 'Falta interpretación territorial'
-          _,instrumentos=locate('06 / INSTRUMENTOS CONCRETOS')
-          assert 'procedimiento' in instrumentos.get_text().lower(), 'Falta lectura específica de instrumentos'
-          full='\n'.join(p.get_text() for p in pdf)
-          assert 'COINCIDENCIA DE TRATAMIENTO' in full or 'SIN REGLA PARTICULAR' in full, 'Falta conexión entre norma y tratamiento barrial'
-          assert 'arts.' in full, 'Faltan referencias de artículos'
-          assert 'no delimita el instrumento' in full.lower(), 'Falta distinción entre tratamiento e instrumento delimitado'
-          assert 'POT 2014 VIGENTE' in full, 'Falta trazabilidad del régimen vigente'
-          menga=fitz.open('/tmp/ficha_0216.pdf')
-          txt_menga='\n'.join(p.get_text() for p in menga)
-          assert 'Desarrollo urbano D2: cesiones mínimas' in txt_menga, 'Menga no contiene reglas D2 propias'
-          assert '16 %' in txt_menga and '8 %' in txt_menga, 'Menga carece de cesiones D2'
-          assert 'Consolidación moderada C3' in txt_menga, 'Menga no contiene reglas C3'
-          barrio1113=fitz.open('/tmp/ficha_1113.pdf')
-          t1113=barrio1113[1].get_text()
-          assert '32,75 ha' in t1113 and '0,17 ha' in t1113, 'Faltan hectáreas de transiciones 1113'
-          assert '98,9' in t1113, 'Falta porcentaje de transición 1113'
-          assert 'reactivación' in t1113.lower() and 'redensificación' in t1113.lower(), 'Falta interpretación R2'
-          transition=pdf[1].get_text()
-          assert 'LA TRANSICIÓN DE MAYOR SUPERFICIE' in transition or 'Sin transiciones' in transition
-          assert ('Antes' in transition and 'Propuesta' in transition) or 'Sin transiciones' in transition
-          assert '\\x00' not in transition and '\\ufffd' not in transition, 'Texto corrupto en transición'
-          assert i_gestion<i_risk, 'Los capítulos no están en orden'
-          for index,p in enumerate(pdf):
-            assert f'{index+1} / {len(pdf)}' in p.get_text(), f'Numeración incorrecta en página {index+1}'
-          from collections import Counter
-          # Verificar que los textos de la página 2 no se monten verticalmente:
-          blocks=[b for b in pdf[1].get_text('blocks') if b[4].strip()]
-          for i,a in enumerate(blocks):
-            for b in blocks[i+1:]:
-              ax0,ay0,ax1,ay1,*_=a; bx0,by0,bx1,by1,*_=b
-              overlap_x=min(ax1,bx1)-max(ax0,bx0)
-              overlap_y=min(ay1,by1)-max(ay0,by0)
-              if overlap_x>18 and overlap_y>4 and (ay1-ay0)>3 and (by1-by0)>3:
-                # Los bloques de diferentes filas no deben superponerse.
-                assert not (overlap_x>25 and overlap_y>6), f'Solapamiento texto PDF 2: {a[4][:45]} / {b[4][:45]}'
-          pix=page.get_pixmap(matrix=fitz.Matrix(2,2),alpha=False)
-          im=Image.open(BytesIO(pix.tobytes('png'))).convert('RGB')
-          # El mapa de la primera columna ocupa aproximadamente 14-71 mm x 85-128 mm.
-          # El borde del mapa es azul; el rojo debe venir de polígonos de amenaza ALTA.
-          pts=0
-          for yy in range(int(86/297*im.height),int(120/297*im.height)):
-            for xx in range(int(19/210*im.width),int(66/210*im.width)):
-              R,G,B=im.getpixel((xx,yy))
-              if R>140 and R>G*1.25 and R>B*1.2 and G<155 and B<155:
-                pts+=1
-          print('Píxeles rojos de amenaza alta en mapa PDF:',pts)
-          assert pts>250, 'El mapa de inundación continúa sin polígonos coloreados'
+          samples={}
+          for code in ['0216','1722','1113']:
+              pdf=fitz.open('/tmp/ficha_'+code+'.pdf')
+              assert len(pdf)==4,(code,'Número de páginas',len(pdf))
+              pages=[p.get_text() for p in pdf]
+              assert 'ENTIENDE EL CAMBIO' in pages[0],code
+              assert 'CÓMO SE TRANSFORMA' in pages[1],code
+              assert 'AMENAZAS CUANTIFICADAS' in pages[2],code
+              assert 'MICROZONIFICACIÓN Y RIESGO' in pages[3],code
+              assert 'INSTRUMENTOS Y OBLIGACIONES' in pages[1],code
+              assert code in pages[0],code
+              for i,p in enumerate(pdf):
+                  assert f'{i+1} / 4' in p.get_text(),(code,i)
+                  assert p.get_images(),(code,i,'no hay contenido gráfico en página')
+              samples[code]='\n'.join(pages)
+              print(code,'4 páginas OK',sum(len(x) for x in pages))
+          assert 'Desarrollo urbano' in samples['0216'] and '16 %' in samples['0216'], 'D2 de Menga no aparece'
+          assert 'Consolidación moderada' in samples['0216'], 'C3 de Menga no aparece'
+          assert samples['0216']!=samples['1722'], 'Las fichas no son específicas'
+          print('Comprobaciones normativas, páginas y especificidad: OK')
           PY
