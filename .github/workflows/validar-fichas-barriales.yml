@@ -1,8 +1,8 @@
 name: Validar botón y generador de fichas barriales
 on:
   push:
-    branches: [main]
-    paths: ['assets/fichas-barriales.js', 'index.html', 'assets/styles.css', '.github/workflows/validar-fichas-barriales.yml']
+    branches: [main, mejora-fichas-barriales-normativa-amenazas-20261125]
+    paths: ['assets/fichas-barriales.js', 'data/normativa_gestion.json', 'index.html', 'assets/styles.css', '.github/workflows/validar-fichas-barriales.yml']
   workflow_dispatch:
 jobs:
   validar:
@@ -22,7 +22,7 @@ jobs:
           js=Path('assets/fichas-barriales.js').read_text()
           css=Path('assets/styles.css').read_text()
           assert h.count('id="download-barrio-pdf"')==1
-          assert 'src="assets/fichas-barriales.js?v=3.3-fichas-especificas"' in h
+          assert 'src="assets/fichas-barriales.js?v=3.4-amenazas-normas-barriales"' in h
           assert 'jspdf.umd.min.js' in h
           assert 'barrioRiskIntersect' in js
           assert "entriesFor(info,'actividad2026')" in js
@@ -68,7 +68,7 @@ jobs:
                   console.log('FALLA',t.codigo,t.nombre,JSON.stringify(info));
                 }else{
                   console.log('OK',t.codigo,t.nombre,info.bytes,info.filename);
-                  if(t.codigo==='1722'||t.codigo==='1113'){
+                  if(t.codigo==='1722'||t.codigo==='1113'||t.codigo==='0216'){
                     const data=await page.evaluate(async ()=>{
                       const buf=await (await fetch(document.getElementById('download-barrio-ready').href)).arrayBuffer();
                       const bytes=new Uint8Array(buf);let str='';
@@ -91,14 +91,14 @@ jobs:
           from PIL import Image
           from io import BytesIO
           pdf=fitz.open('/tmp/ficha_1722.pdf')
-          assert 9<=len(pdf)<=22, f'Número de páginas inesperado: {len(pdf)}'
+          assert 9<=len(pdf)<=28, f'Número de páginas inesperado: {len(pdf)}'
           def locate(needle):
             hits=[(i,p) for i,p in enumerate(pdf) if needle in p.get_text()]
             assert hits, f'Falta capítulo o contenido: {needle}'
             return hits[0]
           i_risk,page=locate('08 / AMENAZAS')
           txt=page.get_text()
-          assert 'INUNDACIÓN' in txt and 'Alta' in txt, 'No se imprimieron indicadores de inundación'
+          assert 'INUNDACIÓN' in txt and 'Alta' in txt and 'CÓMO LEER ESTOS PORCENTAJES' in txt, 'No se imprimieron indicadores de inundación'
           i_gestion,gestion=locate('05 / GESTIÓN URBANÍSTICA')
           _,benefits=locate('07 / GESTIÓN E INCENTIVOS')
           all_text='\n'.join(p.get_text() for p in pdf)
@@ -119,6 +119,11 @@ jobs:
           assert 'arts.' in full, 'Faltan referencias de artículos'
           assert 'no delimita el instrumento' in full.lower(), 'Falta distinción entre tratamiento e instrumento delimitado'
           assert 'POT 2014 VIGENTE' in full, 'Falta trazabilidad del régimen vigente'
+          menga=fitz.open('/tmp/ficha_0216.pdf')
+          txt_menga='\n'.join(p.get_text() for p in menga)
+          assert 'Desarrollo urbano D2: cesiones mínimas' in txt_menga, 'Menga no contiene reglas D2 propias'
+          assert '16 %' in txt_menga and '8 %' in txt_menga, 'Menga carece de cesiones D2'
+          assert 'Consolidación moderada C3' in txt_menga, 'Menga no contiene reglas C3'
           barrio1113=fitz.open('/tmp/ficha_1113.pdf')
           t1113=barrio1113[1].get_text()
           assert '32,75 ha' in t1113 and '0,17 ha' in t1113, 'Faltan hectáreas de transiciones 1113'
@@ -147,8 +152,8 @@ jobs:
           # El mapa de la primera columna ocupa aproximadamente 14-71 mm x 85-128 mm.
           # El borde del mapa es azul; el rojo debe venir de polígonos de amenaza ALTA.
           pts=0
-          for yy in range(int(85/297*im.height),int(128/297*im.height)):
-            for xx in range(int(15/210*im.width),int(71/210*im.width)):
+          for yy in range(int(86/297*im.height),int(120/297*im.height)):
+            for xx in range(int(19/210*im.width),int(66/210*im.width)):
               R,G,B=im.getpixel((xx,yy))
               if R>140 and R>G*1.25 and R>B*1.2 and G<155 and B<155:
                 pts+=1
