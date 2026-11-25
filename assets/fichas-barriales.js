@@ -300,24 +300,46 @@ async function downloadBarrio(){
    }
    if(rows.length>maxItems)drawText(x,y+maxItems*23,'+'+(rows.length-maxItems)+' categorías adicionales en el visor',7.3,C.muted,false,w);
   };
-  const ruleText=(c)=>{
+  // Interpretaciones abreviadas, sin sustituir la norma aplicable al predio.
+  const ruleText=c=>{
    const choose={
-    C1:['Consolidación urbanística','Edificabilidad, volumetría y soporte urbano según norma del sector. Plan parcial solo mediante delimitación PUI; planes manzana sujetos a supuestos específicos.','Arts. 370 y 379'],
-    C2:['Consolidación básica','Las intervenciones dependen de índices, alturas y capacidad de soporte. Planes parciales en consolidación solo mediante PUI.','Arts. 370 y 379'],
-    C3:['Consolidación moderada','Densificación moderada sujeta a índices, alturas y soporte. Plan parcial únicamente mediante delimitación PUI; revisar reglas especiales de plan manzana y transferencias de derechos.','Arts. 370, 379, 390-393 y 637'],
-    C4:['Consolidación con cambio de patrón','Revisar índices, alturas y transición del tejido; instrumentos excepcionales sujetos a delimitación PUI o condiciones especiales.','Arts. 370 y 379'],
-    D1:['Desarrollo en expansión','Plan parcial obligatorio en expansión y ámbitos urbanos delimitados; cesiones mínimas propuestas: 22 % espacio público y 8 % equipamientos sobre área neta urbanizable.','Arts. 381, 382 y 385'],
-    D2:['Desarrollo urbano','Proyecto urbanístico general o licencia; plan parcial si hay gestión asociada o más de 10 ha netas urbanizables y dos o más predios. Cesiones: 16 % espacio público y 8 % equipamientos sobre área neta urbanizable.','Arts. 383 y 385'],
-    MI:['Mejoramiento integral','Posibles Planes de Gestión del Hábitat (PGHAB) para articular intervenciones. Verificar delimitación y condición de asentamiento de desarrollo incompleto.','Arts. 380 y 580-591'],
-    R1:['Renovación con redensificación alta','Actuación individual, plan manzana o plan parcial según tamaño y condiciones. Cargas y cesiones variables, con medidas para moradores que deben verificarse.','Arts. 387, 388, 615 y 619-620'],
-    R2:['Renovación con redensificación media','Actuación individual, plan manzana o plan parcial según tamaño y condiciones. Para planes parciales/manzana, cesiones específicas y demás cargas.','Arts. 387, 388, 615 y 619-620'],
-    CO:['Conservación','Verificar modalidad patrimonial o contextual, obras permitidas y régimen de protección; no atribuir incentivos automáticos.','Arts. 370, 377-378'],
-    CSU:['Conservación urbana','Verificar protección de sector de interés cultural y régimen de intervención aplicable a cada inmueble.','Arts. 377-378'],
-    CTL:['Conservación contextual','Verificar delimitación de conservación contextual y norma patrimonial pertinente.','Arts. 377-378']
+    C1:['Consolidación urbanística','Protege tejidos de baja ocupación con valores ambientales o restricciones. La edificabilidad se verifica predio a predio; no habilita alturas automáticamente.','Arts. 370 y 379'],
+    C2:['Consolidación básica','Busca cualificar sectores urbanizados con déficits de vías, espacio público, servicios o equipamientos. Toda intervención debe comprobar alturas, índices y soporte urbano. Plan parcial en consolidación solo mediante PUI.','Arts. 370 y 379'],
+    C3:['Consolidación moderada','Orienta densificación moderada donde existen servicios, equipamientos y transporte suficientes. No asigna pisos automáticamente: revisar índices y alturas. Plan parcial únicamente en PUI; verificar plan de manzana y transferencia de derechos.','Arts. 370, 379, 390-393 y 637'],
+    C4:['Consolidación con cambio de patrón','Transforma tejidos de baja intensidad en sectores estratégicos. Revisar capacidad de redes, espacio público y movilidad antes de proyectar edificabilidad.','Arts. 370 y 379'],
+    D1:['Desarrollo en expansión','Requiere plan parcial en suelo de expansión. Cesiones propuestas sobre área neta urbanizable: 22 % espacio público y 8 % equipamientos. No corresponden al área total del barrio.','Arts. 381, 382 y 385'],
+    D2:['Desarrollo urbano','Se gestiona con proyecto urbanístico general o licencia; plan parcial según gestión asociada, tamaño y predios. Cesiones propuestas sobre área neta urbanizable: 16 % espacio público y 8 % equipamientos.','Arts. 383 y 385'],
+    MI:['Mejoramiento integral','Orienta intervención articulada en asentamientos de desarrollo incompleto para resolver déficits urbanos y de hábitat. Verificar delimitación y condiciones de los Planes de Gestión del Hábitat.','Arts. 380 y 580-591'],
+    R1:['Renovación con redensificación alta','Transformación urbana con mayor intensidad donde hay soporte y accesibilidad. Según tamaño y condiciones: actuación individual, plan de manzana o parcial, con cargas y cesiones distintas. Verificar gestión del suelo y protección a moradores.','Arts. 387, 388, 615 y 619-620'],
+    R2:['Renovación con redensificación media','Orienta transformación progresiva de sectores de transición. La actuación y sus cargas dependen del instrumento, área y delimitación; planes de manzana y parciales pueden implicar cesiones y medidas para moradores.','Arts. 387, 388, 615 y 619-620'],
+    CO:['Conservación','Protege valores patrimoniales, paisajísticos o contextuales. Las obras dependen del régimen de protección y no reciben incentivos automáticos.','Arts. 370 y 377-378'],
+    CSU:['Conservación urbana','Preserva sectores urbanos de interés cultural; revisar restricciones de intervención del inmueble y entorno.','Arts. 377-378'],
+    CTL:['Conservación contextual','Preserva la relación entre tejido, paisaje y espacio público; consultar reglas de intervención y volumetría.','Arts. 377-378']
    };
    if(choose[c])return choose[c];
    const rule=currentRules.find(r=>(r.codigos||[]).includes(c));
-   return rule?[rule.titulo,rule.condicion,'Arts. '+rule.articulos]:['Tratamiento '+c,'Verificar reglas y obligaciones según localización y actuación urbanística.','Consultar proyecto POT'];
+   return rule?[rule.titulo,rule.condicion,'Arts. '+rule.articulos]:['Tratamiento '+c,'Consultar la reglamentación aplicable a la localización.','Proyecto POT'];
+  };
+  const activityMeaning=name=>{
+   const a=String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+   if(a.includes('PROXIMIDAD'))return 'Prioriza vivienda y habitabilidad, con comercio y servicios de cercanía regulados.';
+   if(a.includes('MULTIFUNCIONAL'))return 'Busca coexistencia regulada de vivienda, comercio y servicios compatibles.';
+   if(a.includes('INTEGRACION'))return 'Admite mezcla controlada de actividades económicas en entornos residenciales.';
+   if(a.includes('DINAMIZACION'))return 'Concentra servicios especializados y actividades económicas de mayor intensidad.';
+   if(a.includes('MANEJO ESPECIAL'))return 'Destina ámbitos a infraestructuras y servicios urbanos básicos y colectivos.';
+   return 'El régimen de usos y las condiciones deben verificarse en el art. 365.';
+  };
+  const microMeaning=zone=>{
+   const z=String(zone||'').replace(/^ZONA\s*/i,'').trim().toUpperCase();
+   const desc={
+    '4D':'Abanico de los ríos Meléndez y Lili: depósitos aluviales con respuesta sísmica específica.',
+    '5':'Transición entre abanicos y llanura: el subsuelo tiene respuesta sísmica diferenciada.',
+    '4B':'Abanico distal de Cali y Menga: depósitos con respuesta sísmica específica.',
+    '4A':'Sector de abanico aluvial; consultar espectro oficial de diseño.',
+    '4C':'Sector de abanico aluvial; consultar espectro oficial de diseño.',
+    '4E':'Sector de abanico aluvial; consultar espectro oficial de diseño.'
+   };
+   return desc[z]||'Sector con parámetros propios de respuesta sísmica y diseño estructural.';
   };
   // PÁGINA 1 · comparación de tratamientos y transición dominante.
   page(1,'01 / ENTIENDE EL CAMBIO','¿Qué cambia en '+name+'?','Comparación de tratamientos del POT 2014 y la propuesta 2026.');
@@ -338,110 +360,100 @@ async function downloadBarrio(){
   drawText(14,256,'¿QUÉ SIGNIFICA?',9,C.purple,true);
   const summary=trans.length?citizenReading(trans[0].from,trans[0].to).watch:'La ausencia de transición en el resumen no demuestra que toda la norma del barrio permanezca igual.';
   drawText(14,265,summary,7.5,C.navy,false,181);
-  // PÁGINA 2 · áreas de actividad y obligaciones por tratamiento de este barrio.
-  page(2,'02 / CÓMO SE TRANSFORMA','Suelo, usos e instrumentos','Categorías cartografiadas; obligaciones propuestas sujetas a delimitación y actuación.');
+  // PÁGINA 2 · usos e instrumentos por categorías presentes en el barrio.
+  page(2,'02 / CÓMO SE TRANSFORMA','Suelo, usos e instrumentos','Área de actividad regula usos; tratamiento orienta la transformación urbana.');
   drawText(14,78,'ÁREAS DE ACTIVIDAD',9,C.purple,true);
   drawText(14,89,'POT 2014 · vigente',8.7,C.navy,true);
   drawText(111,89,'Propuesta 2026',8.7,C.purple,true);
-  miniBars(ac14,14,100,82,C.blue,3);miniBars(ac26,111,100,82,C.green,3);
-  drawText(14,181,'INSTRUMENTOS Y OBLIGACIONES PROPUESTOS',9,C.purple,true);
-  drawText(14,189,'Se activan por tratamiento presente, no automáticamente para todos los predios.',7.6,C.muted,false,182);
+  miniBars(ac14,14,99,82,C.blue,2);miniBars(ac26,111,99,82,C.green,2);
+  drawText(14,145,'¿QUÉ SIGNIFICAN LOS USOS PROPUESTOS?',8.5,C.purple,true);
+  let ay=154;
+  for(const r of ac26.slice(0,2)){
+   ay=drawText(14,ay,r.name+': '+activityMeaning(r.name),7.1,C.navy,false,181)+1;
+  }
+  if(!ac26.length)drawText(14,157,'Sin categorías verificables en el resumen cartográfico.',7.2,C.muted,false,181);
+  drawText(14,179,'INSTRUMENTOS Y OBLIGACIONES PROPUESTOS',9,C.purple,true);
+  drawText(14,186,'No son derechos automáticos: verificar normas, ámbito y licencia de cada predio.',7,C.muted,false,182);
   const treatments=[...areas.entries()].sort((a,b)=>b[1]-a[1]);
-  let y=197;
-  if(!treatments.length){rect(14,y,182,44,C.paper,3);drawText(19,y+11,'No hay tratamiento 2026 verificable en el resumen cartográfico.',8.5,C.navy,false,173)}
+  let y=192;
+  if(!treatments.length){rect(14,y,182,65,C.paper,3);drawText(19,y+12,'No hay tratamiento propuesto verificable en el resumen cartográfico.',8.5,C.navy,false,173)}
   const maxCards=Math.min(3,treatments.length);
+  const cardH=Math.min(27,(274-y)/Math.max(1,maxCards));
   for(let i=0;i<maxCards;i++){
    const [c,extent]=treatments[i],entry=ruleText(c);
-   const remaining=269-y-(maxCards-i-1)*4;
-   const h=Math.min(remaining/(maxCards-i),27);
-   rect(14,y,182,h-3,C.paper,3);
-   drawText(19,y+7,entry[0]+' ('+c+') · '+ha(extent),8.2,C.purple,true,173);
-   const words=entry[1]+' Proyecto POT: '+entry[2]+'.';
-   drawText(19,y+14,words,h<25?6.6:7.0,C.navy,false,172);
-   y+=h;
+   rect(14,y,182,cardH-2,C.paper,3);
+   drawText(19,y+6.3,entry[0]+' ('+c+') · '+ha(extent),8.1,C.purple,true,172);
+   drawText(19,y+12,entry[1]+' Proyecto POT: '+entry[2]+'.',6.6,C.navy,false,172);
+   y+=cardH;
   }
-  if(treatments.length>3)drawText(14,274,'Otros '+(treatments.length-3)+' tratamientos presentes: consultar normas en el visor.',6.5,C.muted,false,182);
-  // PÁGINA 3 · mapas menores y porcentajes prioritarios, tres fenómenos.
-  page(3,'03 / AMENAZAS CUANTIFICADAS','Zonificación de amenazas · propuesta 2026','Cruce SIG exploratorio. Las clases pueden superponerse entre fuentes y escalas.');
+  if(treatments.length>3)drawText(14,276,'+'+(treatments.length-3)+' tratamientos adicionales: consultar el visor.',6.2,C.muted,false,182);
+  // PÁGINA 3 · mapas compactos con cifras junto a cada fenómeno.
+  page(3,'03 / AMENAZAS CUANTIFICADAS','Zonificación de amenazas · propuesta 2026','Cruce SIG exploratorio. Los fenómenos y sus porcentajes no deben sumarse.');
   const phen=[['1','MOVIMIENTOS EN MASA'],['3','INUNDACIÓN'],['2','AVENIDAS TORRENCIALES']];
-  drawText(14,79,'DISTRIBUCIÓN ESPACIAL POR FENÓMENO',9,C.purple,true);
+  drawText(14,79,'MAPAS Y CIFRAS POR FENÓMENO',9,C.purple,true);
   for(let i=0;i<3;i++){
    const [fen,title]=phen[i],x=14+i*62,subset=threat?.rows?.filter(r=>r.fen===fen)||[];
-   drawText(x,92,title,7.4,C.navy,true,58);
+   drawText(x,92,title,7,C.navy,true,59);
    if(threat&&subset.length){
-    const cnv=buildMapCanvas(barrio,threat.rows,fen,400,310);
-    pdf.addImage(cnv.toDataURL('image/jpeg',.86),'JPEG',x+5,97,47,36);
-   }else{rect(x+5,97,47,36,'#EEF1F5',3);drawText(x+9,115,threat?'Sin cruce detectado':'Sin datos SIG',7,C.muted,true,39)}
-   if(threat&&subset.length){
-    let yy=142;
+    const cnv=buildMapCanvas(barrio,threat.rows,fen,380,265);
+    pdf.addImage(cnv.toDataURL('image/jpeg',.84),'JPEG',x+7,97,44,31);
+    let yy=138;
     for(const lvl of ['1','2','3','0']){
-     const rr=subset.filter(r=>r.level===lvl);
-     if(!rr.length)continue;
+     const rr=subset.filter(r=>r.level===lvl);if(!rr.length)continue;
      const total=rr.reduce((a,r)=>a+r.ha,0),percent=rr.reduce((a,r)=>a+r.pct,0);
-     drawText(x,yy,LEVEL[lvl]+': '+ha(total),8,C.navy,true,58);
-     drawText(x,yy+8,pct(percent)+' del barrio',8,C.purple,true,58);
-     yy+=19;
+     drawText(x,yy,LEVEL[lvl]+': '+ha(total)+' · '+pct(percent),7.1,lvl==='1'?C.red:lvl==='3'?C.green:C.navy,true,59);
+     yy+=11;
     }
+   }else{
+    rect(x+7,97,44,31,'#EEF1F5',3);
+    drawText(x+10,113,threat?'Sin cruce':'Sin datos SIG',7,C.muted,true,38);
    }
   }
-  drawText(14,222,'LECTURA DE LOS PORCENTAJES',9,C.purple,true);
-  rect(14,229,182,38,C.paper,3);
+  drawText(14,208,'CÓMO INTERPRETAR LOS PORCENTAJES',9,C.purple,true);
+  rect(14,215,182,51,C.paper,3);
   if(threat){
-   drawText(19,239,'Superficie SIG de referencia: '+ha(threat.bArea),9,C.navy,true,172);
-   drawText(19,248,'Una misma superficie puede estar en más de una clase; no sumar porcentajes ni inferir amenaza alta para todo el barrio.',7.7,C.navy,false,172);
-   if(threat.errors)drawText(19,261,'Precaución: '+threat.errors+' geometrías no procesadas.',7.4,C.red,true,172);
-   else drawText(19,261,'Sin intersección detectable no significa ausencia física del fenómeno.',7.2,C.muted,false,172);
+   drawText(19,225,'Superficie SIG de referencia: '+ha(threat.bArea),9,C.navy,true,172);
+   drawText(19,237,'Alta, media y baja son categorías de amenaza: no equivalen a viviendas ni personas expuestas.',8,C.navy,false,172);
+   drawText(19,250,'Los cruces no determinan riesgo predial ni sustituyen estudios de detalle.',7.7,C.muted,false,172);
+   if(threat.errors)drawText(19,261,'Precaución: '+threat.errors+' geometrías sin procesar.',7.2,C.red,true,172);
   }else{
-   drawText(19,240,'No fue posible calcular los cruces SIG para este barrio.',8.3,C.red,true,171);
-   drawText(19,252,'Motivo: '+threatError,7,C.muted,false,171);
+   drawText(19,230,'No fue posible calcular los cruces SIG para este barrio.',8.3,C.red,true,171);
+   drawText(19,242,'Motivo: '+threatError,7,C.muted,false,171);
   }
-  // PÁGINA 4 · microzonificación y condición de riesgo, separadas de la amenaza.
-  page(4,'04 / MICROZONIFICACIÓN Y RIESGO','Respuesta sísmica local y condición de riesgo','La microzonificación describe respuesta de suelos; no equivale a riesgo predial.');
-  drawText(14,81,'MICROZONAS SÍSMICAS',9,C.purple,true,85);
-  drawText(112,81,'CONDICIÓN DE RIESGO',9,C.purple,true,84);
+  // PÁGINA 4 · interpretación de microzonas y condición de riesgo cuando existe.
+  page(4,'04 / MICROZONIFICACIÓN Y RIESGO','Respuesta sísmica local','Una microzona define respuesta del suelo, no el nivel de riesgo de las viviendas.');
+  drawText(14,80,'MICROZONAS SÍSMICAS APROXIMADAS',9,C.purple,true);
   const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
   const zones=micro.filter(z=>Number(z.hectareas||0)>0).sort((a,b)=>Number(b.hectareas)-Number(a.hectareas));
-  rect(14,89,83,61,'#F3F4F8',3);
   if(zones.length){
    const max=Math.max(...zones.map(z=>Number(z.hectareas)));
-   let zy=99;
+   let zy=94;
    for(const z of zones.slice(0,4)){
     const v=Number(z.hectareas||0);
-    drawText(19,zy,'Zona '+z.zona+' · '+ha(v)+' ('+pct(Number(z.porcentaje_barrio||0))+')',7.1,C.navy,true,74);
-    rect(19,zy+3,72,3,C.track,1);
-    rect(19,zy+3,Math.max(1,72*v/max),3,C.purple,1);
-    zy+=13;
+    drawText(16,zy,'Zona '+z.zona+' · '+ha(v)+' ('+pct(Number(z.porcentaje_barrio||0))+')',8.1,C.navy,true,170);
+    rect(16,zy+4,177,3.1,C.track,1);
+    rect(16,zy+4,Math.max(1,177*v/max),3.1,C.purple,1);
+    zy+=17;
    }
-   if(zones.length>4)drawText(19,147,'+'+(zones.length-4)+' zonas adicionales',6.7,C.muted,false,71);
-  }else drawText(20,116,'Sin microzonas barriales verificables.',8,C.muted,false,69);
+   if(zones.length>4)drawText(16,165,'+'+(zones.length-4)+' microzonas adicionales en el visor.',7,C.muted,false,175);
+   drawText(14,174,'¿QUÉ SIGNIFICA CADA MICROZONA?',9,C.purple,true);
+   let my=185;
+   for(const z of zones.slice(0,2))my=drawText(14,my,'Zona '+z.zona+': '+microMeaning(z.zona),7.6,C.navy,false,181)+3;
+   drawText(14,222,'No clasifica riesgo alto, medio o bajo ni prueba vulnerabilidad de edificaciones.',7.3,C.muted,false,181);
+   drawText(14,234,'Fuente normativa: Decreto 411.0.20.0158 de 2014; proyecto POT, art. 80.',7,C.muted,false,181);
+  }else{
+   rect(14,90,182,57,C.paper,3);
+   drawText(19,111,'No hay microzonas barriales verificables para esta ficha.',8.5,C.muted,false,171);
+   drawText(14,168,'No se infiere una microzona por ausencia de cartografía.',8,C.navy,false,181);
+  }
   const riskRows=conditionRisk?.rows||[];
   if(riskRows.length){
-   const simplified=riskRows.map(r=>({fen:'1',level:'1',geometry:r.geometry?.geometry||r.geometry}));
-   const cnv=buildMapCanvas(barrio,simplified,'1',480,310);
-   pdf.addImage(cnv.toDataURL('image/jpeg',.83),'JPEG',115,91,75,57);
-  }else{
-   rect(114,90,79,60,'#F3F4F8',3);
-   drawText(120,113,conditionRisk?'Sin intersección detectable':'Cruce no disponible',8,C.muted,true,66);
-  }
-  drawText(14,165,'MICROZONIFICACIÓN APROXIMADA',9,C.purple,true);
-  if(zones.length){
-   const total=zones.reduce((a,z)=>a+Number(z.hectareas||0),0);
-   drawText(14,180,zones.length+' zonas identificadas · '+ha(total)+' sumadas por categoría',9,C.navy,true,183);
-   drawText(14,191,'Zonas digitalizadas aproximadamente; áreas sin clasificar no deben asignarse por inferencia.',8,C.muted,false,182);
-  }else drawText(14,180,'Sin clasificación barrial disponible. No se infieren zonas sísmicas.',8.5,C.muted,false,181);
-  drawText(14,214,'CONDICIÓN DE RIESGO · PROPUESTA 2026',9,C.purple,true);
-  rect(14,221,182,45,C.paper,3);
-  if(conditionRisk&&riskRows.length){
    const top=riskRows.slice().sort((a,b)=>b.ha-a.ha)[0];
-   drawText(19,232,'Mayor categoría intersectada: '+String(top.label||top.cat||'sin nombre'),8.5,C.navy,true,171);
-   drawText(19,244,ha(top.ha)+' · '+pct(top.pct)+' del barrio',14,C.purple,true,171);
-   drawText(19,257,'Pueden existir otras categorías y solapamientos. No es diagnóstico predial.',7.2,C.muted,false,170);
-  }else if(conditionRisk){
-   drawText(19,236,'Sin intersección detectable en la capa consultada.',9,C.navy,true,171);
-   drawText(19,251,'No demuestra ausencia de riesgo ni reemplaza estudios técnicos.',7.7,C.muted,false,170);
-  }else{
-   drawText(19,235,'No fue posible verificar la condición de riesgo.',8.5,C.red,true,171);
-   drawText(19,249,'Motivo: '+conditionRiskError,7,C.muted,false,171);
+   drawText(14,246,'CONDICIÓN DE RIESGO · PROPUESTA 2026',9,C.purple,true);
+   drawText(14,257,String(top.label||top.cat||'Categoría intersectada')+' · '+ha(top.ha)+' ('+pct(top.pct)+' del barrio)',8.1,C.navy,true,182);
+   drawText(14,267,'Cruce indicativo: requiere verificación predial y técnica.',7,C.muted,false,182);
+  }else if(conditionRiskError){
+   drawText(14,254,'No se pudo consultar la capa de condición de riesgo.',7.7,C.muted,false,181);
   }
   if(pdf.getNumberOfPages()!==4)throw Error('La ficha no tiene exactamente cuatro páginas');
   const filename='Ficha_barrial_'+safe(name)+'_'+safe(code)+'_POT_Cali.pdf';
