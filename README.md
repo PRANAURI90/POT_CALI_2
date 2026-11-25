@@ -55,3 +55,7 @@ Para las fuentes y cautelas de medición: [Metodología](METODOLOGIA_COMPARACION
 
 ### Versión 6.1
 Corrección de la ventana corrediza, inventario categorizado y filtros individuales; instrucciones en `INSTRUCCIONES_ACTUALIZACION_V6_1.md`.
+
+
+### Fichas barriales, versión 4.0 (25 de noviembre de 2026)
+El generador de PDF usa cuatro páginas para cada uno de los barrios y sectores: tratamientos comparados, áreas de actividad e instrumentos por tratamiento, amenazas cuantificadas, y condición de riesgo y microzonificación aproximada. Las 342 descargas se verificaron mediante GitHub Actions. Los cruces SIG no constituyen certificaciones prediales.
