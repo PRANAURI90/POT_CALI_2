@@ -234,531 +234,150 @@ async function getThreat(barrio){
  if(!result||!Number.isFinite(result.bArea))throw Error('Datos SIG incompletos');
  const rows=result.rows.map(r=>{const [fen,level]=r.cat.split('|');return {fen,level,ha:r.ha,pct:r.pct,geometry:r.geometry?.type==='Feature'?r.geometry.geometry:r.geometry,label:r.label,color:r.color}});
  if(rows.some(r=>r.ha>0&&(!r.geometry||!['Polygon','MultiPolygon'].includes(r.geometry.type))))throw Error('La geometría de amenaza no es un polígono representable');
- return {rows,errors:result.errors,bArea:result.bArea};
+ // Totales por fenómeno: unión geométrica de categorías para evitar doble conteo.
+ // El porcentaje corresponde al área del barrio; el total no es la suma de niveles.
+ const totals={};let errors=Number(result.errors||0);
+ for(const fen of ['3','1','2']){
+  const pieces=rows.filter(r=>r.fen===fen&&r.geometry&&r.ha>=.01);
+  if(!pieces.length){totals[fen]={ha:0,pct:0,levels:0};continue;}
+  try{
+   let united=window.turf.feature(pieces[0].geometry);
+   for(const part of pieces.slice(1)){
+    const joined=window.turf.union(united,window.turf.feature(part.geometry));
+    if(!joined)throw Error('Fallo en disolución entre categorías');
+    united=joined;
+   }
+   const a=window.turf.area(united)/10000;
+   if(!Number.isFinite(a)||a>result.bArea*1.002)throw Error('Área total fuera del barrio');
+   totals[fen]={ha:a,pct:100*a/result.bArea,levels:pieces.length};
+  }catch(e){errors++;totals[fen]={ha:null,pct:null,levels:pieces.length,error:'No fue posible disolver clases solapadas'};}
+ }
+ return {rows,errors,bArea:result.bArea,totals,method:'Cruce exploratorio Turf sobre GeoJSON web simplificados; unión geométrica por categoría y fenómeno'};
 }
 async function downloadBarrio(){
- const button=document.getElementById('download-barrio-pdf');
- const message=document.getElementById('download-barrio-status');
- if(!state.selected||!state.resumen){if(message)message.textContent='Selecciona un barrio y espera a que carguen los indicadores.';return;}
- if(!window.jspdf?.jsPDF){if(message)message.textContent='No cargó la biblioteca PDF. Comprueba la conexión y vuelve a intentarlo.';return;}
+ const button=document.getElementById('download-barrio-pdf'),message=document.getElementById('download-barrio-status');
+ if(!state.selected||!state.resumen){if(message)message.textContent='Selecciona un barrio y espera la carga de los datos.';return}
+ if(!window.jspdf?.jsPDF){if(message)message.textContent='No cargó la biblioteca PDF.';return}
  const barrio=state.selected,p={...barrio.properties},info=barrioInfo(),code=String(p.codigo),name=String(p.barrio);
- button.disabled=true;if(message)message.textContent='Preparando cruces y mapas de '+name+'…';
+ button.disabled=true;if(message)message.textContent='Construyendo ficha territorial de '+name+'...';
  try{
-  // Se calculan amenazas reales del barrio seleccionado; un fallo no se convierte en cero.
   let threat=null,threatError=null;
-  try{threat=await getThreat(barrio)}catch(err){threatError=String(err.message||err)}
-  let conditionRisk=null,conditionRiskError=null;
-  try{
-    const cr=await barrioRiskIntersect(barrio,'condicion_riesgo');
-    conditionRisk={rows:cr.rows||[],errors:Number(cr.errors||0)};
-  }catch(err){conditionRiskError=String(err.message||err)}
-  const pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-  pdf.setProperties({title:'Ficha barrial '+name+' ('+code+') · Observatorio POT Cali',subject:'Análisis territorial exploratorio y comparación normativa 2014–2026',creator:'Observatorio ciudadano POT Cali'});
-  const tr14=entriesFor(info,'tratamientos2014'),tr26=entriesFor(info,'tratamientos2026');
-  const ac14=entriesFor(info,'actividad2014'),ac26=entriesFor(info,'actividad2026');
-  const trans=(info?.transiciones_tratamiento||[]).map(x=>({from:String(x.desde),to:String(x.hacia),ha:Number(x.hectareas||0)})).sort((a,b)=>b.ha-a.ha);
-  const area=window.turf?.area?window.turf.area(barrio)/10000:Number(threat?.bArea||info?.area_barrio_ha||0);
+  try{threat=await getThreat(barrio)}catch(e){threatError=String(e.message||e)}
+  let cr=null,crError=null;
+  try{cr=await barrioRiskIntersect(barrio,'condicion_riesgo')}catch(e){crError=String(e.message||e)}
+  const area=Number(info?.area_barrio_ha)||window.turf.area(barrio)/10000;
+  if(!(area>0))throw Error('Área barrial no calculable');
   p.fichaAreaHa=area;
-  // Primera página: lectura ciudadana, no catálogo de tratamientos.
-  base(pdf,1,'01 / TU BARRIO EN POCAS PALABRAS','¿Qué cambiaría en '+name+'?','Resumen ciudadano del cambio territorial más extenso.',p);
-  const mainTransition=trans.find(t=>Number.isFinite(t.ha)&&t.ha>=.01);
-  if(mainTransition){
-    const reading=citizenReading(mainTransition.from,mainTransition.to);
-    const share=area>0?100*mainTransition.ha/area:null;
-    fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,69,182,42,3,3,'F');
-    line(pdf,19,80,'EL CAMBIO PRINCIPAL',10,COLORS.purple,true);
-    line(pdf,19,90,ha(mainTransition.ha)+(share!==null?' · '+pct(share)+' del barrio':''),12,COLORS.navy,true);
-    line(pdf,19,99,'De: '+labelTreatment(mainTransition.from,2014),8.1,COLORS.navy,false,172);
-    line(pdf,19,106,'A: '+labelTreatment(mainTransition.to,2026),8.1,COLORS.purple,false,172);
-    const citizenBlocks=[
-      ['¿QUÉ SIGNIFICA PARA TU BARRIO?',reading.change],
-      ['¿QUÉ INSTRUMENTOS CONTEMPLA EL NUEVO POT?',reading.tools],
-      ['¿A QUÉ HAY QUE ESTAR ATENTOS?',reading.watch]
-    ];
-    let cy=123;
-    for(const [label,body] of citizenBlocks){
-      line(pdf,14,cy,label,9.1,COLORS.purple,true,179);
-      cy+=9;
-      cy=line(pdf,16,cy,body,8.6,COLORS.navy,false,175)+12;
-    }
-    line(pdf,14,257,reading.refs,7.1,COLORS.muted,false,184);
-  }else{
-    fillColor(pdf,'#F0EFF7');pdf.roundedRect(14,77,182,56,3,3,'F');
-    line(pdf,19,90,'No se identificaron cambios de tratamiento superiores a 0,01 ha.',9,COLORS.navy,true,172);
-    line(pdf,19,106,'Esto no demuestra que todas las normas de ambos POT sean iguales.',8.3,COLORS.muted,false,170);
-    line(pdf,14,147,'¿QUÉ REVISAR?',9.5,COLORS.purple,true);
-    line(pdf,16,160,'Los usos, las reglas de edificabilidad, los instrumentos y las amenazas',9,COLORS.navy,false,176);
-    line(pdf,16,170,'asociadas a las capas disponibles para este barrio.',9,COLORS.navy,false,176);
+  const pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+  pdf.setProperties({title:'Ficha territorial '+name+' ('+code+')',subject:'Ficha ciudadana POT Cali: normativa, gestión y amenazas',creator:'Observatorio ciudadano POT Cali'});
+  const treatment14=entriesFor(info,'tratamientos2014');
+  const treatment26=entriesFor(info,'tratamientos2026');
+  const activity14=entriesFor(info,'actividad2014');
+  const activity26=entriesFor(info,'actividad2026');
+  const trans=(info?.transiciones_tratamiento||[]).map(x=>({from:String(x.desde),to:String(x.hacia),ha:Number(x.hectareas||0)})).filter(x=>x.ha>=.01).sort((a,b)=>b.ha-a.ha);
+  const main=trans[0],reading=main?citizenReading(main.from,main.to):null;
+  const section=(y,title)=>{line(pdf,14,y,title,10,COLORS.purple,true,180);pdf.setDrawColor(...hexRgb(COLORS.line));pdf.line(14,y+3,196,y+3);return y+12};
+  const panel=(x,y,w,h,col='#F1EFF7')=>{fillColor(pdf,col);pdf.roundedRect(x,y,w,h,3,3,'F')};
+  const txt=(x,y,value,width=176,size=8.4,color=COLORS.navy,bold=false)=>line(pdf,x,y,value,size,color,bold,width);
+  const list=(rows,x,y,max=3,w=85)=>{const m=Math.max(.01,...rows.map(z=>z.ha));for(const z of rows.slice(0,max))y=bar(pdf,x,y,z.name,z.ha,m,COLORS.purple,w);return y};
+  const fact=(y,label,value)=>{txt(19,y,label,164,8,COLORS.muted);txt(19,y+8,value,164,10,COLORS.navy,true)};
+  // 01: lectura de la transformación y comparación normativa.
+  base(pdf,1,'01 / ENTIENDE EL CAMBIO','¿Qué cambia en '+name+'?','Tratamientos del POT 2014 vigente frente a la propuesta 2026.',p);
+  let y=section(72,'EL CAMBIO TERRITORIAL MÁS EXTENSO');
+  panel(14,y-3,182,47);
+  if(main){
+   fact(y+6,'TRANSICIÓN IDENTIFICADA',labelTreatment(main.from,2014)+' a '+labelTreatment(main.to,2026));
+   txt(19,y+28,ha(main.ha)+' · '+pct(100*main.ha/area)+' del barrio',167,12,COLORS.purple,true);
+  }else txt(19,y+15,'Sin transición de tratamiento cuantificable superior a 0,01 ha.',169,9);
+  y=section(143,'TRATAMIENTOS POR SUPERFICIE');
+  txt(14,y,'POT 2014 · vigente',85,9,COLORS.navy,true);txt(111,y,'PROPUESTA 2026',85,9,COLORS.purple,true);
+  const yA=list(treatment14,14,y+9,4,84),yB=list(treatment26,111,y+9,4,84);
+  y=Math.max(yA,yB)+2;
+  if(y<225){
+   y=section(y,'QUÉ SIGNIFICA PARA EL BARRIO');
+   y=txt(16,y,reading?.change||'La ausencia de transición cartográfica no acredita que todas las reglas sean iguales.',175,8.5)+6;
+   y=txt(16,y,'El cambio de tratamiento no autoriza automáticamente mayores alturas ni derechos de edificación.',175,8.2,COLORS.muted);
   }
-  line(pdf,14,268,'Esta es una propuesta de POT, no una norma adoptada ni una licencia.',7.5,COLORS.muted);
-  line(pdf,14,275,'Las páginas siguientes muestran cifras, reglas, fuentes y condiciones.',7.5,COLORS.muted);
+  txt(14,263,'Fuente: resumen barrial y transiciones de tratamiento · POT 2014 / propuesta 2026.',183,7.6,COLORS.muted);
+  txt(14,272,'No se homologan automáticamente los códigos R1 de ambos instrumentos.',182,7.5,COLORS.muted);
   pdf.addPage();
-  // PÁGINA 2: lectura sustantiva de las transiciones, con una visualización por superficie.
-  base(pdf,2,'02 / TRANSFORMACIÓN NORMATIVA','¿Qué propone cambiar el POT?','La misma superficie del barrio, comparada entre la cartografía vigente y la propuesta.',p);
-  line(pdf,14,76,'QUÉ ESTAMOS COMPARANDO',9.8,COLORS.purple,true);
-  line(pdf,14,85,'Identificamos qué tratamiento tiene cada porción del barrio en 2014 y cuál',8.5,COLORS.navy);
-  line(pdf,14,91,'se propone asignar en 2026. Cada cruce se mide en hectáreas de superficie.',8.5,COLORS.navy);
-  const effectiveTrans=trans.filter(t=>Number.isFinite(t.ha)&&t.ha>=0.01);
-  if(effectiveTrans.length){
-    const lead=effectiveTrans[0],from=labelTreatment(lead.from,2014),to=labelTreatment(lead.to,2026);
-    const areaPct=area>0?100*lead.ha/area:null;
-    fillColor(pdf,'#F1F0F7');pdf.roundedRect(14,103,182,90,3,3,'F');
-    line(pdf,19,114,'LA TRANSICIÓN DE MAYOR SUPERFICIE',9.7,COLORS.purple,true,170);
-    line(pdf,19,127,'Antes · POT 2014',8,COLORS.muted,true,130);
-    line(pdf,19,136,from,10,COLORS.navy,true,155);
-    line(pdf,19,148,'Propuesta · POT 2026',8,COLORS.muted,true,130);
-    line(pdf,19,157,to,10,COLORS.purple,true,155);
-    fillColor(pdf,'#E2DFED');pdf.roundedRect(19,167,172,5,2,2,'F');
-    if(areaPct!==null){fillColor(pdf,COLORS.purple);pdf.roundedRect(19,167,172*Math.min(100,Math.max(0,areaPct))/100,5,2,2,'F');}
-    line(pdf,19,183,ha(lead.ha)+' de superficie del barrio'+(areaPct===null?'':' · '+pct(areaPct)),9.3,COLORS.navy,true,172);
-    line(pdf,14,206,'OTRAS TRANSICIONES IDENTIFICADAS',9.5,COLORS.purple,true);
-    let otherY=216;
-    for(const t of effectiveTrans.slice(1,3)){
-      const af=labelTreatment(t.from,2014),bt=labelTreatment(t.to,2026);
-      const percent=area>0?pct(100*t.ha/area):'';
-      line(pdf,17,otherY,af+' (2014)',8,COLORS.navy,true,143);
-      line(pdf,17,otherY+7,'a '+bt+' (2026)',8,COLORS.muted,false,143);
-      pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);changeColor(pdf,COLORS.purple);
-      pdf.text(ha(t.ha),192,otherY+7,{align:'right'});
-      if(percent)line(pdf,17,otherY+14,percent+' del barrio',7.5,COLORS.muted);
-      otherY+=23;
-    }
-    if(effectiveTrans.length>3)line(pdf,14,264,'Se destacan los tres cruces mayores; consultar la plataforma para los restantes.',7.5,COLORS.muted);
-  }else{
-    fillColor(pdf,'#F1F0F7');pdf.roundedRect(14,108,182,48,3,3,'F');
-    line(pdf,19,124,'Sin transiciones con superficie suficiente en el resumen barrial.',9,COLORS.navy,true,166);
-    line(pdf,19,137,'No implica que se mantengan idénticas las reglas de los dos POT.',8,COLORS.muted,false,166);
+  // 02: usos, instrumentos y obligaciones sin listados genéricos de categorías ausentes.
+  base(pdf,2,'02 / CÓMO SE TRANSFORMA','Usos, instrumentos y obligaciones','Reglas a estudiar según las categorías efectivamente presentes en el barrio.',p);
+  y=section(71,'ÁREAS DE ACTIVIDAD');
+  txt(14,y,'POT 2014 · vigente',86,8.8,COLORS.navy,true);txt(111,y,'PROPUESTA 2026',85,8.8,COLORS.purple,true);
+  const aY=list(activity14,14,y+9,3,84),bY=list(activity26,111,y+9,3,84);
+  y=Math.max(aY,bY)+2;
+  y=section(Math.max(143,y),'INSTRUMENTOS Y OBLIGACIONES POR VERIFICAR');
+  const unique=[...new Set(treatment26.map(z=>z.name))];
+  const instrumentHints=[];
+  for(const label of unique){
+   const c=labelTreatment(label,2026),norm=c.toUpperCase();
+   if(/RENOVACI|REDENSIFIC|R1|R2/.test(norm))instrumentHints.push(['Renovación / redensificación','Verificar modalidad, área mínima, plan de manzana o plan parcial, cargas y protección de moradores.']);
+   else if(/DESARROLLO|D1|D2/.test(norm))instrumentHints.push(['Desarrollo','Verificar plan parcial cuando proceda, licencias, urbanización, cesiones, vías y redes.']);
+   else if(/CONSOLIDACI|C1|C2|C3|C4/.test(norm))instrumentHints.push(['Consolidación','Verificar índices, altura, obligaciones y excepciones; el tratamiento no demuestra aumento de edificabilidad.']);
+   else instrumentHints.push([c,'Revisar delimitación, régimen de usos, actuaciones e instrumentos aplicables.']);
   }
-  line(pdf,14,275,'Mismo código no implica mismo régimen: p. ej., R2 se redefine en la propuesta 2026.',7.1,COLORS.muted);
+  for(const [h,body] of instrumentHints.slice(0,3)){
+   if(y>231)break;
+   panel(14,y-5,182,28);
+   txt(19,y+2,h,172,8.5,COLORS.purple,true);
+   txt(19,y+10,body,169,7.8,COLORS.navy);
+   y+=35;
+  }
+  if(!instrumentHints.length)txt(16,y,'Sin tratamiento propuesto verificable en el resumen barrial.',172,8.4);
+  txt(14,265,'Un instrumento no se presume aprobado ni localizado en toda la zona de tratamiento.',181,7.6,COLORS.muted);
+  txt(14,273,'Los beneficios e incentivos están sujetos a condiciones y obligaciones específicas.',181,7.5,COLORS.muted);
   pdf.addPage();
-  // PÁGINA 3: interpretación ciudadana, separada de la métrica y del mapa.
-  base(pdf,3,'03 / LECTURA DEL CAMBIO','¿Qué significa para el barrio?','Interpretación de las modificaciones propuestas, no un dictamen sobre predios.',p);
-  if(effectiveTrans.length){
-    const main=effectiveTrans[0],prev=labelTreatment(main.from,2014),next=labelTreatment(main.to,2026);
-    const percent=area>0?pct(100*main.ha/area):null;
-    fillColor(pdf,'#F1F0F7');pdf.roundedRect(14,71,182,47,3,3,'F');
-    line(pdf,19,82,'EL CAMBIO MÁS EXTENSO DEL BARRIO',9.3,COLORS.purple,true);
-    line(pdf,19,93,ha(main.ha)+(percent?' ('+percent+' del barrio)':''),13,COLORS.navy,true);
-    line(pdf,19,103,'Antes: '+prev,8.2,COLORS.navy,false,165);
-    line(pdf,19,112,'Propuesta: '+next,8.2,COLORS.purple,false,165);
-    const verified=verifiedTransitionDetail(main.from,main.to);
-    line(pdf,14,137,'¿QUÉ QUIERE DECIR?',10,COLORS.purple,true);
-    let y=149;
-    y=softParagraph(pdf,16,y,verified?.meaning||treatmentMeaning(main.from,main.to),175,verified?8.35:9.3)+6;
-    line(pdf,14,y,'¿QUÉ NO SE PUEDE CONCLUIR?',10,COLORS.purple,true);
-    y+=12;
-    y=softParagraph(pdf,16,y,verified?.limits||'La transición muestra la clasificación del suelo, pero no acredita pisos permitidos, autorización de un proyecto ni beneficio individual. Estas condiciones dependen de índices, delimitación del ámbito y reglas específicas.',174,verified?8.2:8.8)+4;
-    line(pdf,14,y,'¿QUÉ DEBE VERIFICARSE?',10,COLORS.purple,true);
-    y+=11;
-    y=softParagraph(pdf,16,y,verified?.checks||'Faltan la ubicación y dimensiones de los predios, las delimitaciones efectivas de los instrumentos, los soportes urbanos y la situación ambiental y de riesgo. Las reglas generales se detallan en las páginas de gestión.',174,verified?8.1:8.7);
-  }else{
-    line(pdf,16,83,'No hay un cruce de tratamientos superior a 0,01 ha registrado.',9,COLORS.navy);
-    line(pdf,16,96,'La ausencia de cruce no implica identidad normativa entre los POT.',8.5,COLORS.muted);
-  }
-  line(pdf,14,268,'Fuente: transiciones espaciales calculadas de POT 2014 y propuesta 2026.',7.5,COLORS.muted);
-  line(pdf,14,275,'Lectura interpretativa general; no sustituye la norma de un predio.',7.5,COLORS.muted);
-  pdf.addPage();
-  // PÁGINA 4: áreas de actividad, separadas de los tratamientos.
-  base(pdf,4,'04 / ÁREAS DE ACTIVIDAD','¿Cómo se distribuyen los usos?','Áreas de actividad de cada instrumento territorial; no permisos individuales.',p);
-  line(pdf,14,77,'CÓMO LEER LAS ÁREAS DE ACTIVIDAD',9.8,COLORS.purple,true);
-  line(pdf,14,86,'Muestran la orientación de uso, no actividades autorizadas predio a predio.',8.4,COLORS.navy);
-  line(pdf,14,104,'POT 2014 - VIGENTE',10,COLORS.purple,true);
-  line(pdf,111,104,'PROPUESTA 2026',10,COLORS.purple,true);
-  let y14=115,y26=115;
-  const mx14=Math.max(1,...ac14.map(x=>x.ha)),mx26=Math.max(1,...ac26.map(x=>x.ha));
-  for(const row of ac14.slice(0,4)){y14=bar(pdf,15,y14,row.name,row.ha,mx14,COLORS.green,83);line(pdf,15,y14-5,hintActivity(row.name),6.7,'#8993A1',false,79);y14+=7;}
-  for(const row of ac26.slice(0,4)){y26=bar(pdf,111,y26,row.name,row.ha,mx26,COLORS.orange,83);line(pdf,111,y26-5,hintActivity(row.name),6.7,'#8993A1',false,79);y26+=7;}
-  line(pdf,14,255,'Se muestran las cuatro áreas de mayor superficie para cada instrumento.',8,COLORS.muted);
-  line(pdf,14,264,'Para conocer usos permitidos o condicionados, consultar matrices y articulado.',8,COLORS.muted);
-  pdf.addPage();
-  // PÁGINA 4: instrumentos de gestión. Diferenciar coincidencia cartográfica de reglas generales.
-  const plans14=entriesFor(info,'planes2014');
-  const plans26=entriesFor(info,'planes2026');
-  const prev26=entriesFor(info,'planes_previos2026').length?entriesFor(info,'planes_previos2026'):entriesFor(info,'planes_previos');
-  const instruments26=entriesFor(info,'instrumentos2026').length?entriesFor(info,'instrumentos2026'):entriesFor(info,'instrumentos');
-  const treat26Raw=info?.capas?.tratamientos2026?.categorias||[];
-  // Usar la misma homologación que el visor y descartar coincidencias residuales.
-  // No activar reglas por texto ni por una categoría con área cero.
-  const treatmentCodes=new Set(treat26Raw.filter(v=>Number(v.hectareas)>=.03).map(v=>
-    typeof asCode==='function'?asCode(v,2026):String(v.codigo_original??v.codigo??'')
-  ).filter(Boolean));
-  const urbanRenew=treatmentCodes.has('R1')||treatmentCodes.has('R2');
-  const development=treatmentCodes.has('D1')||treatmentCodes.has('D2');
-  const conservation=treatmentCodes.has('CSU')||treatmentCodes.has('CTL')||treatmentCodes.has('CON');
-  base(pdf,5,'05 / GESTIÓN URBANÍSTICA','¿Con qué instrumentos se transforma?','Ámbitos cartografiados y reglas generales que requieren verificación por predio.',p);
-  line(pdf,14,77,'COINCIDENCIAS CARTOGRÁFICAS EN EL BARRIO',10,COLORS.purple,true);
-  let gy=90;
-  const planLayers=[
-    ['Planes parciales POT 2014',plans14],
-    ['Planes parciales propuesta 2026',plans26],
-    ['Instrumentos preexistentes 2026',prev26],
-    ['Otros instrumentos delimitados 2026',instruments26]
-  ].filter(([,rows])=>rows.length>0);
-  if(planLayers.length){
-    for(const [label,rows] of planLayers){
-      line(pdf,16,gy,label,8.7,COLORS.navy,true,139);
-      pdf.setFont('helvetica','bold');pdf.setFontSize(8.4);changeColor(pdf,COLORS.purple);
-      pdf.text(ha(rows.reduce((v,r)=>v+r.ha,0)),194,gy,{align:'right'});
-      gy+=20;
-    }
-    line(pdf,14,gy+2,'Superficies por categoría: pueden solaparse y no son área única.',7.6,COLORS.muted);
-  }else{
-    fillColor(pdf,'#F2F5F7');pdf.roundedRect(14,85,182,42,3,3,'F');
-    line(pdf,19,96,'Sin intersecciones registradas con instrumentos delimitados.',9.1,COLORS.navy,true,173);
-    line(pdf,19,108,'Esto no elimina reglas de gestión asociadas al tratamiento.',8,COLORS.muted,false,173);
-  }
-  const candidates=[];
-  if(urbanRenew||development){
-    candidates.push(['Plan parcial','Organiza actuaciones urbanísticas en ámbitos definidos.','Procedencia: ver las condiciones del tratamiento y la delimitación.']);
-  }
-  if(urbanRenew){
-    candidates.push(['Plan de manzana','Organiza intervenciones de renovación en una manzana.','Requiere dimensión y condiciones normativas específicas.']);
-  }
-  if(urbanRenew||development){
-    candidates.push(['Actuación individual o licencia','Vía de intervención para ciertos predios o agrupaciones.','Su posibilidad depende de la modalidad de tratamiento y sus cargas.']);
-  }
-  if(treatmentCodes.has('MI'))candidates.push(['Plan de Gestión del Hábitat','Coordina actuaciones públicas de mejoramiento integral.','No es equivalente a un plan parcial de renovación.']);
-  if(conservation)candidates.push(['Conservación','Protección patrimonial y contextual.','Debe identificarse modalidad de conservación y régimen especial.']);
-  let iy=Math.max(gy+23,146);
-  line(pdf,14,iy,'REGLAS ASOCIADAS A LOS TRATAMIENTOS PRESENTES',9.4,COLORS.purple,true);
-  iy+=13;
-  if(candidates.length){
-    for(const [title,definition,detail] of candidates){
-      if(iy>241)break;
-      line(pdf,16,iy,title,8.5,COLORS.navy,true,174);
-      line(pdf,16,iy+6,definition,7.2,'#8993A1',false,175);
-      line(pdf,16,iy+13,detail,7.3,COLORS.muted,false,175);
-      iy+=25;
-    }
-  }else{
-    line(pdf,16,iy,'Sin modalidad particular identificada en la síntesis.',8.6,COLORS.muted,false,174);
-  }
-  line(pdf,14,267,'Estas son reglas vinculadas a tratamientos, NO planes delimitados aquí.',7.6,COLORS.muted);
-  line(pdf,14,274,'Detalles, superficies y artículos específicos en el capítulo siguiente.',7.5,COLORS.muted);
-  pdf.addPage();
-  // PÁGINA 6: reglas e instrumentos concretos asociados al tratamiento cartografiado.
-  base(pdf,6,'06 / INSTRUMENTOS CONCRETOS','¿Qué procedimiento podría aplicar?','Las opciones dependen del tratamiento y de las condiciones específicas del ámbito.',p);
-  // Matriz normativa con soporte territorial: misma clasificación que usa el visor.
-  const t2026=info?.capas?.tratamientos2026?.categorias||[];
-  const t2014=info?.capas?.tratamientos2014?.categorias||[];
-  const codeFor=(r,yr)=>{
-    if(typeof asCode==='function')return asCode(r,yr);
-    const v=String(r?.codigo_original??r?.codigo??'').trim();
-    if(yr===2026)return ({'1':'CO','2':'CO','3':'C1','4':'C2','5':'C3','6':'C4','7':'D1','8':'D2','9':'MI','10':'R1','11':'R2'})[v]||v;
-    return v;
-  };
-  function byTreatment(rows,year){
-    const map=new Map();
-    for(const row of rows){
-      const code=codeFor(row,year),ha=Number(row.hectareas);
-      if(!code||!Number.isFinite(ha)||ha<.03)continue;
-      map.set(code,(map.get(code)||0)+ha);
-    }
-    return map;
-  }
-  const areas26=byTreatment(t2026,2026),areas14=byTreatment(t2014,2014);
-  const norms=state.normas?.reglas||[];
-  const regimes=[];
-  // Regla 2026 con cruce real de su tratamiento, pero NO implica que
-  // el ámbito de un plan parcial/plan manzana haya sido delimitado aquí.
-  for(const rule of norms.filter(r=>r.anio==='2026')){
-    const match=(rule.codigos||[]).filter(code=>areas26.has(code));
-    if(!match.length)continue;
-    const evidence=match.map(code=>code+': '+ha(areas26.get(code))).join(' · ');
-    regimes.push({
-      title:rule.titulo+' · PROPUESTA 2026',
-      rule:rule.condicion,
-      impact:'COINCIDENCIA DE TRATAMIENTO: '+evidence+'. Es superficie por categoría; el instrumento requiere verificar su ámbito y supuestos.',
-      ref:'Proyecto de Acuerdo 2026 · arts. '+rule.articulos+' · p. '+(rule.pagina_documento||'sin dato')+' de la matriz documental.',
-      weight:match.reduce((v,k)=>v+areas26.get(k),0),
-      code:rule.id
-    });
-  }
-  // Conservación CO/CSU/CTL está descrita en homologación, pero la
-  // matriz no contiene una regla 2026 aplicable: no inventar instrumento.
-  const conservationArea=[...areas26].filter(([k])=>['CO','CSU','CTL'].includes(k)).reduce((a,[,v])=>a+v,0);
-  if(conservationArea>0)regimes.push({
-    title:'CONSERVACIÓN · PROPUESTA 2026',
-    rule:'La propuesta diferencia conservación de sectores urbanos de interés cultural y conservación contextual. Es necesario comprobar la modalidad, delimitación y norma patrimonial.',
-    impact:'COINCIDENCIA DE TRATAMIENTO: '+ha(conservationArea)+'. La matriz no permite atribuir aquí un incentivo patrimonial específico.',
-    ref:'Proyecto de Acuerdo 2026, arts. 370 y 377-378. Homologación preliminar.',
-    weight:conservationArea,
-    code:'conservacion-homologacion'
-  });
-  // Evitar repetir reglas generales antes de las específicas: ordenar
-  // por superficie del tratamiento coincidente, luego instrumento.
-  regimes.sort((a,b)=>b.weight-a.weight||a.title.localeCompare(b.title,'es'));
-  if(!regimes.length)regimes.push({
-    title:'SIN REGLA PARTICULAR VINCULABLE',
-    rule:'El resumen cartográfico no identifica un tratamiento con superficie de al menos 0,03 ha que coincida con una regla de la matriz normativa cargada.',
-    impact:'Esto NO implica ausencia de instrumentos, ni de obligaciones; se debe revisar la cartografía y la norma.',
-    ref:'Matriz normativa del Observatorio · data/normativa_gestion.json.',
-    weight:0,code:'no-rule'
-  });
-  // Contexto 2014: referencias jurídicas para contraste de procedimientos.
-  const priorRules=norms.filter(rule=>rule.anio==='2014'&&(rule.codigos||[]).some(c=>areas14.has(c)));
-  // Tarjetas de altura calculada según contenido para evitar desbordes.
-  // En caso de más de dos familias aplicables, se añade una segunda página
-  // de reglas territoriales con continuación y trazabilidad normativa.
-  function drawRegimeCard(rg,y){
-    const titleLines=pdf.splitTextToSize(pdfText(rg.title),170);
-    const ruleLines=pdf.splitTextToSize(pdfText(rg.rule),170);
-    const impactLines=pdf.splitTextToSize(pdfText(rg.impact),170);
-    const refLines=pdf.splitTextToSize(pdfText(rg.ref),170);
-    const titleH=titleLines.length*4.0,ruleH=ruleLines.length*4.15;
-    const impactH=impactLines.length*3.85,refH=refLines.length*3.5;
-    const height=24+titleH+ruleH+impactH+refH+8;
-    fillColor(pdf,'#F3F4F8');pdf.roundedRect(14,y,182,height,3,3,'F');
-    let yy=y+8;
-    yy=line(pdf,19,yy,rg.title,8.6,COLORS.purple,true,170)+1;
-    yy=line(pdf,19,yy,rg.rule,8.15,COLORS.navy,false,170)+2;
-    yy=line(pdf,19,yy,rg.impact,7.7,COLORS.muted,false,170)+2;
-    line(pdf,19,yy,rg.ref,7.0,COLORS.purple,false,170);
-    return y+height+5;
-  }
-  line(pdf,14,72,'Reglas activadas por tratamiento: la superficie NO delimita el instrumento.',7.3,COLORS.muted);
-  let rY=79, printed=0;
-  for(const rg of regimes){
-    const ruleLines=pdf.splitTextToSize(pdfText(rg.rule),170).length;
-    const impactLines=pdf.splitTextToSize(pdfText(rg.impact),170).length;
-    const approx=55+ruleLines*5+impactLines*5;
-    if(rY+approx>257){
-      line(pdf,14,272,'Continúa el análisis de instrumentos del barrio en la página siguiente.',7.4,COLORS.muted);
-      pdf.addPage();
-      base(pdf,6,'06 / INSTRUMENTOS CONCRETOS','Instrumentos: continuación','Tratamientos del barrio y condiciones normativas propuestas.',p);
-      rY=79;
-    }
-    rY=drawRegimeCard(rg,rY);printed++;
-  }
-  // Contraste POT 2014: normativa vigente y superficie cartografiada.
-  // Se presenta de forma separada porque R1/R2 de 2014 no son equivalentes a 2026.
-  if(priorRules.length){
-    if(rY>219){
-      pdf.addPage();
-      base(pdf,6,'06 / NORMATIVA VIGENTE','Antecedentes del POT 2014','Reglas del POT vigente para tratamientos que intersectan el barrio.',p);
-      rY=79;
-    }else{
-      line(pdf,14,rY+1,'ANTECEDENTES DEL POT 2014 VIGENTE',9.1,COLORS.purple,true);
-      rY+=14;
-    }
-    for(const rule of priorRules){
-      const matches=(rule.codigos||[]).filter(code=>areas14.has(code));
-      const evidence=matches.map(code=>code+': '+ha(areas14.get(code))).join(' · ');
-      const rg={
-        title:rule.titulo+' · POT 2014 VIGENTE',
-        rule:rule.condicion,
-        impact:'COINCIDENCIA DE TRATAMIENTO VIGENTE: '+evidence+'. No implica que un plan parcial esté efectivamente delimitado en esta superficie.',
-        ref:'Acuerdo 0373 de 2014 · arts. '+rule.articulos+' · p. '+(rule.pagina_documento||'sin dato')+' de la matriz documental.'
-      };
-      const approx=55+pdf.splitTextToSize(pdfText(rg.rule),170).length*5+pdf.splitTextToSize(pdfText(rg.impact),170).length*5;
-      if(rY+approx>257){
-        pdf.addPage();
-        base(pdf,6,'06 / NORMATIVA VIGENTE','Antecedentes 2014: continuación','Se identifican reglas por tratamiento vigente y superficie coincidente.',p);
-        rY=79;
-      }
-      rY=drawRegimeCard(rg,rY);
-    }
-  }
-  line(pdf,14,268,'Fuente: matriz normativa y cruces de tratamientos del Observatorio.',7.4,COLORS.muted);
-  line(pdf,14,275,'No acredita permisos, exenciones ni derechos específicos por predio.',7.4,COLORS.muted);
-  pdf.addPage();
-  // CAPÍTULO 07: cargas, beneficios y garantías con explicación para ciudadanía.
-  base(pdf,7,'07 / GESTIÓN E INCENTIVOS','¿Quién obtiene qué y bajo qué reglas?','La propuesta diferencia aprovechamientos, cargas y mecanismos de financiación.',p);
-  const benefits=[
-    {
-     title:'Edificabilidad adicional: ICA e ICP',
-     concept:'Son índices que regulan la construcción adicional a la edificabilidad básica.',
-     mechanism:'Los planes parciales y planes de manzana pueden tener formas distintas de acceso. El ICA y el ICP no implican idénticas contraprestaciones.',
-     check:'Verificar modalidad, índice aplicable, cesiones y aportes antes de concluir que hay mayor beneficio.',
-     source:'Proyecto POT 2026: arts. 616, 619 y 620.'
-    },
-    {
-     title:'Participación en plusvalía',
-     concept:'Instrumento mediante el cual la ciudad participa en incrementos de valor del suelo asociados a acciones urbanísticas.',
-     mechanism:'La modificación de usos o aprovechamientos puede configurar un hecho generador, pero no es equivalente a cobrar automáticamente por todo el barrio.',
-     check:'Debe identificarse hecho generador, efecto, régimen de exigibilidad y actos administrativos.',
-     source:'Requiere contraste con normativa distrital y régimen de plusvalía.'
-    },
-    {
-     title:'Cesiones, cargas y beneficios',
-     concept:'Contribuciones para suelo, vías, espacio público, equipamientos o infraestructuras vinculadas a una actuación.',
-     mechanism:(treatmentCodes.has('R2')?'El artículo 388 propone para R2 cesiones de 12% de espacio público y 4% de área privada de vocación pública, calculadas sobre el área neta urbanizable.':treatmentCodes.has('R1')?'El artículo 388 propone para R1 cesiones de 10% de espacio público y 6% de área privada de vocación pública, calculadas sobre el área neta urbanizable.':'Las obligaciones y bases de cálculo dependen del tratamiento, del instrumento y del ámbito delimitado.'),
-     check:'No sumar porcentajes de modalidades diferentes ni concluir exenciones generales.',
-     source:'Proyecto POT 2026: arts. 371-372, 388 y 616-620.'
-    },
-    {
-     title:'Conservación e incentivos',
-     concept:'La conservación regula intervenciones para proteger patrimonio construido y sectores de valor cultural o contextual.',
-     mechanism:'La posibilidad de incentivos depende de instrumentos y condiciones específicos; no todos los inmuebles reciben compensaciones.',
-     check:'Verificar declaratoria, delimitación, nivel de protección y régimen de intervención.',
-     source:'POT 2014: arts. 301-307; propuesta: arts. 377-378.'
-    },
-    {
-     title:'Moradores y actividades económicas',
-     concept:'Las transformaciones urbanas pueden generar impactos sobre hogares, arrendatarios, comercios y actividades existentes.',
-     mechanism:'Deben examinarse medidas de participación, permanencia, reasentamiento o retorno previstas en el instrumento aplicable.',
-     check:'No se ha acreditado un beneficio o garantía concreta para cada persona o predio.',
-     source:'Revisión pendiente de disposiciones y programas complementarios.'
-    }
-  ];
-  // No mostrar incentivos que no están vinculados al tratamiento.
-  // La plusvalía se menciona como posible hecho generador sólo si hay
-  // transformación normativa y un tratamiento de urbanización/renovación.
-  // Cambiar tratamiento no demuestra por sí solo un hecho generador de plusvalía.
-  const benefitAllowed=(item)=>{
-    if(item.title.startsWith('Edificabilidad'))return urbanRenew||development;
-    if(item.title.startsWith('Participación'))return entriesFor(info,'plusvalia2026').length>0; // Sin delimitación o hecho generador sustentado, no atribuir plusvalía.
-    if(item.title.startsWith('Cesiones'))return urbanRenew||development;
-    if(item.title.startsWith('Conservación'))return conservation;
-    if(item.title.startsWith('Moradores'))return urbanRenew;
-    return false;
-  };
-  const relevantBenefits=benefits.filter(benefitAllowed);
-  let benefitY=77;
-  if(!relevantBenefits.length){
-    fillColor(pdf,'#F2F5F7');pdf.roundedRect(14,78,182,56,3,3,'F');
-    line(pdf,20,91,'Sin incentivos específicos asociados a los tratamientos',9.1,COLORS.navy,true,170);
-    line(pdf,20,99,'identificados en la matriz normativa para este barrio.',9.1,COLORS.navy,true,170);
-    line(pdf,20,116,'No equivale a inexistencia de cargas u obligaciones generales.',8,COLORS.muted,false,170);
-  }
-  for(const benefit of relevantBenefits){
-    const fields=[
-     [benefit.title,8.8,COLORS.purple,true],
-     [benefit.concept,8.2,COLORS.navy,false],
-     [benefit.mechanism,8.0,COLORS.navy,false],
-     [benefit.check,7.8,COLORS.muted,false],
-     [benefit.source,7.1,COLORS.purple,false]
-    ];
-    const heights=fields.map(([text,size])=>pdf.splitTextToSize(pdfText(text),171).length*(size*.365+1.7)+2);
-    const total=heights.reduce((a,b)=>a+b,0)+15;
-    if(benefitY+total>256){
-      line(pdf,14,274,'Continúa el análisis de cargas e incentivos en la página siguiente.',7.4,COLORS.muted);
-      pdf.addPage();
-      base(pdf,7,'07 / GESTIÓN E INCENTIVOS','Beneficios y cargas: continuación','Instrumentos con condiciones de aplicación, no derechos individuales.',p);
-      benefitY=77;
-    }
-    fillColor(pdf,'#F3F4F8');pdf.roundedRect(14,benefitY,182,total,3,3,'F');
-    let dy=benefitY+9;
-    for(const [value,size,color,bold] of fields){
-      dy=line(pdf,19,dy,value,size,color,bold,171)+2;
-    }
-    benefitY+=total+7;
-  }
-  line(pdf,14,268,'Plusvalía: no se atribuye sin evidencia de hecho generador y exigibilidad.',7.5,COLORS.muted);
-  line(pdf,14,275,'ICA = Índice de Construcción Adicional; no es el impuesto ICA.',7.8,COLORS.muted);
-  pdf.addPage();
-  // Si el cálculo terminó sin errores ni intersecciones, evitar tres mapas vacíos.
-  const noHazardIntersection=!!threat&&threat.rows.length===0&&Number(threat.errors||0)===0;
-  // PÁGINA 6: cartografía de amenazas.
-  if(!noHazardIntersection){
-  base(pdf,8,'08 / AMENAZAS','Zonificación de amenazas · propuesta 2026','Inundación, movimientos en masa y avenidas torrenciales: mapas separados.',p);
+  // 03: amenazas, condición de riesgo y respuesta sísmica, sin simular comparación histórica.
+  base(pdf,3,'03 / AMENAZAS Y CARACTERÍSTICAS DEL SUELO','Amenaza, riesgo y respuesta sísmica','Lectura territorial 2026; no es comparación de riesgo entre POT.',p);
+  y=section(71,'AMENAZAS CUANTIFICADAS · PROPUESTA 2026');
   if(threat){
-   const titles=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
+   const items=[['3','INUNDACIÓN'],['1','MOVIMIENTOS EN MASA'],['2','AVENIDAS TORRENCIALES']];
    for(let i=0;i<3;i++){
-    const [fen,title]=titles[i],xx=14+i*62;
-    line(pdf,xx,75,title,8.2,COLORS.navy,true,60);
-    const subset=threat.rows.filter(r=>r.fen===fen);
-    if(!subset.length){
-      fillColor(pdf,'#F3F6F7');pdf.roundedRect(xx,88,57,40,3,3,'F');
-      line(pdf,xx+3,105,'Sin intersección',7.8,COLORS.muted,true,51);
-      line(pdf,xx+3,115,'detectable (0,01 ha)',7,COLORS.muted,false,51);
-    }else{
-      const canvas=buildMapCanvas(barrio,threat.rows,fen,540,390);
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.88),'JPEG',xx,85,57,43);
-    }
-    if(subset.length){
-     let ry=135;
-     for(const level of ['1','2','3','0']){
-      const row=subset.find(r=>r.level===level);if(!row)continue;
-      fillColor(pdf,RISK_COLORS[level]);pdf.rect(xx,ry-3,2.5,2.5,'F');
-      line(pdf,xx+4,ry,LEVEL[level]+': '+num(row.ha)+' ha',7.8,COLORS.navy,true,52);
-      line(pdf,xx+4,ry+5,pct(row.pct)+' del barrio',7.3,COLORS.muted,false,52);
-      ry+=13;
-     }
+    const [fen,title]=items[i],x=14+i*62,rows=threat.rows.filter(z=>z.fen===fen),total=threat.totals?.[fen];
+    panel(x,85,57,14);
+    txt(x+2,91,title,53,7.2,COLORS.purple,true);
+    txt(x+2,97,total?.ha===null?'No verificable':total?ha(total.ha)+' · '+pct(total.pct):'Sin dato',53,7.1,COLORS.navy,true);
+    if(rows.length){
+     const canvas=buildMapCanvas(barrio,rows,fen,540,390);
+     pdf.addImage(canvas.toDataURL('image/jpeg',.89),'JPEG',x,102,57,41);
+    }else{panel(x,102,57,41,'#EDF0F3');txt(x+4,119,'Sin intersección',49,7.5,COLORS.muted,true);txt(x+4,127,'detectada >=0,01 ha',49,6.7,COLORS.muted)}
+    let ry=150;
+    for(const z of rows.sort((a,b)=>Number(a.level)-Number(b.level)).slice(0,4)){
+     txt(x+1,ry,LEVEL[z.level]+': '+ha(z.ha),55,7.1,COLORS.navy,true);
+     txt(x+1,ry+6,pct(z.pct)+' del barrio',55,6.9,COLORS.muted);ry+=15;
     }
    }
-   fillColor(pdf,'#F0F3F7');pdf.roundedRect(14,191,182,68,3,3,'F');
-   let ty=202;
-   ty=line(pdf,19,ty,'INTERPRETACIÓN DE LOS CRUCES',10,COLORS.navy,true,174)+2;
-   ty=line(pdf,19,ty,'Superficie barrial calculada: '+ha(threat.bArea)+'.',8.5,COLORS.navy,false,170)+3;
-   ty=line(pdf,19,ty,'Las clases de un mismo fenómeno pueden solaparse; no sumar porcentajes sin disolver categorías.',8.2,COLORS.navy,false,169)+2;
-   if(threat.errors)ty=line(pdf,19,ty,'Precaución: '+threat.errors+' geometrías no procesadas; resultados incompletos.',8.4,COLORS.danger,true,168);
-   else line(pdf,19,ty,'Sin intersección significa ausencia de cruce detectable, no ausencia de peligro.',8.2,COLORS.muted,false,168);
   }else{
-   fillColor(pdf,'#FFF0E9');pdf.roundedRect(14,79,182,68,3,3,'F');
-   line(pdf,19,91,'NO FUE POSIBLE CALCULAR LOS MAPAS DE AMENAZA',10,COLORS.danger,true,170);
-   line(pdf,19,103,'No se asignan porcentajes ni se interpreta como ausencia de peligro.',9,COLORS.navy,false,170);
-   line(pdf,19,114,'Motivo: '+threatError,8,COLORS.muted,false,170);
+   panel(14,87,182,56,'#FFF1EC');
+   txt(19,101,'Cálculo de amenaza no disponible; no se asignan valores cero.',169,9,COLORS.danger,true);
+   txt(19,113,String(threatError||'Error de capas geográficas'),169,7.8,COLORS.muted);
   }
-  line(pdf,14,274,'Fuente: GeoJSON simplificados de amenaza 2026; cruce Turf exploratorio.',7.5,COLORS.muted);
-  pdf.addPage();
-  }
-  // Síntesis de condición de riesgo, distinta de zonificación de amenaza.
-  base(pdf,9,'09 / RIESGO Y GESTIÓN','Condición de riesgo y microzonificación','Lecturas cartográficas diferenciadas; no son diagnóstico predial.',p);
-  const micro=state.microzonasBarrio?.barrios?.[code]?.zonas||[];
-  const riskRows=conditionRisk?.rows||[];
-  fillColor(pdf,'#EEF3F5');pdf.roundedRect(14,75,182,67,3,3,'F');
-  line(pdf,19,86,'CONDICIÓN DE RIESGO · PROPUESTA 2026',9.2,COLORS.purple,true,171);
-  if(conditionRisk&&conditionRisk.errors===0&&riskRows.length===0){
-    line(pdf,19,98,'Sin intersecciones detectables con la capa consultada.',8.5,COLORS.navy,false,170);
-  }else if(conditionRisk&&riskRows.length){
-    line(pdf,19,98,'Se identificaron '+riskRows.length+' categorías con intersección.',8.4,COLORS.navy,false,170);
-    const top=riskRows.slice().sort((a,b)=>b.ha-a.ha)[0];
-    line(pdf,19,110,'Mayor categoría: '+pdfText(top.label||top.cat||'Sin etiqueta')+'.',8,COLORS.navy,false,170);
-    line(pdf,19,120,ha(top.ha)+' ('+pct(top.pct)+' del barrio).',8,COLORS.navy,true,170);
-  }else{
-    line(pdf,19,98,'Cruce no verificable con la información disponible.',8.5,COLORS.danger,false,170);
-  }
-  if(conditionRisk?.errors)line(pdf,19,130,'Advertencia: '+conditionRisk.errors+' geometrías no procesadas.',7.3,COLORS.danger,false,170);
-  else line(pdf,19,132,'Una no intersección no equivale a ausencia de riesgo.',7.4,COLORS.muted,false,170);
-  if(noHazardIntersection){
-    line(pdf,14,156,'AMENAZAS · SIN INTERSECCIONES DETECTABLES',9,COLORS.purple,true,180);
-    line(pdf,14,166,'Inundación, masa y avenidas torrenciales: sin cruce >= 0,01 ha.',8,COLORS.navy,false,180);
-    line(pdf,14,175,'Resultado exploratorio; no certifica ausencia de peligro.',7.6,COLORS.muted,false,180);
-  }
-  if(micro.length&&!noHazardIntersection){
-    line(pdf,14,152,'MICROZONIFICACIÓN SÍSMICA · REFERENCIA APROXIMADA',9,COLORS.purple,true);
-    const mx=Math.max(1,...micro.map(z=>Number(z.hectareas||0)));
-    let my=162;
-    for(const z of micro.slice(0,1))my=bar(pdf,18,my,'Zona '+z.zona+' · '+pct(z.porcentaje_barrio),Number(z.hectareas),mx,COLORS.purple,174)+2;
-  }else if(micro.length){
-    line(pdf,14,187,'Microzonificación: disponible como referencia aproximada.',7.4,COLORS.muted,false,180);
-  }else if(!noHazardIntersection){
-    line(pdf,14,162,'Microzonificación sísmica sin dato barrial verificable.',8,COLORS.muted,false,180);
-  }
-  line(pdf,14,197,'PREGUNTAS DE SEGUIMIENTO TERRITORIAL',10.5,COLORS.purple,true);
-  let qY=208;for(const q of [
-   '¿Qué actuaciones admite cada tratamiento propuesto?',
-   '¿Qué cargas e instrumentos protegen a moradores?',
-   '¿Qué estudios y obras se requieren ante las amenazas?']){
-    qY=line(pdf,18,qY,'- '+q,9,COLORS.navy,false,174)+8;
-  }
-  line(pdf,14,253,'ALCANCE Y FUENTES',9.5,COLORS.purple,true);
-  line(pdf,14,261,'Acuerdo 0373 de 2014 · Proyecto de Acuerdo POT 2026',8,COLORS.navy,false,180);
-  line(pdf,14,268,'Datos: resumen_barrios.json, transiciones y GeoJSON de la plataforma.',8,COLORS.navy,false,180);
-  line(pdf,14,275,'Microzonas digitalizadas aproximadas; no certifican riesgo ni diseño sísmico.',7.6,COLORS.muted,false,184);
-  // Número de página real, incluidas las continuaciones de instrumentos.
-  const totalPages=pdf.getNumberOfPages();
-  for(let pn=1;pn<=totalPages;pn++){
-    pdf.setPage(pn);
-    pdf.setFont('helvetica','bold');pdf.setFontSize(8);changeColor(pdf,COLORS.navy);
-    pdf.text(pn+' / '+totalPages,195,286,{align:'right'});
-  }
-  const filename='Ficha_barrial_'+safe(name)+'_'+safe(code)+'_POT_Cali.pdf';
-  const blob=pdf.output('blob');
-  if(!(blob instanceof Blob)||blob.size<5000)throw Error('El PDF generado no tiene contenido válido');
+  y=section(215,'CONDICIÓN DE RIESGO Y MICROZONIFICACIÓN');
+  const riskRows=cr?.rows||[];
+  if(cr?.errors)txt(16,y,'Condición de riesgo: cruce incompleto ('+cr.errors+' errores).',177,7.8,COLORS.danger);
+  else if(cr)txt(16,y,riskRows.length?'Condición de riesgo: '+riskRows.length+' categorías con intersección.':'Condición de riesgo: sin intersección detectable en la capa consultada.',176,7.7);
+  else txt(16,y,'Condición de riesgo: cruce no disponible. '+String(crError||''),176,7.5,COLORS.danger);
+  const micro=(state.microzonasBarrio?.barrios?.[code]?.zonas||[]).filter(z=>Number(z.hectareas)>0).sort((a,b)=>b.hectareas-a.hectareas);
+  if(micro.length){
+   const top=micro[0];
+   txt(16,y+13,'Microzona predominante '+top.zona+': '+ha(top.hectareas)+' · '+pct(top.porcentaje_barrio),177,8.5,COLORS.purple,true);
+   if(String(top.zona)==='4D')txt(16,y+23,'4D: Abanico de Meléndez y Lili; respuesta local del suelo, no nivel de riesgo.',177,7.5,COLORS.navy);
+  }else txt(16,y+13,'Microzonificación: no hay cruce barrial verificable.',177,8,COLORS.muted);
+  txt(14,263,threat?.errors?'Advertencia: '+threat.errors+' geometrías o uniones de amenaza sin procesar.':'Las categorías y fenómenos pueden solaparse; no sumar porcentajes.',181,7.4,threat?.errors?COLORS.danger:COLORS.muted);
+  txt(14,271,'Fuente: GeoJSON web simplificados y microzonas aproximadas; verificación GDB pendiente.',181,7.2,COLORS.muted);
+  // Numeración física y descarga.
+  const pages=pdf.getNumberOfPages();
+  for(let i=1;i<=pages;i++){pdf.setPage(i);txt(185,286,i+' / '+pages,12,8,COLORS.navy,true)}
+  const filename='Ficha_territorial_'+safe(name)+'_'+safe(code)+'_POT_Cali.pdf';
+  const blob=pdf.output('blob');if(!(blob instanceof Blob)||blob.size<4000)throw Error('PDF incompleto');
   if(pdfReadyUrl)URL.revokeObjectURL(pdfReadyUrl);
   pdfReadyUrl=URL.createObjectURL(blob);
   const link=document.getElementById('download-barrio-ready');
-  if(link){link.href=pdfReadyUrl;link.download=filename;link.hidden=false;link.textContent='Descargar PDF generado · '+name;}
-  // Se intenta la descarga inicial; el enlace visible es el respaldo cuando el
-  // navegador restringe descargas automáticas repetidas desde una misma página.
-  if(link)link.click();
-  if(message)message.textContent='Ficha preparada para '+name+'. Si el archivo no se descargó automáticamente, usa el enlace de abajo.';
- }catch(e){
-  console.error('Generación ficha barrial',e);
-  if(message)message.textContent='No fue posible completar la ficha: '+(e.message||e);
- }finally{button.disabled=!state.selected;}
+  if(link){link.href=pdfReadyUrl;link.download=filename;link.hidden=false;link.textContent='Descargar ficha territorial · '+name;link.click()}
+  if(message)message.textContent='Ficha territorial de tres páginas preparada. Si no se descargó, usa el enlace.';
+ }catch(e){console.error('Ficha territorial',e);if(message)message.textContent='No se pudo generar la ficha: '+String(e.message||e)}
+ finally{button.disabled=!state.selected}
 }
 function init(){
  const btn=document.getElementById('download-barrio-pdf');
